@@ -1,0 +1,17 @@
+Interface:
+    'interface' name=ID ('[' langs+=ID[','] ']')? '{'
+        functions+=Function
+    '}'
+;
+
+Function:
+    ret_type=Type name=ID '(' params*=FunctionParameter[','] ')'
+;
+
+FunctionParameter:
+    p_type=Type p_name=ID
+;
+
+Type:
+    "void" | "string" | "int" | "float" | "double" | "bool"
+;
