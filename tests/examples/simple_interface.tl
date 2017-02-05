@@ -14,7 +14,6 @@ interface SimpleInterface {
         role: server
     }
 
-    void print(string content)
     bool login(string username, string password)
     bool register(string username, string password)
 }

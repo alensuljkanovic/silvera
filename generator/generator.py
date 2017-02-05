@@ -39,9 +39,11 @@ class TalkieGenerator(object):
 
             params_as_str = []
             params = []
+            param_names = []
             for param in function.params:
                 p_type = platforms.convert_type(platform, param.p_type)
                 p_name = param.p_name
+                param_names.append(p_name)
                 if platforms.is_dynamic(platform):
                     params_as_str.append(p_name)
                 else:
@@ -52,6 +54,7 @@ class TalkieGenerator(object):
             params_str = ", ".join(params_as_str)
             func_dict["parameters"] = params_str
             func_dict["params"] = params
+            func_dict["param_names"] = ", ".join(param_names)
             func_dict["def_ret_val"] = platforms.get_def_ret_val(platform, function.ret_type)
             d["functions"].append(func_dict)
 
@@ -70,10 +73,12 @@ class TalkieGenerator(object):
                     "ip": endpoint.ip,
                     "role": endpoint.role,
                     "port": endpoint.port,
-                    "lang": endpoint.lang
+                    "lang": endpoint.lang,
+                    "name": endpoint.name
                 },
                 "client": "client",
-                "server": "server"
+                "server": "server",
+                "interface_name": self.interface_def.name
             }
             d.update(self._get_platform_data(platform))
             file_ext = platforms.get_file_ext(platform)
@@ -81,16 +86,36 @@ class TalkieGenerator(object):
             # Generate interface file
             #
             interface_name = "%s_interface.template" % platform
-
-            file_name = "%s%s" % (endpoint.name, file_ext)
+            module_name = platforms.get_module_name(platform,
+                                                    self.interface_def.name)
+            file_name = "%s%s" % (module_name, file_ext)
             file_path = os.path.join(src_gen_path, file_name)
             interface_tm = env.get_template(interface_name)
             interface_tm.stream(d=d).dump(file_path)
             #
             # Generate stub file
             #
+            module_name = platforms.get_module_name(platform,
+                                                    endpoint.name+"Stub")
             stub_name = "%s_stub.template" % platform
-            file_name = "%sStub%s" % (endpoint.name, file_ext)
+            file_name = "%s%s" % (module_name, file_ext)
             file_path = os.path.join(src_gen_path, file_name)
             stub_tm = env.get_template(stub_name)
             stub_tm.stream(d=d).dump(file_path)
+            #
+            # Generate client/server/peer file
+            #
+            module_name = platforms.get_module_name(platform,
+                                                    endpoint.name)
+            if endpoint.role == platforms.ROLE_CLIENT:
+                client_name = "%s_client.template" % platform
+                file_name = "%s%s" % (module_name, file_ext)
+                file_path = os.path.join(src_gen_path, file_name)
+                client_tm = env.get_template(client_name)
+                client_tm.stream(d=d).dump(file_path)
+            elif endpoint.role == platforms.ROLE_SERVER:
+                server_name = "%s_server.template" % platform
+                file_name = "%s%s" % (module_name, file_ext)
+                file_path = os.path.join(src_gen_path, file_name)
+                server_tm = env.get_template(server_name)
+                server_tm.stream(d=d).dump(file_path)

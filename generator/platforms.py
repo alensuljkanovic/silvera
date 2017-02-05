@@ -3,6 +3,8 @@ This module contains platform data.
 """
 
 # Platform names
+from generator.utils import camelcase_to_snakecase
+
 JAVA = "java"
 PYTHON = "python"
 
@@ -20,6 +22,10 @@ TYPES = "types"
 FILE_EXTENSION = "file_extension"
 VERSION = "version"
 DEF_RET_VAL = "default_return_value"
+MODULE_CASE = "module_case"
+
+ROLE_SERVER = "server"
+ROLE_CLIENT = "client"
 
 platforms = {
     JAVA: {
@@ -47,6 +53,7 @@ platforms = {
     PYTHON: {
         DYNAMICALLY_TYPED: True,
         FILE_EXTENSION: ".py",
+        MODULE_CASE: camelcase_to_snakecase,
         TYPES: {
             INT: "int",
             FLOAT: "float",
@@ -101,3 +108,13 @@ def get_file_ext(platform):
 def is_dynamic(platform):
     """Tells if a given platform is a dynamically typed, or not."""
     return platforms[platform][DYNAMICALLY_TYPED]
+
+
+def get_module_name(platform, module_name):
+    platform_desc = platforms[platform]
+    if MODULE_CASE in platform_desc:
+        func = platform_desc[MODULE_CASE]
+        return func(module_name)
+    return module_name
+
+
