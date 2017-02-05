@@ -82,7 +82,7 @@ class TalkieGenerator(object):
             #
             interface_name = "%s_interface.template" % platform
 
-            file_name = "%s%s" % (self.interface_def.name, file_ext)
+            file_name = "%s%s" % (endpoint.name, file_ext)
             file_path = os.path.join(src_gen_path, file_name)
             interface_tm = env.get_template(interface_name)
             interface_tm.stream(d=d).dump(file_path)
@@ -90,7 +90,7 @@ class TalkieGenerator(object):
             # Generate stub file
             #
             stub_name = "%s_stub.template" % platform
-            file_name = "%sStub%s" % (self.interface_def.name, file_ext)
+            file_name = "%sStub%s" % (endpoint.name, file_ext)
             file_path = os.path.join(src_gen_path, file_name)
             stub_tm = env.get_template(stub_name)
             stub_tm.stream(d=d).dump(file_path)
