@@ -1,6 +1,8 @@
 """
 This module contains the implementation of talkie IDL.
 """
+from generator import platforms
+
 
 class TalkieObject(object):
     """Base class for all classes used in the implementation of talkie IDL."""
@@ -11,12 +13,24 @@ class TalkieObject(object):
 
 class Interface(TalkieObject):
     """Object representation of an interface defined by talkie DSL."""
-    def __init__(self, name, parent=None, functions=None, langs=None):
+    def __init__(self, name, parent=None, functions=None, endpoints=None):
         """Initializes Interface object."""
         super(Interface, self).__init__(parent)
         self.name = name
         self.functions = functions if functions else []
-        self.langs = langs if langs else []
+        self.endpoints = endpoints if endpoints else []
+
+
+class EndPoint(TalkieObject):
+    """Object representation of an endpoint defined by talkie DSL."""
+    def __init__(self, parent, name=None, ip=None, port=None,
+                 lang=None, role=None):
+        super(EndPoint, self).__init__(parent)
+        self.name = name
+        self.ip = ip
+        self.port = port
+        self.lang = lang
+        self.role = role
 
 
 class Function(TalkieObject):
@@ -33,6 +47,10 @@ class Function(TalkieObject):
         params = ["%s %s" % (p.p_type, p.p_name) for p in self.params]
         return ", ".join(params)
 
+    @property
+    def def_ret_val(self):
+        """Returns the default return value."""
+        return platforms.get
 
 class FunctionParameter(TalkieObject):
     """Object representation of a function param defined by talkie DSL."""

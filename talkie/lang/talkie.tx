@@ -1,7 +1,21 @@
 Interface:
-    'interface' name=ID ('[' langs+=ID[','] ']')? '{'
+    'interface' name=ID '{'
+        endpoints+=EndPoint
         functions+=Function
     '}'
+;
+
+EndPoint:
+    'endpoint' (name=ID)? '{'
+        'ip' ':' ip=STRING ','
+        'port' ':' port=INT ','
+        'lang' ':' lang=ID ','
+        'role' ':' role=Role
+    '}'
+;
+
+Role:
+    "client" | "server"
 ;
 
 Function:

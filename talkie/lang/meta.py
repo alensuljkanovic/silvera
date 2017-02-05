@@ -2,10 +2,10 @@ import os
 
 from textx.metamodel import metamodel_from_file
 
-from talkie.talkie import Interface, Function, FunctionParameter
+from talkie.talkie import Interface, Function, FunctionParameter, EndPoint
 from talkie.utils import get_root_path
 
-_classes = (Interface, Function, FunctionParameter)
+_classes = (Interface, EndPoint, Function, FunctionParameter)
 # _classes = ()
 _obj_processors = {}
 

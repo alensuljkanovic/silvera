@@ -13,6 +13,5 @@ def test_simple():
     path = os.path.join(get_root_path(), "tests", "examples", "simple_interface.tl")
     model = metamodel.model_from_file(path)
 
-
     generator = TalkieGenerator(model)
     generator.generate()

@@ -15,7 +15,6 @@ class TalkieGenerator(object):
     """ Talkie IDL code generator."""
     def __init__(self, interface_def):
         self.interface_def = interface_def
-        self.platforms = interface_def.langs
 
     def _get_environment(self):
         """Loads jinja2 Environment."""
@@ -23,8 +22,8 @@ class TalkieGenerator(object):
                                       "templates")
 
         templates = []
-        for platform in self.platforms:
-            templates.append(os.path.join(templates_path, platform))
+        for endpoint in self.interface_def.endpoints:
+            templates.append(os.path.join(templates_path, endpoint.lang))
 
         env = Environment(loader=FileSystemLoader(templates))
         return env
@@ -53,6 +52,7 @@ class TalkieGenerator(object):
             params_str = ", ".join(params_as_str)
             func_dict["parameters"] = params_str
             func_dict["params"] = params
+            func_dict["def_ret_val"] = platforms.get_def_ret_val(platform, function.ret_type)
             d["functions"].append(func_dict)
 
         return d
@@ -63,15 +63,26 @@ class TalkieGenerator(object):
 
         src_gen_path = os.path.join(get_root_path(), "generator", "src-gen")
 
-        for platform in self.platforms:
-            d = self._get_platform_data(platform)
+        for endpoint in self.interface_def.endpoints:
+            platform = endpoint.lang
+            d = {
+                "endpoint": {
+                    "ip": endpoint.ip,
+                    "role": endpoint.role,
+                    "port": endpoint.port,
+                    "lang": endpoint.lang
+                },
+                "client": "client",
+                "server": "server"
+            }
+            d.update(self._get_platform_data(platform))
             file_ext = platforms.get_file_ext(platform)
             #
             # Generate interface file
             #
             interface_name = "%s_interface.template" % platform
 
-            file_name = "%sInterface%s" % (self.interface_def.name, file_ext)
+            file_name = "%s%s" % (self.interface_def.name, file_ext)
             file_path = os.path.join(src_gen_path, file_name)
             interface_tm = env.get_template(interface_name)
             interface_tm.stream(d=d).dump(file_path)

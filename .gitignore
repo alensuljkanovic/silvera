@@ -6,5 +6,7 @@ __pycache__/
 generator/src-gen/**
 !generator/src-gen/.gitkeep
 
+experimenting/**
+
 .idea
 .cache

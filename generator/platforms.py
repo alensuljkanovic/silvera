@@ -19,6 +19,7 @@ DYNAMICALLY_TYPED = "dynamically_typed"
 TYPES = "types"
 FILE_EXTENSION = "file_extension"
 VERSION = "version"
+DEF_RET_VAL = "default_return_value"
 
 platforms = {
     JAVA: {
@@ -31,6 +32,15 @@ platforms = {
             STRING: "String",
             BOOL: "boolean",
             VOID: "void"
+        },
+
+        DEF_RET_VAL: {
+            INT: 0,
+            FLOAT: 0.0,
+            DOUBLE: 0.0,
+            STRING: "",
+            BOOL: "true",
+            VOID: ""
         }
     },
 
@@ -43,6 +53,15 @@ platforms = {
             DOUBLE: "double",
             STRING: "str",
             BOOL: "bool",
+            VOID: ""
+        },
+
+        DEF_RET_VAL: {
+            INT: 0,
+            FLOAT: 0.0,
+            DOUBLE: 0.0,
+            STRING: "",
+            BOOL: True,
             VOID: ""
         }
     }
@@ -64,6 +83,14 @@ def convert_type(platform, _type):
     """Converts talkie type to a platform type."""
     mappings = get_type_mappings(platform)
     return mappings[_type]
+
+
+def get_def_ret_val(platform, _type):
+    """Returns the default return value for given platform and data type"""
+    p = platforms[platform]
+    d = p[DEF_RET_VAL]
+    ret_val = d[_type]
+    return platforms[platform][DEF_RET_VAL][_type]
 
 
 def get_file_ext(platform):
