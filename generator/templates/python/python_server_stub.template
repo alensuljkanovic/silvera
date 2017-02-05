@@ -1,0 +1,31 @@
+#
+# Python server stub implementation.
+#
+class {{d.endpoint.name}}Stub(Abstract{{d.name}}):
+    """Class that implements the interface"""
+    def __init__(self, server, ip, port):
+        super({{d.endpoint.name}}Stub, self).__init__(server, ip, port)
+    {% for function in d.functions %}
+    def {{function.name}}(self, {{function.parameters}}):
+        """
+        #TODO: write docstring
+        Args:
+            {% for param in function.params -%}
+            {{param.p_name}} ({{param.p_type}}):
+            {% endfor %}
+        Returns:
+            {{function.ret_type}}
+        """
+        return self.server.{{function.name}}({{function.parameters}}).encode("utf-8")
+    {% endfor %}
+    def start(self):
+        """
+        Starts the server.
+        """
+        while True:
+            message_bytes = self.socket.recv()
+            message = message_bytes.decode("utf-8")
+            print("Request: ", message)
+            # Echo request...
+            message = "ECHO: %s" % message
+            self.socket.send(message.encode("utf-8"))

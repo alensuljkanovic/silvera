@@ -1,6 +1,7 @@
 """
 This module contains code generator for Talkie IDL.
 """
+import glob
 import os
 from collections import OrderedDict
 
@@ -23,9 +24,13 @@ class TalkieGenerator(object):
 
         templates = []
         for endpoint in self.interface_def.endpoints:
+            # pattern = os.path.join(templates_path, endpoint.lang, "*.template")
+            # for template in glob.glob(pattern):
+            #     templates.append(template)
             templates.append(os.path.join(templates_path, endpoint.lang))
 
         env = Environment(loader=FileSystemLoader(templates))
+        print(env.list_templates())
         return env
 
     def _get_platform_data(self, platform):
@@ -92,30 +97,33 @@ class TalkieGenerator(object):
             file_path = os.path.join(src_gen_path, file_name)
             interface_tm = env.get_template(interface_name)
             interface_tm.stream(d=d).dump(file_path)
-            #
-            # Generate stub file
-            #
-            module_name = platforms.get_module_name(platform,
-                                                    endpoint.name+"Stub")
-            stub_name = "%s_stub.template" % platform
-            file_name = "%s%s" % (module_name, file_ext)
-            file_path = os.path.join(src_gen_path, file_name)
-            stub_tm = env.get_template(stub_name)
-            stub_tm.stream(d=d).dump(file_path)
-            #
-            # Generate client/server/peer file
-            #
-            module_name = platforms.get_module_name(platform,
-                                                    endpoint.name)
-            if endpoint.role == platforms.ROLE_CLIENT:
-                client_name = "%s_client.template" % platform
+
+            number_of_modules = platforms.get_numb_of_modules(platform)
+            if number_of_modules == platforms.MULT_MODULES:
+                #
+                # Generate stub file
+                #
+                module_name = platforms.get_module_name(platform,
+                                                        endpoint.name+"Stub")
+                stub_name = "%s_stub.template" % platform
                 file_name = "%s%s" % (module_name, file_ext)
                 file_path = os.path.join(src_gen_path, file_name)
-                client_tm = env.get_template(client_name)
-                client_tm.stream(d=d).dump(file_path)
-            elif endpoint.role == platforms.ROLE_SERVER:
-                server_name = "%s_server.template" % platform
-                file_name = "%s%s" % (module_name, file_ext)
-                file_path = os.path.join(src_gen_path, file_name)
-                server_tm = env.get_template(server_name)
-                server_tm.stream(d=d).dump(file_path)
+                stub_tm = env.get_template(stub_name)
+                stub_tm.stream(d=d).dump(file_path)
+                #
+                # Generate client/server/peer file
+                #
+                module_name = platforms.get_module_name(platform,
+                                                        endpoint.name)
+                if endpoint.role == platforms.ROLE_CLIENT:
+                    client_name = "%s_client.template" % platform
+                    file_name = "%s%s" % (module_name, file_ext)
+                    file_path = os.path.join(src_gen_path, file_name)
+                    client_tm = env.get_template(client_name)
+                    client_tm.stream(d=d).dump(file_path)
+                elif endpoint.role == platforms.ROLE_SERVER:
+                    server_name = "%s_server.template" % platform
+                    file_name = "%s%s" % (module_name, file_ext)
+                    file_path = os.path.join(src_gen_path, file_name)
+                    server_tm = env.get_template(server_name)
+                    server_tm.stream(d=d).dump(file_path)

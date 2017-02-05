@@ -23,6 +23,9 @@ FILE_EXTENSION = "file_extension"
 VERSION = "version"
 DEF_RET_VAL = "default_return_value"
 MODULE_CASE = "module_case"
+NUMB_OF_MODULES = "numb_of_modules"
+ONE_MODULE = 1
+MULT_MODULES = 2
 
 ROLE_SERVER = "server"
 ROLE_CLIENT = "client"
@@ -31,6 +34,7 @@ platforms = {
     JAVA: {
         DYNAMICALLY_TYPED: False,
         FILE_EXTENSION: ".java",
+        NUMB_OF_MODULES: MULT_MODULES,
         TYPES: {
             INT: "int",
             FLOAT: "float",
@@ -54,6 +58,7 @@ platforms = {
         DYNAMICALLY_TYPED: True,
         FILE_EXTENSION: ".py",
         MODULE_CASE: camelcase_to_snakecase,
+        NUMB_OF_MODULES: ONE_MODULE,
         TYPES: {
             INT: "int",
             FLOAT: "float",
@@ -117,4 +122,5 @@ def get_module_name(platform, module_name):
         return func(module_name)
     return module_name
 
-
+def get_numb_of_modules(platform):
+    return platforms[platform][NUMB_OF_MODULES]
