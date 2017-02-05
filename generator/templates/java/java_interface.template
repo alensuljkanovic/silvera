@@ -8,4 +8,5 @@ public interface {{d.name}} {
 {%for function in d.functions %}
     public {{function.ret_type}} {{function.name}}({{function.parameters}});
 {%- endfor %}
+    public void close();
 }

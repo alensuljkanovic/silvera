@@ -13,8 +13,8 @@ public class {{d.name}}Stub implements {{d.name}} {
 
     public {{d.name}}Stub() {
         this.context = ZMQ.context(1);
-        this.ip = {{d.endpoint.ip}};
-        this.port = {{d.endpoint.ip}};
+        this.ip = "{{d.endpoint.ip}}";
+        this.port = {{d.endpoint.port}};
 
         this.init();
     }
@@ -28,7 +28,7 @@ public class {{d.name}}Stub implements {{d.name}} {
     }
 
     private void init() {
-        this.socket = this.context(ZMQ.REQ);
+        this.socket = this.context.socket(ZMQ.REQ);
         this.socket.connect("tcp://" + this.ip + ":" + this.port);
     }
 
