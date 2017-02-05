@@ -105,7 +105,7 @@ class TalkieGenerator(object):
                 #
                 module_name = platforms.get_module_name(platform,
                                                         endpoint.name+"Stub")
-                stub_name = "%s_stub.template" % platform
+                stub_name = "%s_%s_stub.template" % (platform, endpoint.role)
                 file_name = "%s%s" % (module_name, file_ext)
                 file_path = os.path.join(src_gen_path, file_name)
                 stub_tm = env.get_template(stub_name)
