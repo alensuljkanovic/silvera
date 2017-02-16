@@ -8,18 +8,25 @@ import zmq
 
 class Abstract{{d.name}}(object):
     """Abstract class that is used to simulate interface"""
+    {% if d.endpoint.role == d.server %}
     def __init__(self, server, ip, port):
         super(Abstract{{d.name}}, self).__init__()
         self.server = server
+    {% else %}
+    def __init__(self, ip, port):
+        super(Abstract{{d.name}}, self).__init__()
+    {% endif %}
         self.ip = ip
         self.port = port
         self.context = zmq.Context(1)
-        self.socket = self.context.socket(zmq.REP)
-        self.socket.bind("tcp://*:{{d.endpoint.port}}")
 
-        {%if d.endpoint.role == client %}
-        self.server_endpoint = 0
-        {% endif -%}
+        {%if d.endpoint.role == d.client %}
+        self.socket = self.context.socket(zmq.REQ)
+        self.socket.connect("tcp://%s:%s" % (ip, port))
+        {% else %}
+        self.socket = self.context.socket(zmq.REP)
+        self.socket.bind("tcp://%s:%s" % (ip, port))
+        {% endif %}
 
     {% for function in d.functions %}
     def {{function.name}}(self, {{function.parameters}}):
@@ -38,5 +45,7 @@ class Abstract{{d.name}}(object):
 {% if d.endpoint.role == d.server %}
     {% include 'python_server_stub.template' %}
     {% include 'python_server.template' %}
-
+{% else %}
+    {% include 'python_client_stub.template' %}
+    {% include 'python_client.template' %}
 {% endif %}

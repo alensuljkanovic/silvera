@@ -1,0 +1,21 @@
+
+#
+# Python client implementation.
+#
+class {{d.endpoint.name}}(object):
+    def __init__(self, ip, port):
+        self.stub = {{d.endpoint.name}}Stub(ip, port)
+
+    {%for function in d.functions %}
+    def {{function.name}}(self, {{function.parameters}}):
+        """
+        #TODO: write docstring
+        Args:
+            {% for param in function.params -%}
+            {{param.p_name}} ({{param.p_type}}):
+            {% endfor %}
+        Returns:
+            {{function.ret_type}}
+        """
+        return self.stub.{{function.name}}({{function.param_names}})
+    {% endfor %}

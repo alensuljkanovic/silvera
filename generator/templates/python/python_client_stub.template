@@ -1,0 +1,26 @@
+#
+# Python client stub implementation.
+#
+class {{d.endpoint.name}}Stub(Abstract{{d.name}}):
+    """Class that implements the interface"""
+    def __init__(self, ip, port):
+        super({{d.endpoint.name}}Stub, self).__init__(
+        ip, port)
+
+    def close(self):
+        self.socket.close()
+        self.context.term()
+
+    {% for function in d.functions %}
+    def {{function.name}}(self, {{function.parameters}}):
+        """
+        #TODO: write docstring
+        Args:
+            {% for param in function.params -%}
+            {{param.p_name}} ({{param.p_type}}):
+            {% endfor %}
+        Returns:
+            {{function.ret_type}}
+        """
+        raise NotImplementedError()
+    {% endfor %}
