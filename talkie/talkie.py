@@ -52,11 +52,10 @@ class Function(TalkieObject):
         """Returns the default return value."""
         return platforms.get
 
+
 class FunctionParameter(TalkieObject):
     """Object representation of a function param defined by talkie DSL."""
     def __init__(self, parent, p_name, p_type):
         super(FunctionParameter, self).__init__(parent)
         self.p_name = p_name
         self.p_type = p_type
-
-

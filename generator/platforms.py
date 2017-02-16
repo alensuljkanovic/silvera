@@ -116,11 +116,14 @@ def is_dynamic(platform):
 
 
 def get_module_name(platform, module_name):
+    """Returns the module name in case expected by the platform."""
     platform_desc = platforms[platform]
     if MODULE_CASE in platform_desc:
         func = platform_desc[MODULE_CASE]
         return func(module_name)
     return module_name
 
+
 def get_numb_of_modules(platform):
+    """Returns the number of modules used by the platform."""
     return platforms[platform][NUMB_OF_MODULES]

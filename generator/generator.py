@@ -1,13 +1,9 @@
 """
 This module contains code generator for Talkie IDL.
 """
-import glob
 import os
-from collections import OrderedDict
-
 from jinja2 import Environment
 from jinja2.loaders import FileSystemLoader
-
 from generator import platforms
 from talkie.utils import get_root_path
 
@@ -24,13 +20,9 @@ class TalkieGenerator(object):
 
         templates = []
         for endpoint in self.interface_def.endpoints:
-            # pattern = os.path.join(templates_path, endpoint.lang, "*.template")
-            # for template in glob.glob(pattern):
-            #     templates.append(template)
             templates.append(os.path.join(templates_path, endpoint.lang))
 
         env = Environment(loader=FileSystemLoader(templates))
-        print(env.list_templates())
         return env
 
     def _get_platform_data(self, platform):
