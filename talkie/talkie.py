@@ -1,7 +1,7 @@
 """
 This module contains the implementation of talkie IDL.
 """
-from generator import platforms
+from talkie.generator import platforms
 
 
 class TalkieObject(object):
@@ -46,11 +46,6 @@ class Function(TalkieObject):
     def parameters(self):
         params = ["%s %s" % (p.p_type, p.p_name) for p in self.params]
         return ", ".join(params)
-
-    @property
-    def def_ret_val(self):
-        """Returns the default return value."""
-        return platforms.get
 
 
 class FunctionParameter(TalkieObject):

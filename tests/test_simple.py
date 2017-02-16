@@ -2,7 +2,8 @@
 Tests simple example.
 """
 import os
-from generator.generator import TalkieGenerator
+
+from talkie.generator.generator import TalkieGenerator
 from talkie.lang.meta import get_metamodel
 from talkie.utils import get_root_path
 

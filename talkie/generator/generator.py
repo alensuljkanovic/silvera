@@ -2,10 +2,12 @@
 This module contains code generator for Talkie IDL.
 """
 import os
+
 from jinja2 import Environment
 from jinja2.loaders import FileSystemLoader
-from generator import platforms
-from talkie.utils import get_root_path
+
+from talkie.generator import platforms
+from talkie.utils import get_root_path, get_templates_path
 
 
 class TalkieGenerator(object):
@@ -15,8 +17,7 @@ class TalkieGenerator(object):
 
     def _get_environment(self):
         """Loads jinja2 Environment."""
-        templates_path = os.path.join(get_root_path(), "generator",
-                                      "templates")
+        templates_path = get_templates_path()
 
         templates = []
         for endpoint in self.interface_def.endpoints:
@@ -61,7 +62,8 @@ class TalkieGenerator(object):
         """Generates code."""
         env = self._get_environment()
 
-        src_gen_path = os.path.join(get_root_path(), "generator", "src-gen")
+        src_gen_path = os.path.join(get_root_path(), "talkie", "generator",
+                                    "src-gen")
 
         for endpoint in self.interface_def.endpoints:
             platform = endpoint.lang
@@ -96,7 +98,7 @@ class TalkieGenerator(object):
                 # Generate stub file
                 #
                 module_name = platforms.get_module_name(platform,
-                                                        endpoint.name+"Stub")
+                                                        endpoint.name +"Stub")
                 stub_name = "%s_%s_stub.template" % (platform, endpoint.role)
                 file_name = "%s%s" % (module_name, file_ext)
                 file_path = os.path.join(src_gen_path, file_name)
