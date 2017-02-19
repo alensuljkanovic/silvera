@@ -2,10 +2,8 @@
 This module contains code generator for Talkie IDL.
 """
 import os
-
 from jinja2 import Environment
 from jinja2.loaders import FileSystemLoader
-
 from talkie.generator import platforms
 from talkie.utils import get_root_path, get_templates_path
 

@@ -1,10 +1,9 @@
 """
 This module contains platform data.
 """
-
-# Platform names
 from talkie.generator.utils import camelcase_to_snakecase
 
+# Platform names
 JAVA = "java"
 PYTHON = "python"
 

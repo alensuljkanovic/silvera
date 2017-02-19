@@ -1,7 +1,5 @@
 import os
-
 from textx.metamodel import metamodel_from_file
-
 from talkie.lang.obj_processors import interface_processor
 from talkie.talkie import Interface, Function, FunctionParameter, EndPoint
 from talkie.utils import get_root_path
