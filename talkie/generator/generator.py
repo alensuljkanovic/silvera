@@ -80,6 +80,29 @@ class TalkieGenerator(object):
             d.update(self._get_platform_data(platform))
             file_ext = platforms.get_file_ext(platform)
             number_of_modules = platforms.get_numb_of_modules(platform)
+
+            # Create folder where files for this endpoint will be generated
+            folder_path = os.path.join(src_gen_path, endpoint.name)
+            try:
+                os.mkdir(folder_path)
+                try:
+                    init_file = platforms.get_init_file(platform) + file_ext
+                    init_path = os.path.join(src_gen_path, endpoint.name,
+                                             init_file)
+                    file = open(init_path, mode="w+",encoding="utf-8")
+                    file.write("")
+                    file.close()
+                except KeyError:
+                    # Init file doesn't exist for this platform.
+                    pass
+                except IOError:
+                    raise Exception("Failed to create init file for "
+                                    "'{endpoint}'".format(
+                        endpoint=endpoint.name))
+            except OSError:
+                raise Exception("Failed to make directory for '%s'"
+                                % endpoint.name)
+
             #
             # Generate interface file
             #
@@ -91,7 +114,7 @@ class TalkieGenerator(object):
 
             module_name = platforms.get_module_name(platform, interface_name)
             file_name = "%s%s" % (module_name, file_ext)
-            file_path = os.path.join(src_gen_path, file_name)
+            file_path = os.path.join(folder_path, file_name)
             interface_tm = env.get_template(interface_template_name)
             interface_tm.stream(d=d).dump(file_path)
 
@@ -103,7 +126,7 @@ class TalkieGenerator(object):
                                                         endpoint.name +"Stub")
                 stub_name = "%s_%s_stub.template" % (platform, endpoint.role)
                 file_name = "%s%s" % (module_name, file_ext)
-                file_path = os.path.join(src_gen_path, file_name)
+                file_path = os.path.join(folder_path, file_name)
                 stub_tm = env.get_template(stub_name)
                 stub_tm.stream(d=d).dump(file_path)
                 #
@@ -114,12 +137,12 @@ class TalkieGenerator(object):
                 if endpoint.role == platforms.ROLE_CLIENT:
                     client_name = "%s_client.template" % platform
                     file_name = "%s%s" % (module_name, file_ext)
-                    file_path = os.path.join(src_gen_path, file_name)
+                    file_path = os.path.join(folder_path, file_name)
                     client_tm = env.get_template(client_name)
                     client_tm.stream(d=d).dump(file_path)
                 elif endpoint.role == platforms.ROLE_SERVER:
                     server_name = "%s_server.template" % platform
                     file_name = "%s%s" % (module_name, file_ext)
-                    file_path = os.path.join(src_gen_path, file_name)
+                    file_path = os.path.join(folder_path, file_name)
                     server_tm = env.get_template(server_name)
                     server_tm.stream(d=d).dump(file_path)

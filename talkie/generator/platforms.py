@@ -25,6 +25,7 @@ MODULE_CASE = "module_case"
 NUMB_OF_MODULES = "numb_of_modules"
 ONE_MODULE = 1
 MULT_MODULES = 2
+INIT_FILE = "init_file"
 
 ROLE_SERVER = "server"
 ROLE_CLIENT = "client"
@@ -58,6 +59,7 @@ platforms = {
         FILE_EXTENSION: ".py",
         MODULE_CASE: camelcase_to_snakecase,
         NUMB_OF_MODULES: ONE_MODULE,
+        INIT_FILE: "__init__",
         TYPES: {
             INT: "int",
             FLOAT: "float",
@@ -126,3 +128,8 @@ def get_module_name(platform, module_name):
 def get_numb_of_modules(platform):
     """Returns the number of modules used by the platform."""
     return platforms[platform][NUMB_OF_MODULES]
+
+
+def get_init_file(platform):
+    """Returns the init file."""
+    return platforms[platform][INIT_FILE]
