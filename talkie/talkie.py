@@ -1,7 +1,6 @@
 """
 This module contains the implementation of talkie IDL.
 """
-from talkie.generator import platforms
 
 
 class TalkieObject(object):

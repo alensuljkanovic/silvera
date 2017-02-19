@@ -81,18 +81,22 @@ class TalkieGenerator(object):
             }
             d.update(self._get_platform_data(platform))
             file_ext = platforms.get_file_ext(platform)
+            number_of_modules = platforms.get_numb_of_modules(platform)
             #
             # Generate interface file
             #
-            interface_name = "%s_interface.template" % platform
-            module_name = platforms.get_module_name(platform,
-                                                    self.interface_def.name)
+            interface_template_name = "%s_interface.template" % platform
+
+            interface_name = self.interface_def.name
+            if number_of_modules != platforms.MULT_MODULES:
+                interface_name += endpoint.name
+
+            module_name = platforms.get_module_name(platform, interface_name)
             file_name = "%s%s" % (module_name, file_ext)
             file_path = os.path.join(src_gen_path, file_name)
-            interface_tm = env.get_template(interface_name)
+            interface_tm = env.get_template(interface_template_name)
             interface_tm.stream(d=d).dump(file_path)
 
-            number_of_modules = platforms.get_numb_of_modules(platform)
             if number_of_modules == platforms.MULT_MODULES:
                 #
                 # Generate stub file

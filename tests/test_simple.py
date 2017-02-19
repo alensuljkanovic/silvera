@@ -3,6 +3,8 @@ Tests simple example.
 """
 import os
 
+import pytest
+
 from talkie.generator.generator import TalkieGenerator
 from talkie.lang.meta import get_metamodel
 from talkie.utils import get_root_path
@@ -26,3 +28,13 @@ def test_simple2():
 
     generator = TalkieGenerator(model)
     generator.generate()
+
+
+def test_duplicates():
+    metamodel = get_metamodel()
+    path = os.path.join(get_root_path(), "tests", "examples",
+                        "duplicates.tl")
+    with pytest.raises(Exception):
+        metamodel.model_from_file(path)
+
+    print("Here")
