@@ -1,13 +1,13 @@
 interface SimpleInterface {
 
-    endpoint Client {
+    endpoint Client1 {
         ip: "192.168.0.14",
         port: 5559,
         lang: java,
         role: client
     }
 
-    endpoint Server {
+    endpoint Server1 {
         ip: "192.168.0.17",
         port: 5559,
         lang: python,
