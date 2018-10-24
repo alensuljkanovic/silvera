@@ -1,0 +1,18 @@
+package com.talkie.{{service_name}}.service;
+
+import org.springframework.stereotype.Service;
+import com.talkie.{{service_name}}.domain.model.Employee;
+
+@Service
+public class {{service_name}}Service {
+
+
+
+    {% for function in api.functions %}
+    public {{function.ret_type|converttype}} {{function.name}}({{function|unfold_function_params}}) {
+        throw new java.lang.UnsupportedOperationException("Not implemented yet.");
+
+    }
+    {% endfor %}
+
+}

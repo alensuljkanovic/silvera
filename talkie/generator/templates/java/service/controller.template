@@ -1,0 +1,27 @@
+package com.talkie.{{service_name}}.controller;
+
+import java.util.Collection;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import com.talkie.{{service_name}}.domain.model.Employee;
+import com.talkie.{{service_name}}.service.EmployeeSearchService;
+
+@RefreshScope
+@RestController
+public class {{service_name}}Controller {
+
+    @Autowired
+    {{service_name}}Service {{service_name|firstlower}}Service;
+
+    {% for function in api.functions %}
+    @RequestMapping("{{function.comm_type.mapping}}")
+    public {{function.ret_type|converttype}} {{function.name}}({{function|unfold_function_params_rest}}) {
+        return {{service_name|firstlower}}Service.{{function.name}}({{function|param_names}});
+    }
+    {% endfor %}
+
+
+}

@@ -4,145 +4,321 @@ This module contains code generator for Talkie IDL.
 import os
 from jinja2 import Environment
 from jinja2.loaders import FileSystemLoader
-from talkie.generator import platforms
-from talkie.utils import get_root_path, get_templates_path
+
+from talkie.const import MVN_GENERATE
+from talkie.generator.platforms import JAVA, convert_complex_type
+from talkie.talkie import CustomType
+from talkie.utils import get_root_path, get_templates_path, decode_byte_str
 
 
-class TalkieGenerator(object):
+class TalkieGenerator:
     """ Talkie IDL code generator."""
-    def __init__(self, interface_def):
-        self.interface_def = interface_def
+    def __init__(self, module):
+        self.module = module
 
-    def _get_environment(self):
+    def _get_environment(self, lang):
         """Loads jinja2 Environment."""
-        templates_path = get_templates_path()
+        templates_path = os.path.join(get_templates_path(), lang)
 
-        templates = []
-        for endpoint in self.interface_def.endpoints:
-            templates.append(os.path.join(templates_path, endpoint.lang))
-
-        env = Environment(loader=FileSystemLoader(templates))
+        env = Environment(loader=FileSystemLoader(templates_path))
         return env
-
-    def _get_platform_data(self, platform):
-        """Returns"""
-        d = {"name": self.interface_def.name, "functions": []}
-
-        for function in self.interface_def.functions:
-            ret_type = platforms.convert_type(platform, function.ret_type)
-
-            func_dict = {"ret_type": ret_type, "name": function.name}
-
-            params_as_str = []
-            params = []
-            param_names = []
-            for param in function.params:
-                p_type = platforms.convert_type(platform, param.p_type)
-                p_name = param.p_name
-                param_names.append(p_name)
-                if platforms.is_dynamic(platform):
-                    params_as_str.append(p_name)
-                else:
-                    params_as_str.append("%s %s" % (p_type, p_name))
-
-                params.append({"p_type": p_type, "p_name": p_name})
-
-            params_str = ", ".join(params_as_str)
-            func_dict["parameters"] = params_str
-            func_dict["params"] = params
-            func_dict["param_names"] = ", ".join(param_names)
-            func_dict["def_ret_val"] = platforms.get_def_ret_val(platform, function.ret_type)
-            d["functions"].append(func_dict)
-
-        return d
 
     def generate(self):
         """Generates code."""
-        env = self._get_environment()
 
         src_gen_path = os.path.join(get_root_path(), "talkie", "generator",
                                     "src-gen")
 
-        for endpoint in self.interface_def.endpoints:
-            platform = endpoint.lang
-            d = {
-                "endpoint": {
-                    "ip": endpoint.ip,
-                    "role": endpoint.role,
-                    "port": endpoint.port,
-                    "lang": endpoint.lang,
-                    "name": endpoint.name
-                },
-                "client": "client",
-                "server": "server",
-                "interface_name": self.interface_def.name
-            }
-            d.update(self._get_platform_data(platform))
-            file_ext = platforms.get_file_ext(platform)
-            number_of_modules = platforms.get_numb_of_modules(platform)
+        for config_serv in self.module.config_servers:
+            print("Config server...")
+            self._generate_config_server(src_gen_path, config_serv)
 
-            # Create folder where files for this endpoint will be generated
-            folder_path = os.path.join(src_gen_path, endpoint.name)
-            try:
-                os.mkdir(folder_path)
-                try:
-                    init_file = platforms.get_init_file(platform) + file_ext
-                    init_path = os.path.join(src_gen_path, endpoint.name,
-                                             init_file)
-                    file = open(init_path, mode="w+",encoding="utf-8")
-                    file.write("")
-                    file.close()
-                except KeyError:
-                    # Init file doesn't exist for this platform.
-                    pass
-                except IOError:
-                    raise Exception("Failed to create init file for "
-                                    "'{endpoint}'".format(
-                        endpoint=endpoint.name))
-            except OSError:
-                raise Exception("Failed to make directory for '%s'"
-                                % endpoint.name)
+        for serv_registry in self.module.service_registries:
+            print(serv_registry.name)
+            self._generate_serv_registry(src_gen_path, serv_registry)
 
-            #
-            # Generate interface file
-            #
-            interface_template_name = "%s_interface.template" % platform
+        for service in self.module.service_instances:
+            print(service.type.name, service.idx)
+            self._generate_service(src_gen_path, service)
 
-            interface_name = self.interface_def.name
-            if number_of_modules != platforms.MULT_MODULES:
-                interface_name += endpoint.name
 
-            module_name = platforms.get_module_name(platform, interface_name)
-            file_name = "%s%s" % (module_name, file_ext)
-            file_path = os.path.join(folder_path, file_name)
-            interface_tm = env.get_template(interface_template_name)
-            interface_tm.stream(d=d).dump(file_path)
 
-            if number_of_modules == platforms.MULT_MODULES:
-                #
-                # Generate stub file
-                #
-                module_name = platforms.get_module_name(platform,
-                                                        endpoint.name +"Stub")
-                stub_name = "%s_%s_stub.template" % (platform, endpoint.role)
-                file_name = "%s%s" % (module_name, file_ext)
-                file_path = os.path.join(folder_path, file_name)
-                stub_tm = env.get_template(stub_name)
-                stub_tm.stream(d=d).dump(file_path)
-                #
-                # Generate client/server/peer file
-                #
-                module_name = platforms.get_module_name(platform,
-                                                        endpoint.name)
-                if endpoint.role == platforms.ROLE_CLIENT:
-                    client_name = "%s_client.template" % platform
-                    file_name = "%s%s" % (module_name, file_ext)
-                    file_path = os.path.join(folder_path, file_name)
-                    client_tm = env.get_template(client_name)
-                    client_tm.stream(d=d).dump(file_path)
-                elif endpoint.role == platforms.ROLE_SERVER:
-                    server_name = "%s_server.template" % platform
-                    file_name = "%s%s" % (module_name, file_ext)
-                    file_path = os.path.join(folder_path, file_name)
-                    server_tm = env.get_template(server_name)
-                    server_tm.stream(d=d).dump(file_path)
+    def _generate_service(self, output_path, service):
+        target_lang = service.type.lang
+        if target_lang == JAVA:
+            _create_java_project(output_path, service)
+
+    def _generate_serv_registry(self, output_path, serv_registry):
+        _create_eureka_serv_registry(output_path, serv_registry)
+
+    def _generate_config_server(self, output_path, config_server):
+        _create_config_server(output_path, config_server)
+
+
+def _create_java_project(output_path, service):
+    """Creates Java project with following folder structure:
+
+    {{ServiceName}}:
+        - src
+            - main
+                - java
+                    - impl
+                        - {{ServiceName}}
+                            - controller
+                            - domain
+                            - service
+                - resources
+            - test
+        - bootstrap.properties
+        - pom.xml
+    """
+    templates_path = os.path.join(get_templates_path(), JAVA, "service")
+
+    env = Environment(loader=FileSystemLoader(templates_path))
+    env.filters["firstupper"] = lambda x: x[0].upper() + x[1:]
+    env.filters["firstlower"] = lambda x: x[0].lower() + x[1:]
+    env.filters["converttype"] = lambda x: convert_complex_type(JAVA, x)
+    env.filters["unfold_function_params"] = lambda x: unfold_function_params(
+        JAVA, x, False)
+    env.filters["unfold_function_params_rest"] = lambda x: unfold_function_params(
+        JAVA, x)
+    env.filters["param_names"] = get_param_names
+
+    service_name = service.type.name
+
+    call_mvn(output_path, service_name)
+    root = os.path.join(output_path, service_name)
+
+    #
+    # Generate bootstrap.properties
+    #
+    bootstrap_template = env.get_template("bootstrap_properties.template")
+    d = {
+        "service_name": service_name,
+        "config_server_uri": "http://localhost:%s" % service.type.config_server.port,
+        "service_registry_url": service.type.service_registry.url,
+        "service_port": service.port,
+        "service_version": service.type.version
+
+    }
+    bootstrap_template.stream(d).dump(os.path.join(root,
+                                                   "bootstrap.properties"))
+
+    #
+    # Generate pom.xml
+    #
+    pom_template = env.get_template("pom_xml.template")
+    pom_template.stream(d).dump(os.path.join(root, "pom.xml"))
+
+    content_path = os.path.join(root, "src", "main", "java", "com", "talkie",
+                                service_name)
+    # os.mkdir(content_path)
+
+    #
+    # Generate {{ServiceName}}Application.java
+    #
+    app_template = env.get_template("main.template")
+    app_template.stream(d).dump(os.path.join(content_path, "App.java"))
+
+    #
+    # Generate controller
+    #
+    controller_path = os.path.join(content_path, "controller")
+    os.mkdir(controller_path)
+    controller_data = {
+        "service_name": service_name,
+        "api": service.type.api
+    }
+    controller_template = env.get_template("controller.template")
+    controller_template.stream(controller_data).dump(os.path.join(controller_path,
+                                                                  service_name + "Controller.java"))
+
+    #
+    # Generate domain model
+    #
+    os.mkdir(os.path.join(content_path, "domain"))
+    model_path = os.path.join(content_path, "domain", "model")
+    os.mkdir(model_path)
+
+    api = service.type.api
+    for typedef in api.typedefs:
+        data = {
+            "service_name": service_name,
+            "name": typedef.name,
+            "attributes": typedef.fields
+        }
+        class_template = env.get_template("class.template")
+        class_template.stream(data).dump(os.path.join(model_path,
+                                         typedef.name + ".java"))
+
+    #
+    # Generate services
+    #
+    service_path = os.path.join(content_path, "service")
+    os.mkdir(service_path)
+
+    service_data = {
+        "service_name": service_name,
+        "api": service.type.api
+    }
+    service_template = env.get_template("service.template")
+    service_template.stream(service_data).dump(
+        os.path.join(service_path,
+                     service_name + "Service.java"))
+
+
+def _create_eureka_serv_registry(output_path, serv_registry):
+    """Creates Eureka service registry"""
+
+    templates_path = os.path.join(get_templates_path(), JAVA, "eureka")
+    env = Environment(loader=FileSystemLoader(templates_path))
+
+    reg_name = serv_registry.name
+    call_mvn(output_path, reg_name)
+
+    d = {
+        "registry_name": reg_name,
+        "uri": serv_registry.uri,
+        "port": serv_registry.port,
+        "client_mode": "true" if serv_registry.client_mode else "false",
+        "version": serv_registry.version
+    }
+
+    reg_path = os.path.join(output_path, reg_name)
+
+    #
+    # Generate bootstrap.properties
+    #
+    bootstrap_template = env.get_template("eureka_bootstrap.template")
+    bootstrap_template.stream(d).dump(os.path.join(reg_path,
+                                                   "bootstrap.properties"))
+    #
+    # Generate pom.xml
+    #
+    pom_template = env.get_template("eureka_pom_xml.template")
+    pom_template.stream(d).dump(os.path.join(reg_path, "pom.xml"))
+
+    content_path = os.path.join(reg_path, "src", "main", "java", "com",
+                                "talkie", reg_name)
+
+    #
+    # Generate {{ServiceRegistryName}}/App.java
+    #
+    app_template = env.get_template("eureka_main.template")
+    app_template.stream(d).dump(os.path.join(content_path, "App.java"))
+
+
+def _create_config_server(output_path, config_server):
+
+    templates_path = os.path.join(get_templates_path(), JAVA, "config-server")
+    print(templates_path)
+    env = Environment(loader=FileSystemLoader(templates_path))
+
+    serv_name = config_server.name
+    conf_path = os.path.join(output_path, serv_name)
+    call_mvn(output_path, serv_name)
+
+    d = {
+        "name": serv_name,
+        "port": config_server.port,
+        "search_path": config_server.search_path,
+        "version": config_server.version
+    }
+
+    #
+    # Generate bootstrap.properties
+    #
+    bootstrap_template = env.get_template("bootstrap_properties.template")
+    bootstrap_template.stream(d).dump(os.path.join(conf_path,
+                                                   "bootstrap.properties"))
+    #
+    # Generate pom.xml
+    #
+    pom_template = env.get_template("pom_xml.template")
+    pom_template.stream(d).dump(os.path.join(conf_path, "pom.xml"))
+
+    content_path = os.path.join(conf_path, "src", "main", "java", "com",
+                                "talkie", serv_name)
+    #
+    # Generate {{ServiceRegistryName}}/App.java
+    #
+    app_template = env.get_template("main.template")
+    app_template.stream(d).dump(os.path.join(content_path, "App.java"))
+
+
+def calculate_type(platform, _type):
+    """Calculates platform type for a given Talkie type"""
+    try:
+        convert_complex_type(platform, _type)
+    except KeyError:
+        if isinstance(_type, CustomType):
+            return str(_type)
+
+
+def unfold_function_params(platform, func, with_anotations=True):
+    """Creates a string from function parameters
+
+    Args:
+        platform (str): platform identifier
+        func (Function): function whole params are unfolded
+        with_anotations (bool): tells whether special anotations shall be
+            included in string or not
+    """
+    if platform == JAVA:
+        params = []
+        for p in func.params:
+            param = ""
+            if with_anotations and p.url_placeholder:
+                param = "@PathVariable "
+
+            if with_anotations and p.query_param:
+                required = "true" if p.default is None else "false"
+                param = '@RequestParam(value="%s", required=%s) ' % (p.name, required)
+
+            param += convert_complex_type(JAVA, p.type) + " "
+            param += p.name
+            params.append(param)
+
+        return ", ".join(params)
+
+
+def get_param_names(func):
+    params = [p.name for p in func.params]
+    return ", ".join(params)
+
+
+def call_mvn(output_path, app_name):
+    """Calls Maven which generates the project structure
+
+    Project structure looks as follows:
+    {{app_name}}
+        - src
+            - main
+                - java
+                    - com
+                        - talkie
+                            - {{app_name}}
+                                - App.java
+                - resources
+            - test
+        - bootstrap.properties
+        - pom.xml
+    """
+    mvn_command = MVN_GENERATE.format(app_name=app_name)
+
+    import subprocess
+    process = subprocess.Popen(mvn_command,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE,
+                               stdin=subprocess.PIPE,
+                               shell=True,
+                               cwd=output_path)
+    outmsg, errmsg = process.communicate()
+
+    errmsg = decode_byte_str(errmsg)
+
+    if errmsg:
+        raise Exception(errmsg)
+
+    if process.returncode != 0:
+        raise Exception("Maven exception!")

@@ -4,20 +4,30 @@ This module contains platform data.
 from talkie.generator.utils import camelcase_to_snakecase
 
 # Platform names
+from talkie.talkie import CustomType, TypedList
+
 JAVA = "java"
 PYTHON = "python"
 
 # talkie IDL types
 VOID = "void"
-INT = "int"
-STRING = "string"
+STRING = "str"
 FLOAT = "float"
 DOUBLE = "double"
 BOOL = "bool"
+i16 = "i16"
+i32 = "i32"
+i64 = "i64"
+
+# Collections types
+LIST = "list"
+SET = "set"
+DICT = "dict"
 
 # Constants
 DYNAMICALLY_TYPED = "dynamically_typed"
 TYPES = "types"
+COLLECTIONS = "collections"
 FILE_EXTENSION = "file_extension"
 VERSION = "version"
 DEF_RET_VAL = "default_return_value"
@@ -35,17 +45,28 @@ platforms = {
         DYNAMICALLY_TYPED: False,
         FILE_EXTENSION: ".java",
         NUMB_OF_MODULES: MULT_MODULES,
+
         TYPES: {
-            INT: "int",
-            FLOAT: "float",
-            DOUBLE: "double",
-            STRING: "String",
-            BOOL: "boolean",
+            i16: "java.lang.Integer",
+            i32: "java.lang.Integer",
+            i64: "java.lang.Integer",
+            FLOAT: "java.lang.Double",
+            DOUBLE: "java.lang.Double",
+            STRING: "java.lang.String",
+            BOOL: "java.lang.Boolean",
             VOID: "void"
         },
 
+        COLLECTIONS: {
+            LIST: "java.util.List",
+            SET: "java.util.Set",
+            DICT: "java.util.Map"
+        },
+
         DEF_RET_VAL: {
-            INT: 0,
+            i16: 0,
+            i32: 0,
+            i64: 0,
             FLOAT: 0.0,
             DOUBLE: 0.0,
             STRING: "",
@@ -61,7 +82,9 @@ platforms = {
         NUMB_OF_MODULES: ONE_MODULE,
         INIT_FILE: "__init__",
         TYPES: {
-            INT: "int",
+            i16: "int",
+            i32: "int",
+            i64: "int",
             FLOAT: "float",
             DOUBLE: "double",
             STRING: "str",
@@ -69,8 +92,16 @@ platforms = {
             VOID: ""
         },
 
+        COLLECTIONS: {
+            LIST: "list",
+            SET: "set",
+            DICT: "dict"
+        },
+
         DEF_RET_VAL: {
-            INT: 0,
+            i16: 0,
+            i32: 0,
+            i64: 0,
             FLOAT: 0.0,
             DOUBLE: 0.0,
             STRING: "",
@@ -98,11 +129,21 @@ def convert_type(platform, _type):
     return mappings[_type]
 
 
+def convert_complex_type(platform, _type):
+    """Converts complex talkie object to a platform type"""
+    if isinstance(_type, CustomType):
+        return str(_type)
+
+    try:
+        return convert_type(platform, _type)
+    except KeyError:
+        collections = platforms[platform][COLLECTIONS]
+        if isinstance(_type, TypedList):
+            return collections[LIST] + "<" + convert_complex_type(platform, _type.type) + ">"
+
+
 def get_def_ret_val(platform, _type):
     """Returns the default return value for given platform and data type"""
-    p = platforms[platform]
-    d = p[DEF_RET_VAL]
-    ret_val = d[_type]
     return platforms[platform][DEF_RET_VAL][_type]
 
 

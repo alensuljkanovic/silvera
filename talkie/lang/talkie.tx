@@ -1,31 +1,174 @@
-Interface:
-    'interface' name=ID '{'
-        endpoints+=EndPoint
-        functions+=Function
+Module:
+    decls*=Declaration
+;
+
+Declaration:
+    ConfigServerDecl | ServiceRegistryDecl | ServiceDecl | APIGateway
+;
+
+ConfigServerDecl:
+    'config-server' name=ID '{'
+        'version' '=' version=STRING
+        'port' '=' port=INT
+        'search_path' '=' search_path=STRING
     '}'
 ;
 
-EndPoint:
-    'endpoint' (name=ID)? '{'
-        'ip' ':' ip=STRING ','
-        'port' ':' port=INT ','
-        'lang' ':' lang=ID ','
-        'role' ':' role=Role
+ServiceRegistryDecl:
+    'service-registry' name=ID '{'
+        'version' '=' version=STRING
+        'tool' '=' tool=ServiceRegistryTool
+        'port' '=' port=INT
+        'uri' '=' uri=STRING
+        'client_mode' '=' client_mode=BOOL
     '}'
 ;
 
-Role:
-    "client" | "server"
+ServiceRegistryTool:
+    "eureka" | "zookeeper" | "consul"
+;
+
+APIGateway:
+    'api-gateway' name=ID '{'
+        'version' '=' version=STRING
+        'port' '=' port=INT
+        'lang' '=' lang=STRING
+    '}'
+;
+
+ServiceDecl:
+    'service' name=ID '{'
+        'version' '=' version=STRING
+        'port' '=' port=INT
+        ('config_server' '=' config_server=[ConfigServerDecl])?
+        ('service_registry' '=' service_registry=[ServiceRegistryDecl])?
+        'lang' '=' lang=STRING
+        'deployment' '{'
+            'packaging' '=' packaging=STRING
+            'host' '=' host=HostChoice
+            'n' '=' num_of_instances=INT
+        '}'
+        'communication_style' '=' comm_style=CommunicationStyle
+
+        api=APIDecl
+    '}'
+;
+
+
+APIDecl:
+    'api' '{'
+        typedefs*=TypeDef
+        functions*=Function
+    '}'
+;
+
+TypeDef:
+    'typedef' name=ID (':' inherits+=[TypeDef][','])? '['
+        fields+=TypeField
+    ']'
+;
+
+TypeField:
+    (id=INT ':')? type=DataType name=ID
+;
+
+HostChoice:
+    "PC" | "VM" | "container" | "serverless"
+;
+
+CommunicationStyle:
+    "REST" | "gRPC" | "thrift" | "kafka" | "RabbitMQ" | "custom"
+;
+
+CommunicationType:
+    RESTCommunication
+;
+
+RESTCommunication:
+    '@rest' '(' mapping=STRING ')'
 ;
 
 Function:
-    ret_type=Type name=ID '(' params*=FunctionParameter[','] ')'
+    comm_type=CommunicationType
+    ret_type=ReturnType name=ID '(' params*=FunctionParameter[','] ')'
 ;
 
 FunctionParameter:
-    p_type=Type p_name=ID
+    type=DataType name=ID ('='default=DefaultValue)?
 ;
 
-Type:
-    "void" | "string" | "int" | "float" | "double" | "bool"
+DefaultValue:
+    'none' | STRING | FLOAT | INT | BOOL
+;
+
+ReturnType:
+    'void' | DataType
+;
+
+DataType:
+    Number | Collection | CustomType
+;
+
+CustomType:
+    type=[TypeDef]
+;
+
+Number:
+    Integer | Float
+;
+
+Integer:
+    'i16' | 'i32' | 'i64' | 'bool'
+;
+
+Float:
+    'float' | 'double'
+;
+
+Collection:
+    Sequence | Set | Dict
+;
+
+Sequence:
+    String | List
+;
+
+String:
+    'str'
+;
+
+List:
+    TypedList | NonTypedList
+;
+
+TypedList:
+    'list' '<' type=DataType '>' ('[' len=INT ']')?
+;
+
+NonTypedList:
+    'list'
+;
+
+Set:
+    TypedSet | NonTypedSet
+;
+
+TypedSet:
+    'set' '<' type=DataType '>'
+;
+
+NonTypedSet:
+    'set'
+;
+
+Dict:
+    TypedDict | NonTypedDict
+;
+
+TypedDict:
+    'dict' '<' key_type=DataType ',' value_type=DataType '>'
+;
+
+NonTypedDict:
+    'dict'
 ;
