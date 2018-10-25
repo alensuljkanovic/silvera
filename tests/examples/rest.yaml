@@ -1,0 +1,8 @@
+EmployeeSearch:
+  path: /employee
+  methods:
+  - name: findById
+    path: /find/{id}
+  - name: findAll
+    path: /findall
+

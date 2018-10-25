@@ -38,10 +38,7 @@ service EmployeeSearch {
             str companyInfo
         ]
 
-        @rest("/employee/find/{id}")
         Employee findById(i32 id)
-
-        @rest("/employee/findall")
         list<Employee> findAll()
     }
 

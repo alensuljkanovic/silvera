@@ -17,7 +17,7 @@ public class {{service_name}}Controller {
     {{service_name}}Service {{service_name|firstlower}}Service;
 
     {% for function in api.functions %}
-    @RequestMapping("{{function.comm_type.mapping}}")
+    @RequestMapping("{{function.rest_path}}")
     public {{function.ret_type|converttype}} {{function.name}}({{function|unfold_function_params_rest}}) {
         return {{service_name|firstlower}}Service.{{function.name}}({{function|param_names}});
     }

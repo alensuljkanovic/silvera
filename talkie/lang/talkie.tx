@@ -80,16 +80,8 @@ CommunicationStyle:
     "REST" | "gRPC" | "thrift" | "kafka" | "RabbitMQ" | "custom"
 ;
 
-CommunicationType:
-    RESTCommunication
-;
-
-RESTCommunication:
-    '@rest' '(' mapping=STRING ')'
-;
 
 Function:
-    comm_type=CommunicationType
     ret_type=ReturnType name=ID '(' params*=FunctionParameter[','] ')'
 ;
 

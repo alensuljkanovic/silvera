@@ -29,13 +29,28 @@ class Module:
             if isinstance(decl, ConfigServerDecl):
                 yield decl
 
+    def add_rest_info(self, rest_info):
+        """Goes through all services who use REST as a communication style and
+        adds mappings."""
+        if rest_info is None:
+            return
+
+        for decl in self.decls:
+            if isinstance(decl, ServiceDecl) and decl.uses_rest:
+                try:
+                    d = rest_info[decl.name]
+                    decl.resolve_rest(d)
+                except KeyError:
+                    raise RuntimeError("REST mapping not defined for service"
+                                       " %s" % decl.name)
+
 
 class ServiceDecl:
 
     def __init__(self, parent=None, name=None, version=None, port=None,
                  config_server=None, service_registry=None, lang=None,
                  packaging=None, host=None, num_of_instances=None,
-                 comm_style=None, api=None, communication_style=None):
+                 comm_style=None, api=None,):
         self.parent = parent
         self.name = name
         self.version = version
@@ -48,7 +63,22 @@ class ServiceDecl:
         self.num_of_instances = num_of_instances
         self.comm_style = comm_style
         self.api = api
-        self.communication_style = communication_style
+        self.comm_style = comm_style
+
+    @property
+    def uses_rest(self):
+        return self.comm_style == REST
+
+    def resolve_rest(self, rest_info):
+        pass
+        path = rest_info["path"]
+        methods = rest_info["methods"]
+        for d in methods:
+            name = d["name"]
+            mapping = d["path"]
+            for func in self.api.functions:
+                if func.name == name:
+                    func.add_rest_mappings(path + mapping)
 
 
 class Service:
@@ -107,31 +137,33 @@ class Function:
         self.comm_type = comm_type
         self.ret_type = ret_type
         self.params = params if params else []
+        self.rest_path = None
 
-        if comm_type.__class__.__name__ == "RESTCommunication":
-            # Find all path variables inside REST mapping (these are all params
-            # between brackets, for example {id}, {name}, etc.
-            import re
-            placeholders = re.findall(r'\{(.*?)\}', comm_type.mapping)
-            for param in self.params:
-                param.url_placeholder = param.name in placeholders
+    def add_rest_mappings(self, mapping):
 
-            for placeholder in placeholders:
-                if placeholder not in {p.name for p in self.params}:
-                    raise TypeError("Placeholder '%s' not found in function "
-                                    "parameters!" % placeholder)
+        import re
+        placeholders = re.findall(r'\{(.*?)\}', mapping)
+        for param in self.params:
+            param.url_placeholder = param.name in placeholders
 
-            # Look for query parameters in the URL
-            parsed = url_parser.urlparse(comm_type.mapping)
-            url_params = url_parser.parse_qs(parsed.query)
-            for param in self.params:
-                param.query_param = param.name in url_params
-                print(param.name, param.query_param)
+        for placeholder in placeholders:
+            if placeholder not in {p.name for p in self.params}:
+                raise TypeError("Placeholder '%s' not found in function "
+                                "parameters!" % placeholder)
 
-            for p in url_params:
-                if p not in {p.name for p in self.params}:
-                    raise TypeError("Query parameter '%s' not found in "
-                                    "function parameters" % p)
+        # Look for query parameters in the URL
+        parsed = url_parser.urlparse(mapping)
+        url_params = url_parser.parse_qs(parsed.query)
+        for param in self.params:
+            param.query_param = param.name in url_params
+            print(param.name, param.query_param)
+
+        for p in url_params:
+            if p not in {p.name for p in self.params}:
+                raise TypeError("Query parameter '%s' not found in "
+                                "function parameters" % p)
+
+        self.rest_path = mapping
 
 
 class FunctionParameter:
