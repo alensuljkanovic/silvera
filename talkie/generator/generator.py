@@ -8,7 +8,7 @@ from jinja2.loaders import FileSystemLoader
 from talkie.const import MVN_GENERATE
 from talkie.generator.platforms import JAVA, convert_complex_type
 from talkie.talkie import CustomType
-from talkie.utils import get_root_path, get_templates_path, decode_byte_str
+from talkie.utils import get_templates_path, decode_byte_str
 
 
 class TalkieGenerator:
@@ -23,25 +23,17 @@ class TalkieGenerator:
         env = Environment(loader=FileSystemLoader(templates_path))
         return env
 
-    def generate(self):
+    def generate(self, output_path):
         """Generates code."""
 
-        src_gen_path = os.path.join(get_root_path(), "talkie", "generator",
-                                    "src-gen")
-
         for config_serv in self.module.config_servers:
-            print("Config server...")
-            self._generate_config_server(src_gen_path, config_serv)
+            self._generate_config_server(output_path, config_serv)
 
         for serv_registry in self.module.service_registries:
-            print(serv_registry.name)
-            self._generate_serv_registry(src_gen_path, serv_registry)
+            self._generate_serv_registry(output_path, serv_registry)
 
         for service in self.module.service_instances:
-            print(service.type.name, service.idx)
-            self._generate_service(src_gen_path, service)
-
-
+            self._generate_service(output_path, service)
 
     def _generate_service(self, output_path, service):
         target_lang = service.type.lang
@@ -84,9 +76,10 @@ def _create_java_project(output_path, service):
         JAVA, x)
     env.filters["param_names"] = get_param_names
 
-    service_name = service.type.name
+    service_name = service.name
+    service_version = service.version
 
-    call_mvn(output_path, service_name)
+    mvn_generate(output_path, service_name)
     root = os.path.join(output_path, service_name)
 
     #
@@ -98,7 +91,7 @@ def _create_java_project(output_path, service):
         "config_server_uri": "http://localhost:%s" % service.type.config_server.port,
         "service_registry_url": service.type.service_registry.url,
         "service_port": service.port,
-        "service_version": service.type.version
+        "service_version": service_version
 
     }
     bootstrap_template.stream(d).dump(os.path.join(root,
@@ -166,6 +159,11 @@ def _create_java_project(output_path, service):
         os.path.join(service_path,
                      service_name + "Service.java"))
 
+    #
+    # Generate run script
+    #
+    _generate_run_script(output_path, service_name, service_version)
+
 
 def _create_eureka_serv_registry(output_path, serv_registry):
     """Creates Eureka service registry"""
@@ -174,14 +172,16 @@ def _create_eureka_serv_registry(output_path, serv_registry):
     env = Environment(loader=FileSystemLoader(templates_path))
 
     reg_name = serv_registry.name
-    call_mvn(output_path, reg_name)
+    reg_version = serv_registry.version
+
+    mvn_generate(output_path, reg_name)
 
     d = {
         "registry_name": reg_name,
         "uri": serv_registry.uri,
         "port": serv_registry.port,
         "client_mode": "true" if serv_registry.client_mode else "false",
-        "version": serv_registry.version
+        "version": reg_version
     }
 
     reg_path = os.path.join(output_path, reg_name)
@@ -207,22 +207,28 @@ def _create_eureka_serv_registry(output_path, serv_registry):
     app_template = env.get_template("eureka_main.template")
     app_template.stream(d).dump(os.path.join(content_path, "App.java"))
 
+    #
+    # Generate run script
+    #
+    _generate_run_script(output_path, reg_name, reg_version)
+
 
 def _create_config_server(output_path, config_server):
 
     templates_path = os.path.join(get_templates_path(), JAVA, "config-server")
-    print(templates_path)
     env = Environment(loader=FileSystemLoader(templates_path))
 
     serv_name = config_server.name
+    serv_version = config_server.version
+
     conf_path = os.path.join(output_path, serv_name)
-    call_mvn(output_path, serv_name)
+    mvn_generate(output_path, serv_name)
 
     d = {
         "name": serv_name,
         "port": config_server.port,
         "search_path": config_server.search_path,
-        "version": config_server.version
+        "version": serv_version
     }
 
     #
@@ -244,6 +250,11 @@ def _create_config_server(output_path, config_server):
     #
     app_template = env.get_template("main.template")
     app_template.stream(d).dump(os.path.join(content_path, "App.java"))
+
+    #
+    # Generate run script
+    #
+    _generate_run_script(output_path, serv_name, serv_version)
 
 
 def calculate_type(platform, _type):
@@ -287,7 +298,26 @@ def get_param_names(func):
     return ", ".join(params)
 
 
-def call_mvn(output_path, app_name):
+def _generate_run_script(output_path, app_name, app_version):
+    """Generates run.sh script for application in its root folder
+
+    Args:
+        output_path (str): path to the dir where application root is located
+        app_name (str): application name
+        app_version (str): application version
+
+    Returns:
+        None
+    """
+    templates_path = os.path.join(get_templates_path(), JAVA)
+    env = Environment(loader=FileSystemLoader(templates_path))
+    run_template = env.get_template("run_sh.template")
+
+    out = os.path.join(output_path, app_name, "run.sh")
+    run_template.stream({"name": app_name, "version": app_version}).dump(out)
+
+
+def mvn_generate(output_path, app_name):
     """Calls Maven which generates the project structure
 
     Project structure looks as follows:
@@ -321,4 +351,5 @@ def call_mvn(output_path, app_name):
         raise Exception(errmsg)
 
     if process.returncode != 0:
+        print(decode_byte_str(outmsg))
         raise Exception("Maven exception!")

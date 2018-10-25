@@ -61,6 +61,14 @@ class Service:
         else:
             self.port = None
 
+    @property
+    def name(self):
+        return self.type.name
+
+    @property
+    def version(self):
+        return self.type.version
+
 
 class ServiceRegistryDecl:
 
@@ -76,7 +84,7 @@ class ServiceRegistryDecl:
 
     @property
     def url(self):
-        return "http://{}:{}/{}".format(self.uri, self.port, self.tool)
+        return "{}:{}/{}".format(self.uri, self.port, self.tool)
 
 
 class ConfigServerDecl:

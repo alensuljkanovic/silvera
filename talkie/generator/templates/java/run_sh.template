@@ -1,0 +1,6 @@
+#!/bin/bash
+
+mvn clean
+mvn package
+
+java -jar target/{{name}}-{{version}}-SNAPSHOT.jar

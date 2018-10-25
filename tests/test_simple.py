@@ -13,5 +13,8 @@ def test_example():
                         "example.tl")
     model = metamodel.model_from_file(path)
 
+    output_dir = os.path.join(get_root_path(), "talkie", "generator",
+                              "src-gen")
+
     generator = TalkieGenerator(model)
-    generator.generate()
+    generator.generate(output_dir)
