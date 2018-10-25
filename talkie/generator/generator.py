@@ -78,6 +78,7 @@ def _create_java_project(output_path, service):
 
     service_name = service.name
     service_version = service.version
+    service_port = service.port
 
     mvn_generate(output_path, service_name)
     root = os.path.join(output_path, service_name)
@@ -90,7 +91,7 @@ def _create_java_project(output_path, service):
         "service_name": service_name,
         "config_server_uri": "http://localhost:%s" % service.type.config_server.port,
         "service_registry_url": service.type.service_registry.url,
-        "service_port": service.port,
+        "service_port": "${PORT:%s}" % service_port,
         "service_version": service_version
 
     }
@@ -162,7 +163,8 @@ def _create_java_project(output_path, service):
     #
     # Generate run script
     #
-    _generate_run_script(output_path, service_name, service_version)
+    _generate_run_script(output_path, service_name, service_version,
+                         service_port)
 
 
 def _create_eureka_serv_registry(output_path, serv_registry):
@@ -173,13 +175,14 @@ def _create_eureka_serv_registry(output_path, serv_registry):
 
     reg_name = serv_registry.name
     reg_version = serv_registry.version
+    reg_port = serv_registry.port
 
     mvn_generate(output_path, reg_name)
 
     d = {
         "registry_name": reg_name,
         "uri": serv_registry.uri,
-        "port": serv_registry.port,
+        "port": "${PORT:%s}" % reg_port,
         "client_mode": "true" if serv_registry.client_mode else "false",
         "version": reg_version
     }
@@ -210,7 +213,7 @@ def _create_eureka_serv_registry(output_path, serv_registry):
     #
     # Generate run script
     #
-    _generate_run_script(output_path, reg_name, reg_version)
+    _generate_run_script(output_path, reg_name, reg_version, reg_port)
 
 
 def _create_config_server(output_path, config_server):
@@ -220,13 +223,14 @@ def _create_config_server(output_path, config_server):
 
     serv_name = config_server.name
     serv_version = config_server.version
+    serv_port = config_server.port
 
     conf_path = os.path.join(output_path, serv_name)
     mvn_generate(output_path, serv_name)
 
     d = {
         "name": serv_name,
-        "port": config_server.port,
+        "port": "${PORT:%s}" % serv_port,
         "search_path": config_server.search_path,
         "version": serv_version
     }
@@ -254,7 +258,7 @@ def _create_config_server(output_path, config_server):
     #
     # Generate run script
     #
-    _generate_run_script(output_path, serv_name, serv_version)
+    _generate_run_script(output_path, serv_name, serv_version, serv_port)
 
 
 def calculate_type(platform, _type):
@@ -298,13 +302,14 @@ def get_param_names(func):
     return ", ".join(params)
 
 
-def _generate_run_script(output_path, app_name, app_version):
+def _generate_run_script(output_path, app_name, app_version, app_port):
     """Generates run.sh script for application in its root folder
 
     Args:
         output_path (str): path to the dir where application root is located
         app_name (str): application name
         app_version (str): application version
+        app_version (str): port that application uses
 
     Returns:
         None
@@ -314,7 +319,9 @@ def _generate_run_script(output_path, app_name, app_version):
     run_template = env.get_template("run_sh.template")
 
     out = os.path.join(output_path, app_name, "run.sh")
-    run_template.stream({"name": app_name, "version": app_version}).dump(out)
+
+    d = {"name": app_name, "version": app_version, "port": app_port}
+    run_template.stream(d).dump(out)
 
 
 def mvn_generate(output_path, app_name):
