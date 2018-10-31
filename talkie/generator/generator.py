@@ -6,7 +6,8 @@ from jinja2 import Environment
 from jinja2.loaders import FileSystemLoader
 
 from talkie.const import MVN_GENERATE
-from talkie.generator.platforms import JAVA, convert_complex_type
+from talkie.generator.platforms import JAVA, convert_complex_type, \
+    get_def_ret_val
 from talkie.talkie import CustomType
 from talkie.utils import get_templates_path, decode_byte_str
 
@@ -38,7 +39,7 @@ class TalkieGenerator:
     def _generate_service(self, output_path, service):
         target_lang = service.type.lang
         if target_lang == JAVA:
-            _create_java_project(output_path, service)
+            _create_java_service(output_path, service)
 
     def _generate_serv_registry(self, output_path, serv_registry):
         _create_eureka_serv_registry(output_path, serv_registry)
@@ -47,7 +48,7 @@ class TalkieGenerator:
         _create_config_server(output_path, config_server)
 
 
-def _create_java_project(output_path, service):
+def _create_java_service(output_path, service):
     """Creates Java project with following folder structure:
 
     {{ServiceName}}:
@@ -76,6 +77,11 @@ def _create_java_project(output_path, service):
         JAVA, x)
     env.filters["param_names"] = get_param_names
 
+    env.globals["generate_cb_annotation"] = generate_cb_annotation
+    env.globals["get_default_for_cb_pattern"] = lambda x: \
+        get_default_for_cb_pattern(JAVA, x)
+    env.globals["get_rest_call"] = lambda x: get_rest_call(JAVA, x)
+
     service_name = service.name
     service_version = service.version
     service_port = service.port
@@ -89,12 +95,18 @@ def _create_java_project(output_path, service):
     bootstrap_template = env.get_template("bootstrap_properties.template")
     d = {
         "service_name": service_name,
-        "config_server_uri": "http://localhost:%s" % service.type.config_server.port,
-        "service_registry_url": service.type.service_registry.url,
         "service_port": "${PORT:%s}" % service_port,
-        "service_version": service_version
-
+        "service_version": service_version,
+        "use_circuit_breaker": len(service.type.dependencies) > 0
     }
+
+    if service.type.config_server:
+        d["config_server_uri"] = "http://localhost:%s" % \
+                                 service.type.config_server.port
+
+    if service.type.service_registry:
+        d["service_registry_url"] = service.type.service_registry.url
+
     bootstrap_template.stream(d).dump(os.path.join(root,
                                                    "bootstrap.properties"))
 
@@ -121,7 +133,8 @@ def _create_java_project(output_path, service):
     os.mkdir(controller_path)
     controller_data = {
         "service_name": service_name,
-        "api": service.type.api
+        "api": service.type.api,
+        "dependencies": service.type.dependencies
     }
     controller_template = env.get_template("controller.template")
     controller_template.stream(controller_data).dump(os.path.join(controller_path,
@@ -153,12 +166,26 @@ def _create_java_project(output_path, service):
 
     service_data = {
         "service_name": service_name,
-        "api": service.type.api
+        "package_name": service_name,
+        "functions": service.type.api.functions
     }
     service_template = env.get_template("service.template")
     service_template.stream(service_data).dump(
         os.path.join(service_path,
                      service_name + "Service.java"))
+
+    for s in service.type.dependencies:
+        s_data = {
+            "service_name": s.name,
+            "package_name": service_name,
+            "functions": s.functions,
+            "use_circuit_breaker": True,
+            "dependency_service": True
+        }
+        service_template = env.get_template("service.template")
+        service_template.stream(s_data).dump(
+            os.path.join(service_path,
+                         s.name + "Service.java"))
 
     #
     # Generate run script
@@ -300,6 +327,45 @@ def unfold_function_params(platform, func, with_anotations=True):
 def get_param_names(func):
     params = [p.name for p in func.params]
     return ", ".join(params)
+
+
+def generate_cb_annotation(func):
+    if not func.cb_pattern or func.cb_pattern == "fail_fast":
+        return ""
+
+    return '@HystrixCommand(fallbackMethod = "%s")' % func.cb_fallback
+
+
+def get_default_for_cb_pattern(platform, func):
+    if platform == JAVA:
+        if func.cb_pattern in ("fail_silent", "fallback_method"):
+            return get_def_ret_val(platform, func.ret_type)
+
+
+def get_rest_call(platform, func):
+    if platform == JAVA:
+        port = func.parent.port
+        url = 'http://localhost:%s' % port
+
+        rest_mapping = func.dep_rest_path
+        return get_java_rest_call(url, rest_mapping)
+
+
+def get_java_rest_call(url, rest_mapping):
+    import re
+    placeholders = re.findall(r'\{(.*?)\}', rest_mapping)
+    base_url = rest_mapping.split("/{%s}" % placeholders[0])[0]
+    rest_mapping = rest_mapping.replace(base_url, "")
+    for idx, p in enumerate(placeholders):
+        to_replace = "/{%s}" % p
+        repl_with = '+ "/" + %s' % p
+
+        prefix, suffix = rest_mapping.split(to_replace)
+
+        new_map = '%s %s' % (prefix, repl_with) + suffix
+        rest_mapping = new_map
+
+    return '"%s%s"%s' % (url, base_url, rest_mapping)
 
 
 def _generate_run_script(output_path, app_name, app_version, app_port):

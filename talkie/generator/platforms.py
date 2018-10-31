@@ -18,6 +18,8 @@ BOOL = "bool"
 i16 = "i16"
 i32 = "i32"
 i64 = "i64"
+INT = "int"
+DATE = "date"
 
 # Collections types
 LIST = "list"
@@ -47,6 +49,7 @@ platforms = {
         NUMB_OF_MODULES: MULT_MODULES,
 
         TYPES: {
+            INT: "java.lang.Integer",
             i16: "java.lang.Integer",
             i32: "java.lang.Integer",
             i64: "java.lang.Integer",
@@ -54,7 +57,8 @@ platforms = {
             DOUBLE: "java.lang.Double",
             STRING: "java.lang.String",
             BOOL: "java.lang.Boolean",
-            VOID: "void"
+            VOID: "void",
+            DATE: "java.util.Date"
         },
 
         COLLECTIONS: {
@@ -64,6 +68,7 @@ platforms = {
         },
 
         DEF_RET_VAL: {
+            INT: 0,
             i16: 0,
             i32: 0,
             i64: 0,
@@ -71,8 +76,14 @@ platforms = {
             DOUBLE: 0.0,
             STRING: "",
             BOOL: "true",
-            VOID: ""
+            VOID: "",
+            DATE: "new java.util.Date()",
+            LIST: "java.util.Collections.emptyList()",
+            SET: "java.util.Collections.emptySet()",
+            DICT: "java.util.Collections.emptyMap()"
+
         }
+
     },
 
     PYTHON: {
@@ -82,6 +93,7 @@ platforms = {
         NUMB_OF_MODULES: ONE_MODULE,
         INIT_FILE: "__init__",
         TYPES: {
+            INT: "int",
             i16: "int",
             i32: "int",
             i64: "int",
@@ -106,7 +118,10 @@ platforms = {
             DOUBLE: 0.0,
             STRING: "",
             BOOL: True,
-            VOID: ""
+            VOID: "",
+            LIST: "[]",
+            SET: "{}",
+            DICT: "{}"
         }
     }
 

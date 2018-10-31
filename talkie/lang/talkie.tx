@@ -3,7 +3,7 @@ Module:
 ;
 
 Declaration:
-    ConfigServerDecl | ServiceRegistryDecl | ServiceDecl | APIGateway
+    ConfigServerDecl | ServiceRegistryDecl | ServiceDecl | APIGateway | Connection
 ;
 
 ConfigServerDecl:
@@ -32,8 +32,24 @@ APIGateway:
     'api-gateway' name=ID '{'
         'version' '=' version=STRING
         'port' '=' port=INT
+        ('config_server' '=' config_server=[ConfigServerDecl])?
+        ('service_registry' '=' service_registry=[ServiceRegistryDecl])?
         'lang' '=' lang=STRING
+        'deployment' '{'
+            'packaging' '=' packaging=STRING
+            'host' '=' host=HostChoice
+            'n' '=' num_of_instances=INT
+        '}'
+        'communication_style' '=' comm_style=CommunicationStyle
+
+        'gateway-for' '{'
+            gateway_for+=GatewayFor
+        '}'
     '}'
+;
+
+GatewayFor:
+    service=[ServiceDecl] 'as' url=STRING
 ;
 
 ServiceDecl:
@@ -49,9 +65,21 @@ ServiceDecl:
             'n' '=' num_of_instances=INT
         '}'
         'communication_style' '=' comm_style=CommunicationStyle
+        (requires=ServiceRequirement)?
 
         api=APIDecl
     '}'
+;
+
+ServiceRequirement:
+    'requires' '{'
+        requirements+=RequirementEntry
+
+    '}'
+;
+
+RequirementEntry:
+    service=ID ('[' version=STRING ']')? (circuit_break?='circuit-break')?
 ;
 
 
@@ -61,6 +89,21 @@ APIDecl:
         functions*=Function
     '}'
 ;
+
+Connection:
+    'connection' start=[Declaration] '->' end=[Declaration] '{'
+        circuit_break_defs*=CBPerMethod
+    '}'
+;
+
+CBPerMethod:
+    method_name=ID '[' failure_pattern=CBFailurePattern (fallback_method=ID)? ']'
+;
+
+CBFailurePattern:
+    'fail_fast' | 'fail_silent' | 'fallback_static' | 'fallback_stubbed' | 'fallback_cache' | 'fallback_method'
+;
+
 
 TypeDef:
     'typedef' name=ID (':' inherits+=[TypeDef][','])? '['
@@ -98,11 +141,15 @@ ReturnType:
 ;
 
 DataType:
-    Number | Collection | CustomType
+    Number | Collection | Date | CustomType
 ;
 
 CustomType:
     type=[TypeDef]
+;
+
+Date:
+    'date'
 ;
 
 Number:
@@ -110,7 +157,7 @@ Number:
 ;
 
 Integer:
-    'i16' | 'i32' | 'i64' | 'bool'
+    'i16' | 'i32' | 'i64' | 'bool' | 'int'
 ;
 
 Float:
@@ -163,4 +210,9 @@ TypedDict:
 
 NonTypedDict:
     'dict'
+;
+
+// Special rule for comments. Comments start with //
+Comment:
+    /\/\/.*$/
 ;

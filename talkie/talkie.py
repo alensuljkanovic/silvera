@@ -6,8 +6,18 @@ import urllib.parse as url_parser
 
 
 class Module:
+    """Object representation of Talkie module
+
+    Module contains declarations of Services, Gateways, Service Registries,
+    etc.
+    """
 
     def __init__(self, decls):
+        """Initializes object
+
+        Args:
+            decls (list): list of declarations within module
+        """
         self.decls = decls
 
     @property
@@ -35,22 +45,32 @@ class Module:
         if rest_info is None:
             return
 
-        for decl in self.decls:
-            if isinstance(decl, ServiceDecl) and decl.uses_rest:
-                try:
-                    d = rest_info[decl.name]
-                    decl.resolve_rest(d)
-                except KeyError:
-                    raise RuntimeError("REST mapping not defined for service"
-                                       " %s" % decl.name)
+        rest_serv = [d for d in self.decls
+                     if isinstance(d, ServiceDecl) and d.uses_rest]
+        for decl in rest_serv:
+            try:
+                d = rest_info[decl.name]
+                decl.resolve_rest(d)
+            except KeyError:
+                raise RuntimeError("REST mapping not defined for service"
+                                   " %s" % decl.name)
+
+        for decl in rest_serv:
+            for dep in decl.dependencies:
+                dep.resolve_rest(rest_info)
 
 
-class ServiceDecl:
+class ServiceObject:
+    """Base class for all services
+
+    Contains information about deployment, communication style, etc.
+    """
 
     def __init__(self, parent=None, name=None, version=None, port=None,
                  config_server=None, service_registry=None, lang=None,
                  packaging=None, host=None, num_of_instances=None,
-                 comm_style=None, api=None,):
+                 comm_style=None):
+
         self.parent = parent
         self.name = name
         self.version = version
@@ -62,15 +82,50 @@ class ServiceDecl:
         self.host = host
         self.num_of_instances = num_of_instances
         self.comm_style = comm_style
+
+        # Services upon whom this service depends on.
+        # Depedencies are defined by creating connections towards other
+        # services in .tl file.
+        self.dependencies = []
+
+
+class APIGateway(ServiceObject):
+    """Special kind of service that provides single entry point to a cluster
+    of other services.
+    """
+    def __init__(self, parent=None, name=None, version=None, port=None,
+                 config_server=None, service_registry=None, lang=None,
+                 packaging=None, host=None, num_of_instances=None,
+                 comm_style=None, gateway_for=None):
+        super().__init__(parent, name, version, port, config_server,
+                         service_registry, lang, packaging, host,
+                         num_of_instances, comm_style)
+
+        self._gateway_for = gateway_for
+
+    @property
+    def gateway_for(self):
+        return [(g.service, g.url) for g in self._gateway_for]
+
+
+class ServiceDecl(ServiceObject):
+    """Service declaration object"""
+
+    def __init__(self, parent=None, name=None, version=None, port=None,
+                 config_server=None, service_registry=None, lang=None,
+                 packaging=None, host=None, num_of_instances=None,
+                 comm_style=None, api=None, requires=None):
+        super().__init__(parent, name, version, port, config_server,
+                         service_registry, lang, packaging, host,
+                         num_of_instances, comm_style)
+        self.requires = requires
         self.api = api
-        self.comm_style = comm_style
 
     @property
     def uses_rest(self):
         return self.comm_style == REST
 
     def resolve_rest(self, rest_info):
-        pass
         path = rest_info["path"]
         methods = rest_info["methods"]
         for d in methods:
@@ -80,9 +135,16 @@ class ServiceDecl:
                 if func.name == name:
                     func.add_rest_mappings(path + mapping)
 
+            dep_func = [f for d in self.dependencies for f in d.functions]
+            for func in dep_func:
+                if func.name == name:
+                    func.add_rest_mappings(path + mapping)
+
 
 class Service:
-
+    """Object of this class represents an instance of a service that is of
+    given ServiceDecl type.
+    """
     def __init__(self, service_decl, idx=None):
         self.type = service_decl
         self.idx = idx
@@ -101,6 +163,9 @@ class Service:
 
 
 class ServiceRegistryDecl:
+    """Registry of services. Contains info about their status (health),
+    location, number of instances, etc.
+    """
 
     def __init__(self, parent, name=None, tool=None, port=None, uri=None,
                  client_mode=False, version=None):
@@ -118,7 +183,9 @@ class ServiceRegistryDecl:
 
 
 class ConfigServerDecl:
-
+    """A special service that keep configuration files that are being used by
+    other services.
+    """
     def __init__(self, parent, name=None, version=None, port=None,
                  search_path=None):
         self.parent = parent
@@ -129,15 +196,16 @@ class ConfigServerDecl:
 
 
 class Function:
-
-    def __init__(self, parent, name=None, comm_type=None, ret_type=None,
-                 params=None):
+    """Object representation of function declaration."""
+    def __init__(self, parent, name=None, ret_type=None, params=None):
         self.parent = parent
         self.name = name
-        self.comm_type = comm_type
         self.ret_type = ret_type
         self.params = params if params else []
         self.rest_path = None
+        self.cb_pattern = None
+        self.cb_fallback = None
+        self.dep_rest_path = None
 
     def add_rest_mappings(self, mapping):
 
@@ -149,14 +217,14 @@ class Function:
         for placeholder in placeholders:
             if placeholder not in {p.name for p in self.params}:
                 raise TypeError("Placeholder '%s' not found in function "
-                                "parameters!" % placeholder)
+                                "parameters for mapping '%s'!" %
+                                (placeholder, mapping))
 
         # Look for query parameters in the URL
         parsed = url_parser.urlparse(mapping)
         url_params = url_parser.parse_qs(parsed.query)
         for param in self.params:
             param.query_param = param.name in url_params
-            print(param.name, param.query_param)
 
         for p in url_params:
             if p not in {p.name for p in self.params}:
@@ -165,9 +233,13 @@ class Function:
 
         self.rest_path = mapping
 
+    def clone(self):
+        params = [p.clone() for p in self.params]
+        return Function(None, self.name, self.ret_type, params)
+
 
 class FunctionParameter:
-
+    """Object representation of function parameter."""
     def __init__(self, parent, name=None, type=None, default=None):
         self.parent = parent
         self.type = type
@@ -175,6 +247,9 @@ class FunctionParameter:
         self.default = default
         self.url_placeholder = False
         self.query_param = False
+
+    def clone(self):
+        return FunctionParameter(None, self.name, self.type, self.default)
 
 
 class TypeDef:

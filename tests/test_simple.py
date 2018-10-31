@@ -18,10 +18,11 @@ def test_example():
     metamodel = get_metamodel()
     path = os.path.join(examples_path, "example.tl")
     model = metamodel.model_from_file(path)
-    model.add_rest_info(p)
-
-    output_dir = os.path.join(get_root_path(), "talkie", "generator",
-                              "src-gen")
-
-    generator = TalkieGenerator(model)
-    generator.generate(output_dir)
+    print(model)
+    # model.add_rest_info(p)
+    #
+    # output_dir = os.path.join(get_root_path(), "talkie", "generator",
+    #                           "src-gen")
+    #
+    # generator = TalkieGenerator(model)
+    # generator.generate(output_dir)

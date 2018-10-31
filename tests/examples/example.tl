@@ -13,6 +13,26 @@ service-registry EmployeeEurekaServer{
 }
 
 
+api-gateway APIGateway {
+    version="1.0.0"
+    port=8080
+    config_server=ConfigServer
+    service_registry=EmployeeEurekaServer
+    lang="java"
+
+    deployment {
+        packaging="jar"
+        host=PC
+        n=1
+    }
+
+    communication_style=REST
+
+    gateway-for {
+        EmployeeSearch as "emp"
+    }
+}
+
 
 service EmployeeSearch {
     version="1.0.0"
@@ -43,4 +63,3 @@ service EmployeeSearch {
     }
 
 }
-
