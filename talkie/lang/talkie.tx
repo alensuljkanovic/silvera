@@ -8,19 +8,16 @@ Declaration:
 
 ConfigServerDecl:
     'config-server' name=ID '{'
-        'version' '=' version=STRING
-        'port' '=' port=INT
         'search_path' '=' search_path=STRING
+        deployment=Deployment
     '}'
 ;
 
 ServiceRegistryDecl:
     'service-registry' name=ID '{'
-        'version' '=' version=STRING
         'tool' '=' tool=ServiceRegistryTool
-        'port' '=' port=INT
-        'uri' '=' uri=STRING
         'client_mode' '=' client_mode=BOOL
+        deployment=Deployment
     '}'
 ;
 
@@ -30,16 +27,11 @@ ServiceRegistryTool:
 
 APIGateway:
     'api-gateway' name=ID '{'
-        'version' '=' version=STRING
-        'port' '=' port=INT
         ('config_server' '=' config_server=[ConfigServerDecl])?
         ('service_registry' '=' service_registry=[ServiceRegistryDecl])?
-        'lang' '=' lang=STRING
-        'deployment' '{'
-            'packaging' '=' packaging=STRING
-            'host' '=' host=HostChoice
-            'n' '=' num_of_instances=INT
-        '}'
+
+        deployment=Deployment
+
         'communication_style' '=' comm_style=CommunicationStyle
 
         'gateway-for' '{'
@@ -54,34 +46,47 @@ GatewayFor:
 
 ServiceDecl:
     'service' name=ID '{'
-        'version' '=' version=STRING
-        'port' '=' port=INT
+
         ('config_server' '=' config_server=[ConfigServerDecl])?
         ('service_registry' '=' service_registry=[ServiceRegistryDecl])?
-        'lang' '=' lang=STRING
-        'deployment' '{'
-            'packaging' '=' packaging=STRING
-            'host' '=' host=HostChoice
-            'n' '=' num_of_instances=INT
-        '}'
+
+        deployment=Deployment
+
         'communication_style' '=' comm_style=CommunicationStyle
-        (requires=ServiceRequirement)?
 
         api=APIDecl
     '}'
 ;
 
-ServiceRequirement:
-    'requires' '{'
-        requirements+=RequirementEntry
-
+Deployment:
+    'deployment' '{'
+        (
+            ('version' '=' version=STRING)? |
+            ('url' '=' url=STRING)? |
+            ('port' '=' port=INT)? |
+            ('lang' '=' lang=STRING)? |
+            ('packaging' '=' packaging=STRING)? |
+            ('host' '=' host=HostChoice)?
+            ('replicas' '=' replicas=INT)?
+            (restart_policy=RestartPolicy)?
+        )#
     '}'
 ;
 
-RequirementEntry:
-    service=ID ('[' version=STRING ']')? (circuit_break?='circuit-break')?
+RestartPolicy:
+    'restart-policy' '{'
+        (
+            ('condition' '=' condition=RestartCondition)? |
+            ('delay' '=' delay=INT)? |
+            ('max_attempts' '=' max_attempts=INT)? |
+            ('window' '=' window=INT)
+        )#
+    '}'
 ;
 
+RestartCondition:
+    "any" | "on-failure" | "any"
+;
 
 APIDecl:
     'api' '{'

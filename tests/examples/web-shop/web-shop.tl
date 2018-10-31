@@ -1,28 +1,34 @@
 config-server ConfigServer {
-    version="0.0.1"
-    port=9090
+
     search_path="file://${user.home}/Projects/MicroServiceProps/centralProperties/"
+    deployment {
+        version="0.0.1"
+        port=9090
+    }
 }
 
 service-registry ServiceRegistry{
-    version="0.0.1"
     tool=eureka
-    port=9091
-    uri="http://localhost"
     client_mode=False
+    deployment {
+        version="0.0.1"
+        port=9091
+        url="http://localhost"
+    }
 }
 
 service UserService {
-    version="0.0.1"
-    port=8080
+
     config_server=ConfigServer
     service_registry=ServiceRegistry
-    lang="java"
 
     deployment {
+        version="0.0.1"
+        port=8080
+        lang="java"
         packaging="jar"
         host=PC
-        n=1
+        replicas=1
     }
 
     communication_style=REST
@@ -63,16 +69,17 @@ service UserService {
 }
 
 service PaymentService {
-    version="0.0.1"
-    port=8081
+
     config_server=ConfigServer
     service_registry=ServiceRegistry
-    lang="java"
 
     deployment {
+        version="0.0.1"
+        port=8081
+        lang="java"
         packaging="jar"
         host=PC
-        n=1
+        replicas=1
     }
 
     communication_style=REST
@@ -94,16 +101,17 @@ service PaymentService {
 }
 
 service ShoppingCartService {
-    version="0.0.1"
-    port=8082
+
     config_server=ConfigServer
     service_registry=ServiceRegistry
-    lang="java"
 
     deployment {
+        version="0.0.1"
+        port=8082
+        lang="java"
         packaging="jar"
         host=PC
-        n=1
+        replicas=1
     }
 
     communication_style=REST
@@ -129,16 +137,17 @@ service ShoppingCartService {
 }
 
 service ProductService {
-    version="0.0.1"
-    port=8083
+
     config_server=ConfigServer
     service_registry=ServiceRegistry
-    lang="java"
 
     deployment {
+        version="0.0.1"
+        port=8083
+        lang="java"
         packaging="jar"
         host=PC
-        n=1
+        replicas=1
     }
 
     communication_style=REST

@@ -6,7 +6,7 @@ from talkie.lang.meta import get_metamodel
 from talkie.utils import get_root_path
 
 
-def test_example():
+def test_web_shop():
     examples_path = os.path.join(get_root_path(), "tests", "examples",
                                  "web-shop")
 

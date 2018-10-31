@@ -1,5 +1,5 @@
 spring.application.name={{registry_name}}
-eureka.client.serviceUrl.defaultZone:{{uri}}:{{port}}/
+eureka.client.serviceUrl.defaultZone:{{url}}:{{port}}/eureka
 server.port={{port}}
 eureka.client.register-with-eureka={{client_mode}}
 eureka.client.fetch-registry=false

@@ -24,7 +24,7 @@ class Module:
     def service_instances(self):
         for decl in self.decls:
             if isinstance(decl, ServiceDecl):
-                for i in range(decl.num_of_instances):
+                for i in range(decl.replicas):
                     yield Service(decl, i)
 
     @property
@@ -60,27 +60,45 @@ class Module:
                 dep.resolve_rest(rest_info)
 
 
-class ServiceObject:
+class Deployable:
+    """Base class for all deployable objects"""
+    def __init__(self, deployment=None):
+        self.deployment = deployment
+
+    @property
+    def version(self):
+        return self.deployment.version
+
+    @property
+    def port(self):
+        return self.deployment.port
+
+    @property
+    def url(self):
+        return self.deployment.url
+
+    @property
+    def replicas(self):
+        return self.deployment.replicas
+
+    @property
+    def lang(self):
+        return self.deployment.lang
+
+
+class ServiceObject(Deployable):
     """Base class for all services
 
     Contains information about deployment, communication style, etc.
     """
 
-    def __init__(self, parent=None, name=None, version=None, port=None,
-                 config_server=None, service_registry=None, lang=None,
-                 packaging=None, host=None, num_of_instances=None,
-                 comm_style=None):
-
+    def __init__(self, parent=None, name=None, config_server=None,
+                 service_registry=None, deployment=None, comm_style=None):
+        super().__init__(deployment)
         self.parent = parent
         self.name = name
-        self.version = version
-        self.port = port
         self.config_server = config_server
         self.service_registry = service_registry
-        self.lang = lang
-        self.packaging = packaging
-        self.host = host
-        self.num_of_instances = num_of_instances
         self.comm_style = comm_style
 
         # Services upon whom this service depends on.
@@ -93,13 +111,11 @@ class APIGateway(ServiceObject):
     """Special kind of service that provides single entry point to a cluster
     of other services.
     """
-    def __init__(self, parent=None, name=None, version=None, port=None,
-                 config_server=None, service_registry=None, lang=None,
-                 packaging=None, host=None, num_of_instances=None,
-                 comm_style=None, gateway_for=None):
-        super().__init__(parent, name, version, port, config_server,
-                         service_registry, lang, packaging, host,
-                         num_of_instances, comm_style)
+    def __init__(self, parent=None, name=None, config_server=None,
+                 service_registry=None, deployment=None, comm_style=None,
+                 gateway_for=None):
+        super().__init__(parent, name, config_server, service_registry,
+                         deployment, comm_style)
 
         self._gateway_for = gateway_for
 
@@ -111,14 +127,11 @@ class APIGateway(ServiceObject):
 class ServiceDecl(ServiceObject):
     """Service declaration object"""
 
-    def __init__(self, parent=None, name=None, version=None, port=None,
-                 config_server=None, service_registry=None, lang=None,
-                 packaging=None, host=None, num_of_instances=None,
-                 comm_style=None, api=None, requires=None):
-        super().__init__(parent, name, version, port, config_server,
-                         service_registry, lang, packaging, host,
-                         num_of_instances, comm_style)
-        self.requires = requires
+    def __init__(self, parent=None, name=None, config_server=None,
+                 service_registry=None, deployment=None, comm_style=None,
+                 api=None):
+        super().__init__(parent, name, config_server, service_registry,
+                         deployment, comm_style)
         self.api = api
 
     @property
@@ -159,40 +172,32 @@ class Service:
 
     @property
     def version(self):
-        return self.type.version
+        return self.type.deployment.version
 
 
-class ServiceRegistryDecl:
+class ServiceRegistryDecl(Deployable):
     """Registry of services. Contains info about their status (health),
     location, number of instances, etc.
     """
 
-    def __init__(self, parent, name=None, tool=None, port=None, uri=None,
-                 client_mode=False, version=None):
+    def __init__(self, parent, name=None, tool=None,
+                 client_mode=False, deployment=None):
+        super().__init__(deployment)
         self.name = name
-        self.version = version
         self.parent = parent
         self.tool = tool
-        self.uri = uri
-        self.port = port
         self.client_mode = client_mode
 
-    @property
-    def url(self):
-        return "{}:{}/{}".format(self.uri, self.port, self.tool)
-
-
-class ConfigServerDecl:
+class ConfigServerDecl(Deployable):
     """A special service that keep configuration files that are being used by
     other services.
     """
-    def __init__(self, parent, name=None, version=None, port=None,
-                 search_path=None):
+    def __init__(self, parent, name=None, search_path=None, deployment=None):
+        super().__init__(deployment)
+
         self.parent = parent
         self.name = name
-        self.version = version
         self.search_path = search_path
-        self.port = port
 
 
 class Function:

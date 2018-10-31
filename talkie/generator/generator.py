@@ -105,7 +105,9 @@ def _create_java_service(output_path, service):
                                  service.type.config_server.port
 
     if service.type.service_registry:
-        d["service_registry_url"] = service.type.service_registry.url
+        reg = service.type.service_registry
+        url = "%s:%s/eureka" % (reg.url, reg.port)
+        d["service_registry_url"] = url
 
     bootstrap_template.stream(d).dump(os.path.join(root,
                                                    "bootstrap.properties"))
@@ -208,7 +210,7 @@ def _create_eureka_serv_registry(output_path, serv_registry):
 
     d = {
         "registry_name": reg_name,
-        "uri": serv_registry.uri,
+        "url": serv_registry.url,
         "port": "${PORT:%s}" % reg_port,
         "client_mode": "true" if serv_registry.client_mode else "false",
         "version": reg_version

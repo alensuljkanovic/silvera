@@ -1,29 +1,34 @@
 config-server ConfigServer {
-    version="0.0.1"
-    port=9090
     search_path="file://${user.home}/Projects/MicroServiceProps/centralProperties/"
+
+    deployment {
+        version="0.0.1"
+        port=9090
+    }
 }
 
 service-registry EmployeeEurekaServer{
-    version="0.0.1"
     tool=eureka
-    port=9091
-    uri="http://localhost"
     client_mode=False
+    deployment {
+        version="0.0.1"
+        port=9091
+    }
 }
 
 
 api-gateway APIGateway {
-    version="1.0.0"
-    port=8080
+
     config_server=ConfigServer
     service_registry=EmployeeEurekaServer
-    lang="java"
 
     deployment {
+        version="1.0.0"
+        port=8080
+        lang="java"
         packaging="jar"
         host=PC
-        n=1
+        replicas=1
     }
 
     communication_style=REST
@@ -35,16 +40,17 @@ api-gateway APIGateway {
 
 
 service EmployeeSearch {
-    version="1.0.0"
-    port=8080
+
     config_server=ConfigServer
     service_registry=EmployeeEurekaServer
-    lang="java"
 
     deployment {
+        version="1.0.0"
+        port=8080
+        lang="java"
         packaging="jar"
         host=PC
-        n=1
+        replicas=1
     }
 
     communication_style=REST
