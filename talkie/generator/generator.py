@@ -5,11 +5,11 @@ import os
 from jinja2 import Environment
 from jinja2.loaders import FileSystemLoader
 
-from talkie.const import MVN_GENERATE
+from talkie.const import MVN_GENERATE, HOST_CONTAINER
 from talkie.generator.platforms import JAVA, convert_complex_type, \
     get_def_ret_val
 from talkie.talkie import CustomType
-from talkie.utils import get_templates_path, decode_byte_str
+from talkie.utils import get_templates_path, decode_byte_str, get_root_path
 
 
 class TalkieGenerator:
@@ -26,15 +26,36 @@ class TalkieGenerator:
 
     def generate(self, output_path):
         """Generates code."""
+        compose = {
+            "version": "3.6",
+            "services": []
+        }
+
+        def _create_entry(obj, env=True):
+            res = {
+                "name": obj.name,
+                "ports": ",".join(["{0}:{0}".format(obj.port)])
+            }
+            # res["environment"] =
+            return res
 
         for config_serv in self.module.config_servers:
             self._generate_config_server(output_path, config_serv)
+            if config_serv.host == HOST_CONTAINER:
+                compose["services"].append(_create_entry(config_serv))
 
         for serv_registry in self.module.service_registries:
             self._generate_serv_registry(output_path, serv_registry)
+            if serv_registry.host == HOST_CONTAINER:
+                compose["services"].append(_create_entry(serv_registry))
 
         for service in self.module.service_instances:
             self._generate_service(output_path, service)
+            if service.type.host == HOST_CONTAINER:
+                compose["services"].append(_create_entry(service))
+
+        if compose["services"]:
+            _generate_docker_compose(output_path, compose)
 
     def _generate_service(self, output_path, service):
         target_lang = service.type.lang
@@ -88,6 +109,9 @@ def _create_java_service(output_path, service):
 
     mvn_generate(output_path, service_name)
     root = os.path.join(output_path, service_name)
+    res_path = os.path.join(root, "src", "main", "resources")
+    if not os.path.exists(res_path):
+        os.mkdir(res_path)
 
     #
     # Generate bootstrap.properties
@@ -109,7 +133,7 @@ def _create_java_service(output_path, service):
         url = "%s:%s/eureka" % (reg.url, reg.port)
         d["service_registry_url"] = url
 
-    bootstrap_template.stream(d).dump(os.path.join(root,
+    bootstrap_template.stream(d).dump(os.path.join(res_path,
                                                    "bootstrap.properties"))
 
     #
@@ -195,6 +219,17 @@ def _create_java_service(output_path, service):
     _generate_run_script(output_path, service_name, service_version,
                          service_port)
 
+    if service.type.host == HOST_CONTAINER:
+        # Generate Dockerfile
+        _generate_dockerfile(output_path, service_name, service_version,
+                             service_port)
+
+        # # Copy wait-for-it.sh
+        # from shutil import copy2
+        # src = os.path.join(get_root_path(), "talkie", "generator", "utils",
+        #                    "wait-for-it.sh")
+        # copy2(src, root)
+
 
 def _create_eureka_serv_registry(output_path, serv_registry):
     """Creates Eureka service registry"""
@@ -217,13 +252,16 @@ def _create_eureka_serv_registry(output_path, serv_registry):
     }
 
     reg_path = os.path.join(output_path, reg_name)
-
+    res_path = os.path.join(reg_path, "src", "main", "resources")
+    if not os.path.exists(res_path):
+        os.mkdir(res_path)
     #
     # Generate bootstrap.properties
     #
     bootstrap_template = env.get_template("eureka_bootstrap.template")
-    bootstrap_template.stream(d).dump(os.path.join(reg_path,
+    bootstrap_template.stream(d).dump(os.path.join(res_path,
                                                    "bootstrap.properties"))
+
     #
     # Generate pom.xml
     #
@@ -243,6 +281,10 @@ def _create_eureka_serv_registry(output_path, serv_registry):
     # Generate run script
     #
     _generate_run_script(output_path, reg_name, reg_version, reg_port)
+
+    if serv_registry.host == HOST_CONTAINER:
+        # Generate Dockerfile
+        _generate_dockerfile(output_path, reg_name, reg_version, reg_port)
 
 
 def _create_config_server(output_path, config_server):
@@ -264,11 +306,15 @@ def _create_config_server(output_path, config_server):
         "version": serv_version
     }
 
+    res_path = os.path.join(conf_path, "src", "main", "resources")
+    if not os.path.exists(res_path):
+        os.mkdir(res_path)
+
     #
     # Generate bootstrap.properties
     #
     bootstrap_template = env.get_template("bootstrap_properties.template")
-    bootstrap_template.stream(d).dump(os.path.join(conf_path,
+    bootstrap_template.stream(d).dump(os.path.join(res_path,
                                                    "bootstrap.properties"))
     #
     # Generate pom.xml
@@ -288,6 +334,10 @@ def _create_config_server(output_path, config_server):
     # Generate run script
     #
     _generate_run_script(output_path, serv_name, serv_version, serv_port)
+
+    if config_server.host == HOST_CONTAINER:
+        # Generate Dockerfile
+        _generate_dockerfile(output_path, serv_name, serv_version, serv_port)
 
 
 def calculate_type(platform, _type):
@@ -390,6 +440,44 @@ def _generate_run_script(output_path, app_name, app_version, app_port):
 
     d = {"name": app_name, "version": app_version, "port": app_port}
     run_template.stream(d).dump(out)
+
+
+def _generate_dockerfile(output_path, app_name, app_version, app_port):
+    """Generates Dockerfile for application in its root folder
+
+    Args:
+        output_path (str): path to the dir where application root is located
+        app_name (str): application name
+        app_version (str): application version
+        app_version (str): port that application uses
+
+    Returns:
+        None
+    """
+    templates_path = os.path.join(get_templates_path(), JAVA)
+    env = Environment(loader=FileSystemLoader(templates_path))
+    template = env.get_template("Dockerfile.template")
+
+    out = os.path.join(output_path, app_name, "Dockerfile")
+
+    d = {"app_name": app_name, "app_version": app_version, "app_port": app_port}
+    template.stream(d).dump(out)
+
+
+def _generate_docker_compose(output_path, d):
+    """Generates docker-compose.yml which is used to start all containers at
+    the same time
+
+    Args:
+        output_path (str): path where file will be generated
+        d (dict): data needed for template
+    """
+    templates_path = os.path.join(get_templates_path(), JAVA)
+    env = Environment(loader=FileSystemLoader(templates_path))
+    template = env.get_template("docker_compose.template")
+
+    out = os.path.join(output_path, "docker-compose.yml")
+    template.stream(d).dump(out)
 
 
 def mvn_generate(output_path, app_name):

@@ -1,0 +1,11 @@
+version: "{{version}}"
+services:
+  {% for s in services %}
+  {{s.name|lower}}:
+    build: ./{{s.name}}
+    ports:
+    - "{{s.ports}}"
+    hostname: {{s.name|lower}}
+    environment:
+    - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://serviceregistry:9091/eureka
+  {% endfor %}

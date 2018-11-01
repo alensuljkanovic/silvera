@@ -1,7 +1,6 @@
 """
 This module contains platform data.
 """
-from talkie.generator.utils import camelcase_to_snakecase
 
 # Platform names
 from talkie.talkie import CustomType, TypedList
@@ -89,7 +88,7 @@ platforms = {
     PYTHON: {
         DYNAMICALLY_TYPED: True,
         FILE_EXTENSION: ".py",
-        MODULE_CASE: camelcase_to_snakecase,
+        # MODULE_CASE: camelcase_to_snakecase,
         NUMB_OF_MODULES: ONE_MODULE,
         INIT_FILE: "__init__",
         TYPES: {

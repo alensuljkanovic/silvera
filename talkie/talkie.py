@@ -85,6 +85,10 @@ class Deployable:
     def lang(self):
         return self.deployment.lang
 
+    @property
+    def host(self):
+        return self.deployment.host
+
 
 class ServiceObject(Deployable):
     """Base class for all services
