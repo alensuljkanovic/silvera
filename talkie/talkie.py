@@ -39,6 +39,12 @@ class Module:
             if isinstance(decl, ConfigServerDecl):
                 yield decl
 
+    @property
+    def connections(self):
+        for decl in self.decls:
+            if decl.__class__.__name__ == "Connection":
+                yield decl
+
     def add_rest_info(self, rest_info):
         """Goes through all services who use REST as a communication style and
         adds mappings."""
