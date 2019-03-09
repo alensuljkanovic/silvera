@@ -16,7 +16,7 @@ def test_web_shop():
     metamodel = get_metamodel()
     path = os.path.join(examples_path, "web-shop.tl")
     model = metamodel.model_from_file(path)
-    model.add_rest_info(p)
+    model.add_rest_info()
     print(model)
 
     output_dir = os.path.join(get_root_path(), "talkie", "generator",

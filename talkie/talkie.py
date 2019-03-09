@@ -1,7 +1,7 @@
 """
 This module contains the implementation of talkie IDL.
 """
-from talkie.const import REST
+from talkie.const import REST, HTTP_GET
 import urllib.parse as url_parser
 
 
@@ -45,12 +45,36 @@ class Module:
             if decl.__class__.__name__ == "Connection":
                 yield decl
 
-    def add_rest_info(self, rest_info):
+    def add_rest_info(self, rest_info=None):
         """Goes through all services who use REST as a communication style and
         adds mappings."""
         if rest_info is None:
-            return
+            self._resolve_rest_from_tl()
+        else:
+            self._resolve_rest_from_ext(rest_info)
 
+    def _resolve_rest_from_tl(self):
+        """Try to resolve REST mappings for each service based on the model
+        and annotation, if they exist.
+        """
+        rest_serv = [d for d in self.decls
+                     if isinstance(d, ServiceDecl) and d.uses_rest]
+
+        for decl in rest_serv:
+            decl.resolve_rest()
+
+        for decl in rest_serv:
+            for dep in decl.dependencies:
+                dep.resolve_rest()
+
+    def _resolve_rest_from_ext(self, rest_info):
+        """Create REST mappings for each service based on the description
+        provided by the external YAML file.
+
+        Args:
+            rest_info(dict): dict of information from YAML file
+
+        """
         rest_serv = [d for d in self.decls
                      if isinstance(d, ServiceDecl) and d.uses_rest]
         for decl in rest_serv:
@@ -148,7 +172,40 @@ class ServiceDecl(ServiceObject):
     def uses_rest(self):
         return self.comm_style == REST
 
-    def resolve_rest(self, rest_info):
+    @property
+    def domain_objs(self):
+        return {obj.name for obj in self.api.typedefs}
+
+    def resolve_rest(self, rest_info=None):
+        if rest_info is None:
+            self._resolve_rest_from_tl()
+        else:
+            self._resolve_rest_from_ext(rest_info)
+
+    def _resolve_rest_from_tl(self):
+        path = "%s/" % self.name.lower()
+        for func in self.api.functions:
+
+            ann = func.annotation
+            if ann is not None:
+                func.http_verb = ann.method
+
+                mapping = ann.mapping if ann.mapping else "%s/" % func.name.lower()
+                if func.http_verb == HTTP_GET and func.params:
+                    mapping += "{%s}" % func.params[0].name
+
+                func.add_rest_mappings(path + mapping)
+                continue
+
+            params = func.params
+
+            if not params or len(params) > 1:
+                func.http_verb = HTTP_GET
+            else:
+                raise TypeError("Cannot decide which HTTP method to"
+                                "use for function: '%s'" % func.name)
+
+    def _resolve_rest_from_ext(self, rest_info):
         path = rest_info["path"]
         methods = rest_info["methods"]
         for d in methods:
@@ -162,6 +219,9 @@ class ServiceDecl(ServiceObject):
             for func in dep_func:
                 if func.name == name:
                     func.add_rest_mappings(path + mapping)
+
+    def __str__(self):
+        return "ServiceDecl: %s" % self.name
 
 
 class Service:
@@ -198,6 +258,7 @@ class ServiceRegistryDecl(Deployable):
         self.tool = tool
         self.client_mode = client_mode
 
+
 class ConfigServerDecl(Deployable):
     """A special service that keep configuration files that are being used by
     other services.
@@ -212,15 +273,18 @@ class ConfigServerDecl(Deployable):
 
 class Function:
     """Object representation of function declaration."""
-    def __init__(self, parent, name=None, ret_type=None, params=None):
+    def __init__(self, parent, name=None, ret_type=None, params=None,
+                 annotation=None):
         self.parent = parent
         self.name = name
         self.ret_type = ret_type
         self.params = params if params else []
         self.rest_path = None
+        self.http_verb = None
         self.cb_pattern = None
         self.cb_fallback = None
         self.dep_rest_path = None
+        self.annotation = annotation
 
     def add_rest_mappings(self, mapping):
 
@@ -250,21 +314,42 @@ class Function:
 
     def clone(self):
         params = [p.clone() for p in self.params]
-        return Function(None, self.name, self.ret_type, params)
+        ann = self.annotation
+        if self.annotation:
+            ann = Annotation(None, ann.method, ann.mapping)
+
+        return Function(None, self.name, self.ret_type, params, ann)
+
+    def __str__(self):
+        return "Function %s" % self.name
 
 
 class FunctionParameter:
     """Object representation of function parameter."""
-    def __init__(self, parent, name=None, type=None, default=None):
+    def __init__(self, parent, name=None, type=None, default=None,
+                 name_mapping=None):
         self.parent = parent
         self.type = type
         self.name = name
         self.default = default
+        self.name_mapping = name_mapping
         self.url_placeholder = False
         self.query_param = False
 
     def clone(self):
-        return FunctionParameter(None, self.name, self.type, self.default)
+        return FunctionParameter(None, self.name, self.type, self.default,
+                                 self.name_mapping)
+
+
+class Annotation:
+
+    def __init__(self, parent, method=None, mapping=None):
+        self.parent = parent
+        self.method = method
+        self.mapping = mapping
+
+    def clone(self):
+        return Annotation(None, self.method, self.mapping)
 
 
 class TypeDef:

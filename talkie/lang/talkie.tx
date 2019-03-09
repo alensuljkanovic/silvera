@@ -128,14 +128,28 @@ CommunicationStyle:
     "REST" | "gRPC" | "thrift" | "kafka" | "RabbitMQ" | "custom"
 ;
 
+RESTAnnotation:
+    '@rest' '('
+        (
+            ('method' '=' method=HTTPMethod)? |
+            ('mapping' '=' mapping=STRING)?
+        )#
+    ')'
+;
+
+HTTPMethod:
+    'POST' | 'PUT' | 'GET' | 'DELETE'
+;
 
 Function:
+    (annotation=RESTAnnotation)?
     ret_type=ReturnType name=ID '(' params*=FunctionParameter[','] ')'
 ;
 
 FunctionParameter:
-    type=DataType name=ID ('='default=DefaultValue)?
+    type=DataType name=ID ('='default=DefaultValue)? (':'name_mapping=ID)?
 ;
+
 
 DefaultValue:
     'none' | STRING | FLOAT | INT | BOOL

@@ -22,8 +22,11 @@ public class {{service_name}}Service {
         {% if dependency_service %}
         RestTemplate restTemplate = new RestTemplate();
         URI uri = URI.create({{get_rest_call(function)}});
-
+        {% if function.http_verb == HTTP_GET %}
         return restTemplate.getForObject(uri, {{function.ret_type|converttype}}.class);
+        {% else %}
+        return restTemplate.postForObject(uri, {{function|unfold_function_params}}, {{function.ret_type|converttype}}.class);
+        {% endif%}
         {% else %}
         throw new java.lang.UnsupportedOperationException("Not implemented yet.");
         {% endif %}

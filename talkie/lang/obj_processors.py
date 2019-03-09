@@ -17,6 +17,5 @@ def module_processor(module):
         if hasattr(start, "circuit_breaked"):
             start.circuit_breaked = True
 
-        end = connection.end
-        d = create_dependency_obj(end, connection)
+        d = create_dependency_obj(connection)
         start.dependencies.append(d)

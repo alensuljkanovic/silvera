@@ -395,16 +395,20 @@ def get_default_for_cb_pattern(platform, func):
 
 
 def get_rest_call(platform, func):
+    """Returns the REST URL towards the function of the service that current
+    service depends upon"""
     if platform == JAVA:
         port = func.parent.port
         url = 'http://localhost:%s' % port
 
         rest_mapping = func.dep_rest_path
-        return get_java_rest_call(url, rest_mapping)
+        return url + "/" + rest_mapping
+        # return get_java_rest_call(url, rest_mapping)
 
 
 def get_java_rest_call(url, rest_mapping):
     import re
+    print(url, rest_mapping)
     placeholders = re.findall(r'\{(.*?)\}', rest_mapping)
     base_url = rest_mapping.split("/{%s}" % placeholders[0])[0]
     rest_mapping = rest_mapping.replace(base_url, "")

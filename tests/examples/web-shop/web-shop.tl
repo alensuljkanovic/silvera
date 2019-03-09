@@ -60,9 +60,17 @@ service UserService {
         ]
 
         User login(str userId, str password)
+
+        @rest(method=POST)
         bool checkUser(str userId)
+
+        @rest(method=POST)
         bool register(User user)
+
+        @rest(method=GET)
         PaymentDetail getPaymentInfo(str userId)
+
+        @rest(method=POST)
         bool checkPaymentInfo(str userId)
 
     }
@@ -94,6 +102,7 @@ service PaymentService {
             date paymentDate
         ]
 
+        @rest(method=POST)
         Payment createPayment(Payment payment)
 
 
@@ -132,6 +141,7 @@ service ShoppingCartService {
             double productPrice
         ]
 
+        @rest(method=POST)
         ShoppingCart createShoppingCart(ShoppingCart cart)
     }
 }
@@ -162,8 +172,13 @@ service ProductService {
             double price
         ]
 
+        @rest(method=GET)
         int getProductQTY(str productId)
+
+        @rest(method=GET)
         Product getProduct(int productId)
+
+        @rest(method=GET)
         bool checkProduct(int productId)
     }
 }
