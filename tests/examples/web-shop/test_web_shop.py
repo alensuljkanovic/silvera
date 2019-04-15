@@ -3,6 +3,7 @@ import yaml
 
 from talkie.generator.generator import TalkieGenerator
 from talkie.lang.meta import get_metamodel
+from talkie.resolvers import RESTResolver
 from talkie.utils import get_root_path
 
 
@@ -16,8 +17,9 @@ def test_web_shop():
     metamodel = get_metamodel()
     path = os.path.join(examples_path, "web-shop.tl")
     model = metamodel.model_from_file(path)
-    model.add_rest_info()
-    print(model)
+
+    resolver = RESTResolver()
+    resolver.resolve_model(model)
 
     output_dir = os.path.join(get_root_path(), "talkie", "generator",
                               "src-gen")

@@ -1,7 +1,7 @@
 """
 This module contains the implementation of talkie IDL.
 """
-from talkie.const import REST, HTTP_GET
+from talkie.const import REST
 import urllib.parse as url_parser
 
 
@@ -27,6 +27,13 @@ class Module:
                 for i in range(decl.replicas):
                     yield Service(decl, i)
 
+    def service_by_name(self, service_name):
+        for decl in self.decls:
+            if isinstance(decl, ServiceDecl):
+                if decl.name == service_name:
+                    return decl
+        return KeyError("Service with name '%s' not found!" % service_name)
+
     @property
     def service_registries(self):
         for decl in self.decls:
@@ -44,50 +51,6 @@ class Module:
         for decl in self.decls:
             if decl.__class__.__name__ == "Connection":
                 yield decl
-
-    def add_rest_info(self, rest_info=None):
-        """Goes through all services who use REST as a communication style and
-        adds mappings."""
-        if rest_info is None:
-            self._resolve_rest_from_tl()
-        else:
-            self._resolve_rest_from_ext(rest_info)
-
-    def _resolve_rest_from_tl(self):
-        """Try to resolve REST mappings for each service based on the model
-        and annotation, if they exist.
-        """
-        rest_serv = [d for d in self.decls
-                     if isinstance(d, ServiceDecl) and d.uses_rest]
-
-        for decl in rest_serv:
-            decl.resolve_rest()
-
-        for decl in rest_serv:
-            for dep in decl.dependencies:
-                dep.resolve_rest()
-
-    def _resolve_rest_from_ext(self, rest_info):
-        """Create REST mappings for each service based on the description
-        provided by the external YAML file.
-
-        Args:
-            rest_info(dict): dict of information from YAML file
-
-        """
-        rest_serv = [d for d in self.decls
-                     if isinstance(d, ServiceDecl) and d.uses_rest]
-        for decl in rest_serv:
-            try:
-                d = rest_info[decl.name]
-                decl.resolve_rest(d)
-            except KeyError:
-                raise RuntimeError("REST mapping not defined for service"
-                                   " %s" % decl.name)
-
-        for decl in rest_serv:
-            for dep in decl.dependencies:
-                dep.resolve_rest(rest_info)
 
 
 class Deployable:
@@ -167,6 +130,32 @@ class ServiceDecl(ServiceObject):
         super().__init__(parent, name, config_server, service_registry,
                          deployment, comm_style)
         self.api = api
+        self.dep_functions = []
+
+    @property
+    def functions(self):
+        funcs = [f for f in self.api.functions]
+        funcs.extend(self.dep_functions)
+
+        return funcs
+
+    def get_function(self, func_name):
+        for f in self.api.functions:
+            if f.name == func_name:
+                return f
+
+        # Check if function is contained in a service that self depends upon
+        f = None
+        for dep_serv in self.dependencies:
+            try:
+                f = dep_serv.get_function(func_name)
+            except KeyError:
+                pass
+
+        if not f:
+            raise  KeyError("Function not found!")
+
+        return f
 
     @property
     def uses_rest(self):
@@ -175,50 +164,6 @@ class ServiceDecl(ServiceObject):
     @property
     def domain_objs(self):
         return {obj.name for obj in self.api.typedefs}
-
-    def resolve_rest(self, rest_info=None):
-        if rest_info is None:
-            self._resolve_rest_from_tl()
-        else:
-            self._resolve_rest_from_ext(rest_info)
-
-    def _resolve_rest_from_tl(self):
-        path = "%s/" % self.name.lower()
-        for func in self.api.functions:
-
-            ann = func.annotation
-            if ann is not None:
-                func.http_verb = ann.method
-
-                mapping = ann.mapping if ann.mapping else "%s/" % func.name.lower()
-                if func.http_verb == HTTP_GET and func.params:
-                    mapping += "{%s}" % func.params[0].name
-
-                func.add_rest_mappings(path + mapping)
-                continue
-
-            params = func.params
-
-            if not params or len(params) > 1:
-                func.http_verb = HTTP_GET
-            else:
-                raise TypeError("Cannot decide which HTTP method to"
-                                "use for function: '%s'" % func.name)
-
-    def _resolve_rest_from_ext(self, rest_info):
-        path = rest_info["path"]
-        methods = rest_info["methods"]
-        for d in methods:
-            name = d["name"]
-            mapping = d["path"]
-            for func in self.api.functions:
-                if func.name == name:
-                    func.add_rest_mappings(path + mapping)
-
-            dep_func = [f for d in self.dependencies for f in d.functions]
-            for func in dep_func:
-                if func.name == name:
-                    func.add_rest_mappings(path + mapping)
 
     def __str__(self):
         return "ServiceDecl: %s" % self.name
@@ -283,7 +228,6 @@ class Function:
         self.http_verb = None
         self.cb_pattern = None
         self.cb_fallback = None
-        self.dep_rest_path = None
         self.annotation = annotation
 
     def add_rest_mappings(self, mapping):

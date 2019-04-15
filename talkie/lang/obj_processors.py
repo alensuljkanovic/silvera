@@ -14,8 +14,16 @@ def module_processor(module):
         # Mark start as 'circuit_breaked'
         #
         start = connection.start
+        end = connection.end
         if hasattr(start, "circuit_breaked"):
             start.circuit_breaked = True
 
-        d = create_dependency_obj(connection)
-        start.dependencies.append(d)
+        use = {c.method_name: (c.failure_pattern, c.fallback_method)
+               for c in connection.circuit_break_defs}
+
+        for orig_fn in end.api.functions:
+            if orig_fn.name in use:
+                start.dep_functions.append(orig_fn)
+
+        # d = create_dependency_obj(connection)
+        start.dependencies.append(end)

@@ -9,7 +9,7 @@ from talkie.const import MVN_GENERATE, HOST_CONTAINER
 from talkie.generator.platforms import JAVA, convert_complex_type, \
     get_def_ret_val
 from talkie.talkie import CustomType
-from talkie.utils import get_templates_path, decode_byte_str, get_root_path
+from talkie.utils import get_templates_path, decode_byte_str
 
 
 class TalkieGenerator:
@@ -204,7 +204,8 @@ def _create_java_service(output_path, service):
         s_data = {
             "service_name": s.name,
             "package_name": service_name,
-            "functions": s.functions,
+            "functions": [f for f in service.type.dep_functions
+                          if f in s.api.functions],
             "use_circuit_breaker": True,
             "dependency_service": True
         }
@@ -398,10 +399,10 @@ def get_rest_call(platform, func):
     """Returns the REST URL towards the function of the service that current
     service depends upon"""
     if platform == JAVA:
-        port = func.parent.port
+        port = func.parent.parent.port
         url = 'http://localhost:%s' % port
 
-        rest_mapping = func.dep_rest_path
+        rest_mapping = func.rest_path
         return url + "/" + rest_mapping
         # return get_java_rest_call(url, rest_mapping)
 
