@@ -2,7 +2,6 @@
 This module contains object processors attached to Talkie objects. Object
 processors are used during parsing.
 """
-from talkie.utils import create_dependency_obj
 
 
 def module_processor(module):
