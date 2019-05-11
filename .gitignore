@@ -8,3 +8,6 @@ experimenting/**
 
 .idea
 .cache
+
+talkie/generator/src-gen/*
+!talkie/generator/src-gen/.gitkeep

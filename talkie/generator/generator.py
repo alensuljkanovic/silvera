@@ -1,6 +1,8 @@
 """
 This module contains code generator for Talkie IDL.
 """
+from collections import defaultdict
+
 import os
 from jinja2 import Environment
 from jinja2.loaders import FileSystemLoader
@@ -160,7 +162,8 @@ def _create_java_service(output_path, service):
     controller_data = {
         "service_name": service_name,
         "api": service.type.api,
-        "dependencies": service.type.dependencies
+        "dep_names": [s.name for s in service.type.dependencies],
+        "dep_functions": service.type.dep_functions
     }
     controller_template = env.get_template("controller.template")
     controller_template.stream(controller_data).dump(os.path.join(controller_path,
@@ -200,12 +203,15 @@ def _create_java_service(output_path, service):
         os.path.join(service_path,
                      service_name + "Service.java"))
 
+    fns_by_service = defaultdict(list)
+    for fn in service.type.dep_functions:
+        fns_by_service[fn.service_name].append(fn)
+
     for s in service.type.dependencies:
         s_data = {
             "service_name": s.name,
             "package_name": service_name,
-            "functions": [f for f in service.type.dep_functions
-                          if f in s.api.functions],
+            "functions": fns_by_service[s.name],
             "use_circuit_breaker": True,
             "dependency_service": True
         }
@@ -399,10 +405,10 @@ def get_rest_call(platform, func):
     """Returns the REST URL towards the function of the service that current
     service depends upon"""
     if platform == JAVA:
-        port = func.parent.parent.port
+        port = func.dep.parent.parent.port
         url = 'http://localhost:%s' % port
 
-        rest_mapping = func.rest_path
+        rest_mapping = func.dep.rest_path
         return url + "/" + rest_mapping
         # return get_java_rest_call(url, rest_mapping)
 

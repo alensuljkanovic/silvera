@@ -17,9 +17,9 @@ public class {{service_name}}Controller {
     @Autowired
     {{service_name}}Service {{service_name|firstlower}}Service;
 
-    {% for dependency in dependencies %}
+    {% for dependency in dep_names %}
     @Autowired
-    {{dependency.name}}Service {{dependency.name|firstlower}}Service;
+    {{dependency}}Service {{dependency|firstlower}}Service;
     {% endfor %}
 
     {% for function in api.functions %}
@@ -29,14 +29,11 @@ public class {{service_name}}Controller {
     }
     {% endfor %}
 
-    {% for dependency in dependencies %}
-    {% for function in dependency.functions %}
+    {% for function in dep_functions %}
     @RequestMapping("{{function.rest_path}}")
     public {{function.ret_type|converttype}} {{function.name}}({{function|unfold_function_params_rest}}) {
-        return {{dependency.name|firstlower}}Service.{{function.name}}({{function|param_names}});
+        return {{function.service_name|firstlower}}Service.{{function.name}}({{function|param_names}});
     }
     {% endfor %}
-    {% endfor %}
-
 
 }

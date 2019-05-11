@@ -140,22 +140,22 @@ class ServiceDecl(ServiceObject):
         return funcs
 
     def get_function(self, func_name):
-        for f in self.api.functions:
+        for f in self.functions:
             if f.name == func_name:
                 return f
 
-        # Check if function is contained in a service that self depends upon
-        f = None
-        for dep_serv in self.dependencies:
-            try:
-                f = dep_serv.get_function(func_name)
-            except KeyError:
-                pass
+        # # Check if function is contained in a service that self depends upon
+        # f = None
+        # for dep_serv in self.dependencies:
+        #     try:
+        #         f = dep_serv.get_function(func_name)
+        #     except KeyError:
+        #         pass
+        #
+        # if not f:
+        raise  KeyError("Function not found!")
 
-        if not f:
-            raise  KeyError("Function not found!")
-
-        return f
+        # return f
 
     @property
     def uses_rest(self):
@@ -225,10 +225,17 @@ class Function:
         self.ret_type = ret_type
         self.params = params if params else []
         self.rest_path = None
+        self.dep = None
         self.http_verb = None
         self.cb_pattern = None
         self.cb_fallback = None
         self.annotation = annotation
+
+    @property
+    def service_name(self):
+        if self.dep:
+            return self.dep.parent.parent.name
+        return self.parent.parent.name
 
     def add_rest_mappings(self, mapping):
 

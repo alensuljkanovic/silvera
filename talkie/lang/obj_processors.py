@@ -22,7 +22,8 @@ def module_processor(module):
 
         for orig_fn in end.api.functions:
             if orig_fn.name in use:
-                start.dep_functions.append(orig_fn)
+                fn_clone = orig_fn.clone()
+                fn_clone.dep = orig_fn
+                start.dep_functions.append(fn_clone)
 
-        # d = create_dependency_obj(connection)
         start.dependencies.append(end)

@@ -79,8 +79,9 @@ def test_resolving_with_dependencies(metamodel, examples_path):
 
     office_service = model.service_by_name("OfficeService")
     office_print_func = office_service.get_function("print")
-    assert office_print_func.http_verb == HTTP_GET
-    assert office_print_func.rest_path == "printservice/print/{id}"
+    assert office_print_func.dep.rest_path == "printservice/print/{id}"
+    assert office_print_func.dep.http_verb == HTTP_GET
+    assert office_print_func.rest_path == "officeservice/print/{id}"
 
     office_print_func = office_service.get_function("addWorker")
     assert office_print_func.http_verb == HTTP_POST
