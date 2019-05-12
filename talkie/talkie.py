@@ -1,8 +1,41 @@
 """
 This module contains the implementation of talkie IDL.
 """
+import os
 from talkie.const import REST
 import urllib.parse as url_parser
+
+
+def fqn_to_path(fqn):
+    fqns = fqn.split(".")
+    path = os.sep.join(fqns[:-1]) + ".tl"
+    return path
+
+
+class Model:
+    """Model object"""
+
+    def __init__(self, root_dir, modules=None):
+        self.root_dir = root_dir
+        self.modules = modules if modules else []
+
+    def modules_dict(self):
+        return {m.path: m for m in self.modules}
+
+    def find_by_path(self, path):
+        try:
+            modules = self.modules_dict()
+            return modules[path]
+        except KeyError:
+            raise ValueError("Module '%s' not found." % path)
+
+    def find_by_fqn(self, fqn):
+        fqns = fqn.split(".")
+        path = os.sep.join(fqns[:-1]) + ".tl"
+        name = fqns[-1]
+
+        module = self.find_by_path(path)
+        return module.decl_by_name(name)
 
 
 class Module:
@@ -12,13 +45,37 @@ class Module:
     etc.
     """
 
-    def __init__(self, decls):
+    def __init__(self, decls, imports=None, model=None):
         """Initializes object
 
         Args:
             decls (list): list of declarations within module
+            imports (list): list of imports
         """
+        self.model = model
+        self.imports = imports if imports else []
         self.decls = decls
+        self._path = None
+        self.name = None
+
+    def __str__(self):
+        return self._path
+
+    def __repr__(self):
+        return self._path
+
+    @property
+    def path(self):
+        return self._path
+
+    @path.setter
+    def path(self, module_path):
+        self._path = module_path
+        self.name = os.path.basename(module_path)
+
+    def depends_on(self):
+        return [self.model.find_by_path(fqn_to_path(i.import_url))
+                for i in self.imports]
 
     @property
     def service_instances(self):
@@ -51,6 +108,13 @@ class Module:
         for decl in self.decls:
             if decl.__class__.__name__ == "Connection":
                 yield decl
+
+    def decl_by_name(self, name):
+        for decl in self.decls:
+            if hasattr(decl, "name") and decl.name == name:
+                return decl
+
+        raise KeyError("Declaration with name '%s' not found!" % name)
 
 
 class Deployable:

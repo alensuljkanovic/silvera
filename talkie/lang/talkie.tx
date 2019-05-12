@@ -1,6 +1,12 @@
 Module:
+    imports*=Import
     decls*=Declaration
 ;
+
+Import:
+    'import' import_url=STRING
+;
+
 
 Declaration:
     ConfigServerDecl | ServiceRegistryDecl | ServiceDecl | APIGateway | Connection
@@ -27,8 +33,8 @@ ServiceRegistryTool:
 
 APIGateway:
     'api-gateway' name=ID '{'
-        ('config_server' '=' config_server=[ConfigServerDecl])?
-        ('service_registry' '=' service_registry=[ServiceRegistryDecl])?
+        ('config_server' '=' config_server=FQN)?
+        ('service_registry' '=' service_registry=FQN)?
 
         deployment=Deployment
 
@@ -47,8 +53,8 @@ GatewayFor:
 ServiceDecl:
     'service' name=ID '{'
 
-        ('config_server' '=' config_server=[ConfigServerDecl])?
-        ('service_registry' '=' service_registry=[ServiceRegistryDecl])?
+        ('config_server' '=' config_server=FQN)?
+        ('service_registry' '=' service_registry=FQN)?
 
         deployment=Deployment
 
@@ -96,7 +102,7 @@ APIDecl:
 ;
 
 Connection:
-    'connection' start=[Declaration] '->' end=[Declaration] '{'
+    'connection' start=FQN '->' end=FQN '{'
         circuit_break_defs*=CBPerMethod
     '}'
 ;
@@ -229,6 +235,10 @@ TypedDict:
 
 NonTypedDict:
     'dict'
+;
+
+FQN:
+    ID+['.']
 ;
 
 // Special rule for comments. Comments start with //
