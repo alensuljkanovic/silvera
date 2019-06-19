@@ -51,16 +51,16 @@ GatewayFor:
 ;
 
 ServiceDecl:
-    'service' name=ID '{'
+    'service' name=ID ('extends' extends=FQN)? '{'
 
         ('config_server' '=' config_server=FQN)?
         ('service_registry' '=' service_registry=FQN)?
 
-        deployment=Deployment
+        (deployment=Deployment)?
 
         'communication_style' '=' comm_style=CommunicationStyle
 
-        api=APIDecl
+        (api=APIDecl)?
     '}'
 ;
 
@@ -72,8 +72,8 @@ Deployment:
             ('port' '=' port=INT)? |
             ('lang' '=' lang=STRING)? |
             ('packaging' '=' packaging=STRING)? |
-            ('host' '=' host=HostChoice)?
-            ('replicas' '=' replicas=INT)?
+            ('host' '=' host=HostChoice)? |
+            ('replicas' '=' replicas=INT)? |
             (restart_policy=RestartPolicy)?
         )#
     '}'
@@ -85,13 +85,13 @@ RestartPolicy:
             ('condition' '=' condition=RestartCondition)? |
             ('delay' '=' delay=INT)? |
             ('max_attempts' '=' max_attempts=INT)? |
-            ('window' '=' window=INT)
+            ('window' '=' window=INT)?
         )#
     '}'
 ;
 
 RestartCondition:
-    "any" | "on-failure" | "any"
+    "any" | "on-failure"
 ;
 
 APIDecl:
@@ -117,7 +117,7 @@ CBFailurePattern:
 
 
 TypeDef:
-    'typedef' name=ID (':' inherits+=[TypeDef][','])? '['
+    'typedef' name=ID (':' inherits+=FQN[','])? '['
         fields+=TypeField
     ']'
 ;
@@ -166,7 +166,7 @@ ReturnType:
 ;
 
 DataType:
-    Number | Collection | Date | CustomType
+    Number | Collection | Date | FQN
 ;
 
 CustomType:

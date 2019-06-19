@@ -3,7 +3,7 @@ This module contains platform data.
 """
 
 # Platform names
-from talkie.talkie import CustomType, TypedList
+from talkie.talkie import CustomType, TypedList, TypeDef
 
 JAVA = "java"
 PYTHON = "python"
@@ -145,8 +145,8 @@ def convert_type(platform, _type):
 
 def convert_complex_type(platform, _type):
     """Converts complex talkie object to a platform type"""
-    if isinstance(_type, CustomType):
-        return str(_type)
+    if isinstance(_type, TypeDef):
+        return _type.name
 
     try:
         return convert_type(platform, _type)

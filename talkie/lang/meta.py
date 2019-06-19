@@ -17,6 +17,7 @@ def get_metamodel():
     global _metamodel
 
     path = os.path.join(get_root_path(), "talkie", "lang", "talkie.tx")
-    _metamodel = metamodel_from_file(path, classes=_classes)
+    _metamodel = metamodel_from_file(path, classes=_classes,
+                                     auto_init_attributes=False)
 
     return _metamodel

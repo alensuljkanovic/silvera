@@ -16,8 +16,8 @@ from talkie.utils import get_templates_path, decode_byte_str
 
 class TalkieGenerator:
     """ Talkie IDL code generator."""
-    def __init__(self, module):
-        self.module = module
+    def __init__(self, model):
+        self.model = model
 
     def _get_environment(self, lang):
         """Loads jinja2 Environment."""
@@ -41,20 +41,21 @@ class TalkieGenerator:
             # res["environment"] =
             return res
 
-        for config_serv in self.module.config_servers:
-            self._generate_config_server(output_path, config_serv)
-            if config_serv.host == HOST_CONTAINER:
-                compose["services"].append(_create_entry(config_serv))
+        for module in self.model.modules:
+            for config_serv in module.config_servers:
+                self._generate_config_server(output_path, config_serv)
+                if config_serv.host == HOST_CONTAINER:
+                    compose["services"].append(_create_entry(config_serv))
 
-        for serv_registry in self.module.service_registries:
-            self._generate_serv_registry(output_path, serv_registry)
-            if serv_registry.host == HOST_CONTAINER:
-                compose["services"].append(_create_entry(serv_registry))
+            for serv_registry in module.service_registries:
+                self._generate_serv_registry(output_path, serv_registry)
+                if serv_registry.host == HOST_CONTAINER:
+                    compose["services"].append(_create_entry(serv_registry))
 
-        for service in self.module.service_instances:
-            self._generate_service(output_path, service)
-            if service.type.host == HOST_CONTAINER:
-                compose["services"].append(_create_entry(service))
+            for service in module.service_instances:
+                self._generate_service(output_path, service)
+                if service.type.host == HOST_CONTAINER:
+                    compose["services"].append(_create_entry(service))
 
         if compose["services"]:
             _generate_docker_compose(output_path, compose)

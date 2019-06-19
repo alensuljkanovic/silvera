@@ -79,3 +79,24 @@ def test_non_existing_dir(examples_path):
     with pytest.raises(ValueError):
         load(os.path.join(examples_path, "non-existing-dir"))
 
+
+def test_loading_with_custom_types(examples_path):
+    model = load(os.path.join(examples_path, "loading"))
+
+    print_service = model.find_by_fqn("print.PrintService")
+    doc_type = print_service.domain_objs["Document"]
+    print_doc = print_service.get_function("printDoc")
+    print_param = print_doc.params[0]
+    assert print_param.type is doc_type
+
+    office_service = model.find_by_fqn("office.OfficeService")
+    worker = office_service.domain_objs["Worker"]
+    rm_worker = office_service.get_function("removeWorker")
+    rm_param = rm_worker.params[0]
+    assert rm_param.type is worker
+    assert rm_worker.ret_type is worker
+
+    new_office_service = model.find_by_fqn("office.NewOfficeService")
+    update_worker = new_office_service.get_function("updateWorker")
+    up_param = update_worker.params[0]
+    assert up_param.type is worker

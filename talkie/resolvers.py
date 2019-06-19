@@ -84,7 +84,7 @@ class RESTResolver:
 
     def resolve_model(self, model):
         """Resolve model."""
-        for decl in model.decls:
+        for decl in (d for module in model.modules for d in module.decls):
             if isinstance(decl, ServiceDecl) and decl.uses_rest:
                 self.resolve_service(decl)
 

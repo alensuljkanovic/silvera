@@ -1,0 +1,46 @@
+import "setup.tl"
+
+service UserService {
+
+    config_server=ConfigServer
+    service_registry=ServiceRegistry
+
+    deployment {
+        version="0.0.1"
+        port=8080
+        lang="java"
+        packaging="jar"
+        host=PC
+        replicas=1
+    }
+
+    communication_style=REST
+
+    api {
+        typedef User [
+            str id
+            str password
+            bool active
+            str createdBy
+            str deletedBy
+        ]
+
+
+        User login(str userId, str password)
+
+        @rest(method=POST)
+        bool register(User user)
+    }
+}
+
+
+service NewUserService extends UserService {
+
+    communication_style=REST
+
+    api {
+        // NewUserService adds another API method
+        @rest(method=POST)
+        bool checkUser(str userId)
+    }
+}

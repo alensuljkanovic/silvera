@@ -1,6 +1,7 @@
 from talkie.const import HTTP_GET, HTTP_POST
 from talkie.lang.meta import get_metamodel
 from talkie.resolvers import RESTResolver
+from talkie.run import load
 from talkie.utils import get_root_path
 import pytest
 import os
@@ -17,21 +18,21 @@ def metamodel():
 
 
 def test_no_params_no_strategy(metamodel, examples_path):
-    path = os.path.join(examples_path, "resolving_no_params.tl")
-    model = metamodel.model_from_file(path)
+    path = os.path.join(examples_path, "no_par_no_str")
+    model = load(path)
 
     resolver = RESTResolver()
     resolver.resolve_model(model)
 
-    service = model.service_by_name("TestService")
+    service = model.find_by_fqn("test.TestService")
     func = service.get_function("getAll")
     assert func.http_verb == HTTP_GET
     assert func.rest_path == "testservice/getall/"
 
 
 def test_one_param_no_strategy(metamodel, examples_path):
-    path = os.path.join(examples_path, "resolving_one_param_no_strategy.tl")
-    model = metamodel.model_from_file(path)
+    path = os.path.join(examples_path, "one_par_no_str")
+    model = load(path)
 
     resolver = RESTResolver()
 
@@ -40,44 +41,44 @@ def test_one_param_no_strategy(metamodel, examples_path):
 
 
 def test_multiple_params_no_strategy(metamodel, examples_path):
-    path = os.path.join(examples_path, "resolving_mult_params_no_strategy.tl")
-    model = metamodel.model_from_file(path)
+    path = os.path.join(examples_path, "mult_par_no_str")
+    model = load(path)
 
     resolver = RESTResolver()
     resolver.resolve_model(model)
 
-    service = model.service_by_name("TestService")
+    service = model.find_by_fqn("test.TestService")
     func = service.get_function("getObject")
     assert func.http_verb == HTTP_GET
     assert func.rest_path == "testservice/getobject/{name}/{description}"
 
 
 def test_one_param_post_annotation(metamodel, examples_path):
-    path = os.path.join(examples_path, "resolving_one_param_post.tl")
-    model = metamodel.model_from_file(path)
+    path = os.path.join(examples_path, "one_par_post")
+    model = load(path)
 
     resolver = RESTResolver()
     resolver.resolve_model(model)
 
-    service = model.service_by_name("TestService")
+    service = model.find_by_fqn("test.TestService")
     func = service.get_function("addCustomObject")
     assert func.http_verb == HTTP_POST
     assert func.rest_path == "testservice/addcustomobject/"
 
 
 def test_resolving_with_dependencies(metamodel, examples_path):
-    path = os.path.join(examples_path, "resolving_with_dependencies.tl")
-    model = metamodel.model_from_file(path)
+    path = os.path.join(examples_path, "dep")
+    model = load(path)
 
     resolver = RESTResolver()
     resolver.resolve_model(model)
 
-    print_service = model.service_by_name("PrintService")
+    print_service = model.find_by_fqn("print.PrintService")
     print_func = print_service.get_function("print")
     assert print_func.http_verb == HTTP_GET
     assert print_func.rest_path == "printservice/print/{id}"
 
-    office_service = model.service_by_name("OfficeService")
+    office_service = model.find_by_fqn("print.OfficeService")
     office_print_func = office_service.get_function("print")
     assert office_print_func.dep.rest_path == "printservice/print/{id}"
     assert office_print_func.dep.http_verb == HTTP_GET
@@ -86,3 +87,25 @@ def test_resolving_with_dependencies(metamodel, examples_path):
     office_print_func = office_service.get_function("addWorker")
     assert office_print_func.http_verb == HTTP_POST
     assert office_print_func.rest_path == "officeservice/addworker/"
+
+
+def test_with_connections_and_inherit(examples_path):
+    model = load(os.path.join(examples_path, "connections"))
+
+    resolver = RESTResolver()
+    resolver.resolve_model(model)
+
+    new_office_service = model.find_by_fqn("print.NewOfficeService")
+
+    new_print = new_office_service.get_function("print")
+    assert new_print.http_verb == HTTP_GET
+    assert new_print.rest_path == "newofficeservice/print/{id}"
+    assert new_print.dep.http_verb == HTTP_GET
+    assert new_print.dep.rest_path == "fastprintservice/print/{id}"
+
+    new_fast_print = new_office_service.get_function("fastPrint")
+    assert new_fast_print.http_verb == HTTP_POST
+    assert new_fast_print.rest_path == "newofficeservice/fastprint/"
+    assert new_fast_print.dep.http_verb == HTTP_POST
+    assert new_fast_print.dep.rest_path == "fastprintservice/fastprint/"
+

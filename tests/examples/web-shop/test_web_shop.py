@@ -1,17 +1,15 @@
 import os
 from talkie.generator.generator import TalkieGenerator
-from talkie.lang.meta import get_metamodel
 from talkie.resolvers import RESTResolver
+from talkie.run import load
 from talkie.utils import get_root_path
 
 
 def test_web_shop():
-    examples_path = os.path.join(get_root_path(), "tests", "examples",
-                                 "web-shop")
+    example_path = os.path.join(get_root_path(), "tests", "examples",
+                                "web-shop")
 
-    metamodel = get_metamodel()
-    path = os.path.join(examples_path, "web-shop.tl")
-    model = metamodel.model_from_file(path)
+    model = load(example_path)
 
     resolver = RESTResolver()
     resolver.resolve_model(model)

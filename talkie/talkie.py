@@ -23,6 +23,14 @@ class Model:
         return {m.path: m for m in self.modules}
 
     def find_by_path(self, path):
+        """Returns module from given path.
+
+        Args:
+            path (str): path to the Module
+
+        Returns:
+            Module
+        """
         try:
             modules = self.modules_dict()
             return modules[path]
@@ -154,9 +162,11 @@ class ServiceObject(Deployable):
     """
 
     def __init__(self, parent=None, name=None, config_server=None,
-                 service_registry=None, deployment=None, comm_style=None):
+                 service_registry=None, deployment=None, comm_style=None,
+                 extends=None):
         super().__init__(deployment)
         self.parent = parent
+        self.extends = extends
         self.name = name
         self.config_server = config_server
         self.service_registry = service_registry
@@ -190,9 +200,9 @@ class ServiceDecl(ServiceObject):
 
     def __init__(self, parent=None, name=None, config_server=None,
                  service_registry=None, deployment=None, comm_style=None,
-                 api=None):
+                 api=None, extends=None):
         super().__init__(parent, name, config_server, service_registry,
-                         deployment, comm_style)
+                         deployment, comm_style, extends)
         self.api = api
         self.dep_functions = []
 
@@ -202,6 +212,10 @@ class ServiceDecl(ServiceObject):
         funcs.extend(self.dep_functions)
 
         return funcs
+
+    def add_function(self, fnc):
+        fnc.parent = self.api
+        self.api.functions.append(fnc)
 
     def get_function(self, func_name):
         for f in self.functions:
@@ -217,7 +231,7 @@ class ServiceDecl(ServiceObject):
         #         pass
         #
         # if not f:
-        raise  KeyError("Function not found!")
+        raise KeyError("Function not found!")
 
         # return f
 
@@ -227,7 +241,7 @@ class ServiceDecl(ServiceObject):
 
     @property
     def domain_objs(self):
-        return {obj.name for obj in self.api.typedefs}
+        return {obj.name: obj for obj in self.api.typedefs}
 
     def __str__(self):
         return "ServiceDecl: %s" % self.name
