@@ -79,7 +79,7 @@ def resolve_custom_types(service_decl):
     """
     api = service_decl.api
     if api is not None:
-        functions = service_decl.api.functions
+        functions = api.functions
 
         for fnc in functions:
             rtd = service_decl.domain_objs.get(fnc.ret_type, None)
@@ -90,6 +90,12 @@ def resolve_custom_types(service_decl):
                 td = service_decl.domain_objs.get(param.type, None)
                 if td is not None:
                     param.type = td
+
+        typedefs = api.typedefs
+        for field in (f for td in typedefs for f in td.fields):
+            ft = service_decl.domain_objs.get(field.type, None)
+            if ft is not None:
+                field.type = ft
 
 
 def resolve_deployment_inheritance(base_service, service_decl):
