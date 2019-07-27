@@ -1,8 +1,8 @@
 import os
-from talkie.generator.generator import TalkieGenerator
-from talkie.resolvers import RESTResolver
-from talkie.run import load
-from talkie.utils import get_root_path
+from silvera.generator.generator import SilveraGenerator
+from silvera.resolvers import RESTResolver
+from silvera.run import load
+from silvera.utils import get_root_path
 
 
 def test_web_shop():
@@ -14,9 +14,9 @@ def test_web_shop():
     resolver = RESTResolver()
     resolver.resolve_model(model)
 
-    output_dir = os.path.join(get_root_path(), "talkie", "generator",
+    output_dir = os.path.join(get_root_path(), "silvera", "generator",
                               "src-gen")
 
-    generator = TalkieGenerator(model)
+    generator = SilveraGenerator(model)
     generator.generate(output_dir)
 

@@ -1,6 +1,5 @@
-Talkie-IDL
+Silvera
 ==========
 
-Talkie is an Interface Definition Language (IDL). It allows you to describe an interface in a language-independent way,
-enabling communication between heterogeneous software components.
+Silvera is an tool for generating microservice architectures.
 

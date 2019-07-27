@@ -1,0 +1,44 @@
+package com.silvera.{{package_name}}.service;
+
+import org.springframework.stereotype.Service;
+import com.silvera.{{package_name}}.domain.model.*;
+{% if use_circuit_breaker %}
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+{% endif %}
+
+{% if dependency_service %}
+import org.springframework.web.client.RestTemplate;
+import java.net.URI;
+{% endif %}
+
+@Service
+public class {{service_name}}Service {
+
+
+
+    {% for function in functions %}
+    {{generate_cb_annotation(function)}}
+    public {{function.ret_type|converttype}} {{function.name}}({{function|unfold_function_params}}) {
+        {% if dependency_service %}
+        RestTemplate restTemplate = new RestTemplate();
+        URI uri = URI.create("{{get_rest_call(function)}}");
+        {% if function.http_verb == HTTP_GET %}
+        return restTemplate.getForObject(uri, {{function.ret_type|converttype}}.class);
+        {% else %}
+        return restTemplate.postForObject(uri, {{function|param_names}}, {{function.ret_type|converttype}}.class);
+        {% endif%}
+        {% else %}
+        throw new java.lang.UnsupportedOperationException("Not implemented yet.");
+        {% endif %}
+    }
+    {% if function.cb_pattern and function.cb_pattern != "fail_fast" %}
+    //
+    // This is a fallback method if method '{{function.name}}' fails!
+    //
+    public {{function.ret_type|converttype}} {{function.cb_fallback}}({{function|unfold_function_params}}) {
+        return {{get_default_for_cb_pattern(function)}};
+    }
+    {% endif %}
+    {% endfor %}
+
+}

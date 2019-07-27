@@ -4,8 +4,8 @@ This module test inheritance mechanism
 import os
 import pytest
 
-from talkie.run import load
-from talkie.utils import get_root_path
+from silvera.run import load
+from silvera.utils import get_root_path
 
 
 @pytest.fixture()
