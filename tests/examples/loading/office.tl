@@ -31,7 +31,6 @@ service NewOfficeService extends OfficeService{
     communication_style=thrift
 
     api {
-
         void updateWorker(Worker w)
     }
 }

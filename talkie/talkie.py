@@ -92,6 +92,12 @@ class Module:
                 for i in range(decl.replicas):
                     yield Service(decl, i)
 
+    @property
+    def service_decls(self):
+        for decl in self.decls:
+            if isinstance(decl, ServiceDecl):
+                yield decl
+
     def service_by_name(self, service_name):
         for decl in self.decls:
             if isinstance(decl, ServiceDecl):
@@ -245,6 +251,9 @@ class ServiceDecl(ServiceObject):
 
     def __str__(self):
         return "ServiceDecl: %s" % self.name
+
+    def __repr__(self):
+        return str(self)
 
 
 class Service:
