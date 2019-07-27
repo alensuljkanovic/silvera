@@ -9,5 +9,5 @@ experimenting/**
 .idea
 .cache
 
-talkie/generator/src-gen/*
-!talkie/generator/src-gen/.gitkeep
+silvera/generator/src-gen/*
+!silvera/generator/src-gen/.gitkeep
