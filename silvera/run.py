@@ -1,6 +1,6 @@
 import os
 import fnmatch
-from silvera.generator.generator import SilveraGenerator
+from silvera.generator.generator import generate
 from silvera.lang.meta import get_metamodel
 from silvera.lang.obj_processors import model_processor
 from silvera.core import Model
@@ -20,8 +20,7 @@ def run(tl_path, output_dir=None):
         output_dir = os.path.join(get_root_path(), "silvera", "generator",
                                   "src-gen")
 
-    generator = SilveraGenerator(model)
-    generator.generate(output_dir)
+    generate(model, output_dir)
 
 
 _metamodel = None
