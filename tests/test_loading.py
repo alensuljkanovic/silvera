@@ -3,9 +3,9 @@ This module tests loading mechanism
 """
 import os
 import pytest
-from talkie.run import load
-from talkie.talkie import ConfigServerDecl, ServiceRegistryDecl
-from talkie.utils import get_root_path
+from silvera.run import load
+from silvera.core import ConfigServerDecl, ServiceRegistryDecl
+from silvera.utils import get_root_path
 
 
 @pytest.fixture()

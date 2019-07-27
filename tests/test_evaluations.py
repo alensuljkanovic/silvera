@@ -1,9 +1,9 @@
 import os
 import pytest
 
-from talkie.evaluation import Evaluator
-from talkie.run import load
-from talkie.utils import get_root_path
+from silvera.evaluation import Evaluator
+from silvera.run import load
+from silvera.utils import get_root_path
 
 
 @pytest.fixture()

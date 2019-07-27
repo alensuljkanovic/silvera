@@ -1,0 +1,8 @@
+FROM java8
+MAINTAINER silvera
+COPY target/{{app_name}}-{{app_version}}-SNAPSHOT.jar /opt/lib/
+
+ENTRYPOINT ["/usr/bin/java"]
+CMD ["-jar", "/opt/lib/{{app_name}}-{{app_version}}-SNAPSHOT.jar"]
+
+EXPOSE {{app_port}}

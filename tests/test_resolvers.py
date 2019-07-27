@@ -1,8 +1,8 @@
-from talkie.const import HTTP_GET, HTTP_POST
-from talkie.lang.meta import get_metamodel
-from talkie.resolvers import RESTResolver
-from talkie.run import load
-from talkie.utils import get_root_path
+from silvera.const import HTTP_GET, HTTP_POST
+from silvera.lang.meta import get_metamodel
+from silvera.resolvers import RESTResolver
+from silvera.run import load
+from silvera.utils import get_root_path
 import pytest
 import os
 

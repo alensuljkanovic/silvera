@@ -2,8 +2,8 @@
 Tests simple example.
 """
 import os
-from talkie.lang.meta import get_metamodel
-from talkie.utils import get_root_path
+from silvera.lang.meta import get_metamodel
+from silvera.utils import get_root_path
 
 
 def test_example():
