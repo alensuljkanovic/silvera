@@ -3,18 +3,21 @@ import fnmatch
 from silvera.generator.generator import generate
 from silvera.lang.meta import get_metamodel
 from silvera.lang.obj_processors import model_processor
+from silvera.resolvers import RESTResolver, NO_STRATEGY
 from silvera.core import Model
 from silvera.utils import get_root_path
 
 
-def run(tl_path, output_dir=None):
+def run(src_path, output_dir=None, rest_res_strategy=NO_STRATEGY):
     """Runs Silvera
 
     After this function is called, Silvera will process the given .tl file,
     run a compiler and start an application.
     """
-    meta = get_metamodel()
-    model = meta.model_from_file(tl_path)
+    model = load(src_path)
+
+    resolver = RESTResolver(rest_res_strategy)
+    resolver.resolve_model(model)
 
     if output_dir is None:
         output_dir = os.path.join(get_root_path(), "silvera", "generator",

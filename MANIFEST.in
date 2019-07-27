@@ -1,0 +1,1 @@
+recursive-include silvera *.py *.tx *.template
