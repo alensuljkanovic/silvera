@@ -14,14 +14,12 @@ def run(src_path, output_dir=None, rest_res_strategy=NO_STRATEGY):
     After this function is called, Silvera will process the given .tl file,
     run a compiler and start an application.
     """
-    model = load(src_path)
-
-    resolver = RESTResolver(rest_res_strategy)
-    resolver.resolve_model(model)
+    model = load(src_path, rest_res_strategy)
 
     if output_dir is None:
-        output_dir = os.path.join(get_root_path(), "silvera", "generator",
-                                  "src-gen")
+        output_dir = src_path
+    else:
+        output_dir = os.path.abspath(output_dir)
 
     generate(model, output_dir)
 
@@ -29,7 +27,7 @@ def run(src_path, output_dir=None, rest_res_strategy=NO_STRATEGY):
 _metamodel = None
 
 
-def load(src_path):
+def load(src_path, rest_res_strategy=NO_STRATEGY):
     """Loads project
 
     Args:
@@ -57,4 +55,8 @@ def load(src_path):
             model.modules.append(module)
 
     model_processor(model)
+
+    resolver = RESTResolver(rest_res_strategy)
+    resolver.resolve_model(model)
+
     return model

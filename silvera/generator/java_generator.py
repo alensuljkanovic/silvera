@@ -5,7 +5,7 @@ from silvera.const import MVN_GENERATE, HOST_CONTAINER
 from silvera.core import CustomType, ConfigServerDecl, ServiceRegistryDecl, ServiceDecl, Service
 from silvera.generator.platforms import JAVA, convert_complex_type, get_def_ret_val
 from silvera.utils import get_templates_path, decode_byte_str
-
+from silvera.generator.gen_reg import generator
 
 def generate_config_server(config_server, output_dir):
 
@@ -293,8 +293,9 @@ _obj_to_fnc = {
 }
 
 
-def generate(decl, output_dir):
-    """Entry point function for Java code generator.
+@generator(JAVA, "1.8")
+def generate(decl, output_dir, debug):
+    """Java 1.8 code generator.
 
     Args:
         decl(Decl): can be declaration of service, registry or config server.

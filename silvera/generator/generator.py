@@ -4,10 +4,10 @@ This module contains code generator for Silvera.
 import os
 from jinja2 import Environment
 from jinja2.loaders import FileSystemLoader
-
+from silvera.generator.gen_reg import generator_for_language
 from silvera.const import HOST_CONTAINER
-from silvera.generator.platforms import JAVA
 from silvera.utils import get_templates_path
+from silvera.generator.platforms import JAVA
 
 
 def compose_entry(decl):
@@ -18,42 +18,17 @@ def compose_entry(decl):
     return res
 
 
-# Registry of all available code generators.
-generators = None
+def generate(model, output_dir, debug=False):
+    """Entry function for code generation.
 
-
-def generator_for_language(language):
-    """Returns the generator for a given language."""
-    global generators
-    try:
-       return generators[language]
-    except KeyError:
-        raise ValueError("Could not find generator for a language \
-                         '%s'" % language)
-
-
-def init():
-    """Initialize the generators registry."""
-    global generators
-    if not generators:
-        from silvera.generator import java_generator
-
-        generators = {
-            JAVA: java_generator.generate
-        }
-
-
-def generate(model, output_dir):
-    """Entry function for code generation. 
-    
     Iterates over every declaration in the model and calls appropriate code
     generation function for it.
 
     Args:
         model(Model): Silvera model object
         output_dir(str): output directory
+        debug (bool): debug flag
     """
-    init()
 
     compose = {
         "version": "3.6",
@@ -65,21 +40,21 @@ def generate(model, output_dir):
         for config_serv in module.config_servers:
             # Currently, config servers can only work in Java.
             generator = generator_for_language(JAVA)
-            generator(config_serv, output_dir)
+            generator(config_serv, output_dir, debug)
             if config_serv.host == HOST_CONTAINER:
                 for_compose(config_serv)
 
         for serv_registry in module.service_registries:
             # Currently, service registry can only work in Java.
             generator = generator_for_language(JAVA)
-            generator(serv_registry, output_dir)
+            generator(serv_registry, output_dir, debug)
             if serv_registry.host == HOST_CONTAINER:
                 for_compose(serv_registry)
 
         for service in module.service_instances:
             lang = service.type.lang
             generator = generator_for_language(lang)
-            generator(service, output_dir)
+            generator(service, output_dir, debug)
             if service.type.host == HOST_CONTAINER:
                 for_compose(service)
 

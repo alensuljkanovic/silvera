@@ -34,6 +34,15 @@ setup(
     ],
     keywords="microservices dsl generator compiler",
     entry_points={
+        'console_scripts': [
+            'silvera = silvera.cli:silvera'
+        ],
+
+        'silvera_commands': [
+            'check = silvera.cli.check'
+            'generate = silvera.cli.generate'
+            'list_generators = silvera.cli.list_generators'
+        ],
 
         'silvera_generators': [
             'java = silvera.generator.java_generator:generate',
