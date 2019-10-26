@@ -69,6 +69,40 @@ def generator_for_language(language):
                          '%s'" % language)
 
 
+def register_generator(lang_name_or_desc, lang_ver="", description="",
+                       gen_function=None):
+    """Register generator
+
+    Args:
+        lang_name_of_desc: language name (str) or `GeneratorDesc` object
+        lang_ver (str): language version
+        description (str): a short description
+        gen_function (callable): a callable that performs the generation
+
+    Returns:
+        None
+    """
+    global generators
+    if generators is None:
+        generators = collect_generators()
+
+    if isinstance(lang_name_or_desc, GeneratorDesc):
+        generators[lang_name_or_desc.lang_name] = lang_name_or_desc
+    else:
+        desc = GeneratorDesc(
+            lang_name_or_desc,
+            lang_ver,
+            description,
+            gen_function
+        )
+        generators[lang_name_or_desc] = desc
+
+
+def clean_generator_registrations():
+    """Clean all generator registrations()"""
+    global generators
+    generators = {}
+
 def collect_generators():
     """Returns a dict of `GeneratorDesc` objects for each registered generator
 
@@ -79,7 +113,6 @@ def collect_generators():
         dict
     """
     global generators
-
     if generators is None:
         generators = {}
         group = "silvera_generators"

@@ -45,7 +45,8 @@ setup(
         ],
 
         'silvera_generators': [
-            'java = silvera.generator.java_generator:generate',
+            # Java generator is built-in
+            'java = silvera.generator.java_generator:java',
         ]
     },
     classifiers=[
