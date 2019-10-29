@@ -97,7 +97,7 @@ class Module:
             if isinstance(decl, ServiceDecl):
                 if decl.name == service_name:
                     return decl
-        return KeyError("Service with name '%s' not found!" % service_name)
+        raise KeyError("Service with name '%s' not found!" % service_name)
 
     @property
     def service_registries(self):
