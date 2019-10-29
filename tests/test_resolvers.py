@@ -35,9 +35,12 @@ def test_one_param_no_strategy(metamodel, examples_path):
     model = load(path)
 
     resolver = RESTResolver()
+    resolver.resolve_model(model)
 
-    with pytest.raises(TypeError):
-        resolver.resolve_model(model)
+    service = model.find_by_fqn("test.TestService")
+    func = service.get_function("addCustomObject")
+    assert func.http_verb == HTTP_GET
+    assert func.rest_path == "testservice/addcustomobject/{o}"
 
 
 def test_multiple_params_no_strategy(metamodel, examples_path):

@@ -22,11 +22,8 @@ class RESTResolver:
     Resolution strategies:
     -------------------------------------------------------------------
     - NO_STRATEGY:
-        - This strategy uses following rules:
-            1. If function has no parameters -> HTTP_GET function.
-            2. If function has multiple parameters -> HTTP_GET function.
-            3. If function has one parameter -> extra info needed, raise an
-                exception.
+        - This strategy uses following rule:
+            - Every function is HTTP_GET function.
 
     - PREFER_POST_OVER_PUT:
         - This strategy uses following rules:
@@ -105,7 +102,7 @@ class RESTResolver:
 
             return fn_mapping
 
-        model = service.parent
+        model = service.parent.model
         name = service.name
         api = service.api
 
@@ -120,7 +117,7 @@ class RESTResolver:
             func.add_rest_mappings(path + func_name_mapping(func))
 
         for func in service.dep_functions:
-            org_serv = model.service_by_name(func.service_name)
+            org_serv = model.find_by_fqn(func.service_fqn)
             org_fn = org_serv.get_function(func.name)
             func.http_verb = org_fn.http_verb
             func.rest_path = path + func_name_mapping(func)

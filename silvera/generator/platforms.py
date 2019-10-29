@@ -157,6 +157,8 @@ def convert_complex_type(platform, _type):
         collections = platforms[platform][COLLECTIONS]
         if isinstance(_type, TypedList):
             tl_type = convert_complex_type(platform, _type.type)
+            if tl_type is None:
+                breakpoint()
             return collections[LIST] + "<" + tl_type + ">"
 
 

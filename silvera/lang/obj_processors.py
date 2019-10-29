@@ -84,14 +84,20 @@ def resolve_custom_types(service_decl):
         functions = api.functions
 
         for fnc in functions:
-            rtd = service_decl.domain_objs.get(fnc.ret_type, None)
-            if rtd is not None:
-                fnc.ret_type = rtd
+            if isinstance(fnc.ret_type, TypedList):
+                _resolve_typed_list(service_decl, fnc.ret_type)
+            else:
+                rtd = service_decl.domain_objs.get(fnc.ret_type, None)
+                if rtd is not None:
+                    fnc.ret_type = rtd
 
             for param in fnc.params:
-                td = service_decl.domain_objs.get(param.type, None)
-                if td is not None:
-                    param.type = td
+                if isinstance(param.type, TypedList):
+                    _resolve_typed_list(service_decl, param.type)
+                else:
+                    td = service_decl.domain_objs.get(param.type, None)
+                    if td is not None:
+                        param.type = td
 
         typedefs = api.typedefs
         for field in (f for td in typedefs for f in td.fields):

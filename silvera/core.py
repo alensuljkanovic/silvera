@@ -315,6 +315,16 @@ class Function:
             return self.dep.parent.parent.name
         return self.parent.parent.name
 
+    @property
+    def service_fqn(self):
+        if self.dep:
+            service = self.dep.parent.parent
+            module = service.parent
+        else:
+            service = self.parent.parent
+            module = service.parent
+        return "{}.{}".format(module.path.replace(".tl", ""), service.name)
+
     def add_rest_mappings(self, mapping):
 
         import re
