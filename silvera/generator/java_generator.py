@@ -11,6 +11,7 @@ from silvera.generator.platforms import (
 from silvera.utils import get_templates_path, decode_byte_str
 from silvera.generator.gen_reg import GeneratorDesc
 
+
 def generate_config_server(config_server, output_dir):
 
     templates_path = os.path.join(get_templates_path(), JAVA, "config-server")

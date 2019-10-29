@@ -159,14 +159,7 @@ class DefaultStrategy(ResolvingStrategy):
         super().__init__()
 
     def apply(self, func):
-
-        params = func.params
-
-        if not params or len(params) > 1:
-            func.http_verb = HTTP_GET
-        else:
-            raise TypeError("Cannot decide which HTTP method to"
-                            "use for function: '%s'." % func.name)
+        func.http_verb = HTTP_GET
 
 
 class PreferPostOverPut(ResolvingStrategy):

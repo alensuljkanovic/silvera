@@ -3,7 +3,7 @@ This module contains platform data.
 """
 
 # Platform names
-from silvera.core import CustomType, TypedList, TypeDef
+from silvera.core import CustomType, TypedList, TypeDef, CustomType
 
 JAVA = "java"
 PYTHON = "python"
@@ -145,15 +145,19 @@ def convert_type(platform, _type):
 
 def convert_complex_type(platform, _type):
     """Converts complex silvera object to a platform type"""
+
     if isinstance(_type, TypeDef):
         return _type.name
+    if isinstance(_type, CustomType):
+        return _type.type
 
     try:
         return convert_type(platform, _type)
     except KeyError:
         collections = platforms[platform][COLLECTIONS]
         if isinstance(_type, TypedList):
-            return collections[LIST] + "<" + convert_complex_type(platform, _type.type) + ">"
+            tl_type = convert_complex_type(platform, _type.type)
+            return collections[LIST] + "<" + tl_type + ">"
 
 
 def get_def_ret_val(platform, _type):

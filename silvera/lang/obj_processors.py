@@ -3,7 +3,9 @@ This module contains object processors attached to Silvera objects. Object
 processors are used during parsing.
 """
 from collections import deque, OrderedDict
-from silvera.core import ServiceDecl, ConfigServerDecl, ServiceRegistryDecl
+from silvera.core import (ServiceDecl, ConfigServerDecl, ServiceRegistryDecl,
+    TypedList
+)
 
 
 def process_connections(module):
@@ -93,9 +95,21 @@ def resolve_custom_types(service_decl):
 
         typedefs = api.typedefs
         for field in (f for td in typedefs for f in td.fields):
-            ft = service_decl.domain_objs.get(field.type, None)
-            if ft is not None:
-                field.type = ft
+            if isinstance(field.type, TypedList):
+                _resolve_typed_list(service_decl, field.type)
+            else:
+                ft = service_decl.domain_objs.get(field.type, None)
+                if ft is not None:
+                    field.type = ft
+
+
+def _resolve_typed_list(service_decl, typed_list):
+    if isinstance(typed_list.type, TypedList):
+        _resolve_typed_list(service_decl, typed_list.type)
+    else:
+        ft = service_decl.domain_objs.get(typed_list.type, None)
+        if ft is not None:
+            typed_list.type = ft
 
 
 def resolve_deployment_inheritance(base_service, service_decl):

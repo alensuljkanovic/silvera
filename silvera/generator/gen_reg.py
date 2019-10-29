@@ -4,7 +4,7 @@ from silvera.generator.platforms import JAVA
 
 # Registry of all available code generators.
 generators = None
-
+built_in_generators = {}
 
 class GeneratorDesc:
     """Generator description class, used for generator registration and
@@ -65,8 +65,13 @@ def generator_for_language(language):
     try:
        return generators[language]
     except KeyError:
-        raise ValueError("Could not find generator for a language \
-                         '%s'" % language)
+        global built_in_generators
+
+        try:
+            return built_in_generators[language]
+        except KeyError:
+            raise ValueError("Could not find generator for a language \
+                            '%s'" % language)
 
 
 def register_generator(lang_name_or_desc, lang_ver="", description="",
@@ -120,5 +125,9 @@ def collect_generators():
             gen_desc = entry_point.load()
             gen_desc.project_name = entry_point.dist.project_name
             generators[gen_desc.lang_name] = gen_desc
+
+    global built_in_generators
+    from .java_generator import java
+    built_in_generators[java.lang_name] = java
 
     return generators
