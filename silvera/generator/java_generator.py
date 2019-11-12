@@ -1,7 +1,7 @@
 import os
 from collections import defaultdict
 from jinja2 import Environment, FileSystemLoader
-from silvera.const import MVN_GENERATE, HOST_CONTAINER, HTTP_POST
+from silvera.const import HOST_CONTAINER, HTTP_POST
 from silvera.core import (CustomType, ConfigServerDecl, ServiceRegistryDecl,
     ServiceDecl, Service
 )
@@ -10,6 +10,7 @@ from silvera.generator.platforms import (
 )
 from silvera.utils import get_templates_path, decode_byte_str
 from silvera.generator.gen_reg import GeneratorDesc
+from silvera.generator.project_struct import java_struct, create_if_missing
 
 
 def generate_config_server(config_server, output_dir):
@@ -22,7 +23,7 @@ def generate_config_server(config_server, output_dir):
     serv_port = config_server.port
 
     conf_path = os.path.join(output_dir, serv_name)
-    mvn_generate(output_dir, serv_name)
+    java_struct(output_dir, serv_name)
 
     d = {
         "name": serv_name,
@@ -75,7 +76,7 @@ def generate_service_registry(serv_registry, output_dir):
     reg_version = serv_registry.version
     reg_port = serv_registry.port
 
-    mvn_generate(output_dir, reg_name)
+    java_struct(output_dir, reg_name)
 
     d = {
         "registry_name": reg_name,
@@ -160,11 +161,9 @@ def generate_service(service, output_dir):
     service_version = service.version
     service_port = service.port
 
-    mvn_generate(output_dir, service_name)
+    java_struct(output_dir, service_name)
     root = os.path.join(output_dir, service_name)
     res_path = os.path.join(root, "src", "main", "resources")
-    if not os.path.exists(res_path):
-        os.mkdir(res_path)
 
     #
     # Generate bootstrap.properties
@@ -208,8 +207,10 @@ def generate_service(service, output_dir):
     #
     # Generate controller
     #
-    controller_path = os.path.join(content_path, "controller")
-    os.mkdir(controller_path)
+    controller_path = create_if_missing(
+        os.path.join(content_path, "controller")
+    )
+
     controller_data = {
         "service_name": service_name,
         "api": service.type.api,
@@ -223,13 +224,12 @@ def generate_service(service, output_dir):
     #
     # Generate domain model
     #
-    os.mkdir(os.path.join(content_path, "domain"))
-    model_path = os.path.join(content_path, "domain", "model")
-    os.mkdir(model_path)
+    domain_path = create_if_missing(os.path.join(content_path, "domain"))
+    model_path = create_if_missing(os.path.join(domain_path, "model"))
 
     api = service.type.api
     typedefs = api.typedefs.extend(service.type.dep_typedefs)
-    for typedef in api.typedefs:
+    for typedef in typedefs:
         data = {
             "service_name": service_name,
             "name": typedef.name,
@@ -242,8 +242,7 @@ def generate_service(service, output_dir):
     #
     # Generate services
     #
-    service_path = os.path.join(content_path, "service")
-    os.mkdir(service_path)
+    service_path = create_if_missing(os.path.join(content_path, "service"))
 
     service_data = {
         "service_name": service_name,
@@ -398,44 +397,6 @@ def get_java_rest_call(url, rest_mapping):
         rest_mapping = new_map
 
     return '"%s%s"%s' % (url, base_url, rest_mapping)
-
-
-def mvn_generate(output_path, app_name):
-    """Calls Maven which generates the project structure
-
-    Project structure looks as follows:
-    {{app_name}}
-        - src
-            - main
-                - java
-                    - com
-                        - silvera
-                            - {{app_name}}
-                                - App.java
-                - resources
-            - test
-        - bootstrap.properties
-        - pom.xml
-    """
-    mvn_command = MVN_GENERATE.format(app_name=app_name)
-
-    import subprocess
-    process = subprocess.Popen(mvn_command,
-                               stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE,
-                               stdin=subprocess.PIPE,
-                               shell=True,
-                               cwd=output_path)
-    outmsg, errmsg = process.communicate()
-
-    errmsg = decode_byte_str(errmsg)
-
-    if errmsg:
-        raise Exception(errmsg)
-
-    if process.returncode != 0:
-        print(decode_byte_str(outmsg))
-        raise Exception("Maven exception!")
 
 
 def generate_run_script(output_path, app_name, app_version, app_port):
