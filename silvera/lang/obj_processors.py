@@ -31,10 +31,31 @@ def process_connections(module):
                 start.dep_functions.append(fn_clone)
 
                 ret_type = orig_fn.ret_type
-                if isinstance(ret_type, (TypeDef, CustomType)):
-                    start.dep_typedefs.append(ret_type)
+                if isinstance(ret_type, TypeDef):
+                    start.dep_typedefs.extend(recurse_typedef(ret_type))
+                elif isinstance(ret_type, TypedList):
+                    start.dep_typedefs.extend(recurse_typedef(ret_type.type))
 
         start.dependencies.append(end)
+
+
+def recurse_typedef(typedef, visited=None):
+    """Find all types that the current service will depend upon"""
+    if visited is None:
+        visited = set()
+
+    if typedef in visited:
+        return
+
+    visited.add(typedef)
+
+    for field in typedef.fields:
+        if isinstance(field.type, TypeDef):
+            recurse_typedef(field.type, visited)
+        elif isinstance(field.type, TypedList):
+            recurse_typedef(field.type.type, visited)
+
+    return visited
 
 
 def lookup(module, name):

@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from collections import defaultdict
 from jinja2 import Environment, FileSystemLoader
 from silvera.const import HOST_CONTAINER, HTTP_POST
@@ -11,6 +12,10 @@ from silvera.generator.platforms import (
 from silvera.utils import get_templates_path, decode_byte_str
 from silvera.generator.gen_reg import GeneratorDesc
 from silvera.generator.project_struct import java_struct, create_if_missing
+
+
+def timestamp():
+    return "{:%Y-%m-%d %H:%M:%S}".format(datetime.now())
 
 
 def generate_config_server(config_server, output_dir):
@@ -29,7 +34,8 @@ def generate_config_server(config_server, output_dir):
         "name": serv_name,
         "port": "${PORT:%s}" % serv_port,
         "search_path": config_server.search_path,
-        "version": serv_version
+        "version": serv_version,
+        "timestamp": timestamp()
     }
 
     res_path = os.path.join(conf_path, "src", "main", "resources")
@@ -83,7 +89,8 @@ def generate_service_registry(serv_registry, output_dir):
         "url": serv_registry.url,
         "port": "${PORT:%s}" % reg_port,
         "client_mode": "true" if serv_registry.client_mode else "false",
-        "version": reg_version
+        "version": reg_version,
+        "timestamp": timestamp()
     }
 
     reg_path = os.path.join(output_dir, reg_name)
@@ -173,7 +180,8 @@ def generate_service(service, output_dir):
         "service_name": service_name,
         "service_port": "${PORT:%s}" % service_port,
         "service_version": service_version,
-        "use_circuit_breaker": len(service.type.dependencies) > 0
+        "use_circuit_breaker": len(service.type.dependencies) > 0,
+        "timestamp": timestamp()
     }
 
     if service.type.config_server:
@@ -196,7 +204,6 @@ def generate_service(service, output_dir):
 
     content_path = os.path.join(root, "src", "main", "java", "com", "silvera",
                                 service_name)
-    # os.mkdir(content_path)
 
     #
     # Generate {{ServiceName}}Application.java
@@ -214,6 +221,7 @@ def generate_service(service, output_dir):
     controller_data = {
         "service_name": service_name,
         "api": service.type.api,
+        "timestamp": timestamp()
     }
     controller_template = env.get_template("controller.template")
     controller_template.stream(controller_data).dump(
@@ -228,33 +236,62 @@ def generate_service(service, output_dir):
     model_path = create_if_missing(os.path.join(domain_path, "model"))
 
     api = service.type.api
-    typedefs = api.typedefs.extend(service.type.dep_typedefs)
-    for typedef in typedefs:
+
+    for typedef in api.typedefs:
         data = {
+            "dependency": False,
             "service_name": service_name,
             "name": typedef.name,
-            "attributes": typedef.fields
+            "attributes": typedef.fields,
+            "timestamp": timestamp()
         }
         class_template = env.get_template("class.template")
         class_template.stream(data).dump(os.path.join(model_path,
                                          typedef.name + ".java"))
 
+    # domain dependecy classes
+    dependencies_path = create_if_missing(
+        os.path.join(domain_path, "dependencies")
+    )
+    for typedef in service.type.dep_typedefs:
+        data = {
+            "dependency": True,
+            "service_name": service_name,
+            "name": typedef.name,
+            "attributes": typedef.fields,
+            "timestamp": timestamp()
+        }
+        class_template = env.get_template("class.template")
+        class_template.stream(data).dump(
+            os.path.join(dependencies_path, typedef.name + ".java")
+        )
     #
     # Generate services
     #
     service_path = create_if_missing(os.path.join(content_path, "service"))
 
+    # base service
+    base_path = create_if_missing(os.path.join(service_path, "base"))
     service_data = {
         "service_name": service_name,
         "package_name": service_name,
         "functions": service.type.api.functions,
         "dep_names": [s.name for s in service.type.dependencies],
+        "timestamp": timestamp()
     }
-    service_template = env.get_template("service.template")
-    service_template.stream(service_data).dump(
-        os.path.join(service_path,
-                     service_name + "Service.java"))
+    base_template = env.get_template("base_service.template")
+    base_template.stream(service_data).dump(
+        os.path.join(base_path,
+                     "Base" + service_name + "Service.java"))
 
+    # impl service
+    impl_path = create_if_missing(os.path.join(service_path, "impl"))
+    impl_file = os.path.join(impl_path, service_name + "Service.java")
+    if not os.path.exists(impl_file):
+        impl_template = env.get_template("service.template")
+        impl_template.stream(service_data).dump(impl_file)
+
+    # dependecy services
     fns_by_service = defaultdict(list)
     for fn in service.type.dep_functions:
         fns_by_service[fn.service_name].append(fn)
@@ -265,11 +302,11 @@ def generate_service(service, output_dir):
             "package_name": service_name,
             "functions": fns_by_service[s.name],
             "use_circuit_breaker": True,
-            "dependency_service": True
+            "timestamp": timestamp()
         }
-        service_template = env.get_template("service.template")
+        service_template = env.get_template("dependency_service.template")
         service_template.stream(s_data).dump(
-            os.path.join(service_path,
+            os.path.join(base_path,
                          s.name + "Service.java"))
 
     #
