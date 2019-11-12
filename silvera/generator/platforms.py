@@ -194,3 +194,8 @@ def get_numb_of_modules(platform):
 def get_init_file(platform):
     """Returns the init file."""
     return platforms[platform][INIT_FILE]
+
+def is_collection(_type):
+    if isinstance(_type, TypedList):
+        return True
+    return False

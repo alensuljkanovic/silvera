@@ -10,9 +10,8 @@ package com.silvera.{{service_name}}.domain.{{"dependencies" if dependency else 
 public class {{name}} {
 
     {% for attr in attributes %}
-    private {{attr.type|converttype}} {{attr.name}};
+    private {{attr.type|converttype}} {{attr.name}}{{ "= java.util.Collections.emptyList()" if attr.type is collection else ""}};
     {%- endfor %}
-
 
 
     {%- for attr in attributes %}

@@ -7,7 +7,7 @@ from silvera.core import (CustomType, ConfigServerDecl, ServiceRegistryDecl,
     ServiceDecl, Service
 )
 from silvera.generator.platforms import (
-    JAVA, convert_complex_type, get_def_ret_val
+    JAVA, convert_complex_type, get_def_ret_val, is_collection
 )
 from silvera.utils import get_templates_path, decode_byte_str
 from silvera.generator.gen_reg import GeneratorDesc
@@ -163,6 +163,10 @@ def generate_service(service, output_dir):
     env.globals["get_default_for_cb_pattern"] = lambda x: \
         get_default_for_cb_pattern(JAVA, x)
     env.globals["get_rest_call"] = lambda x: get_rest_call(JAVA, x)
+    env.globals["default_value_for_type"] = lambda x: \
+        get_def_ret_val(JAVA, x)
+
+    env.tests["collection"] = lambda x: is_collection(x)
 
     service_name = service.name
     service_version = service.version
