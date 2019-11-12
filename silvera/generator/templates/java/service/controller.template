@@ -6,6 +6,9 @@ import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.silvera.{{service_name}}.service.*;
 import com.silvera.{{service_name}}.domain.model.*;
@@ -17,23 +20,21 @@ public class {{service_name}}Controller {
     @Autowired
     {{service_name}}Service {{service_name|firstlower}}Service;
 
-    {% for dependency in dep_names %}
-    @Autowired
-    {{dependency}}Service {{dependency|firstlower}}Service;
-    {% endfor %}
 
     {% for function in api.functions %}
-    @RequestMapping("{{function.rest_path}}")
+        {%if function.http_verb == "POST" %}
+    @RequestMapping(value="{{function.rest_path}}", method=RequestMethod.POST)
+    @ResponseBody
     public {{function.ret_type|converttype}} {{function.name}}({{function|unfold_function_params_rest}}) {
         {{"return" if function.ret_type != "void" else ""}} {{service_name|firstlower}}Service.{{function.name}}({{function|param_names}});
     }
-    {% endfor %}
-
-    {% for function in dep_functions %}
-    @RequestMapping("{{function.rest_path}}")
+        {% elif function.http_verb == "GET" %}
+    @RequestMapping(value="{{function.rest_path}}", method=RequestMethod.GET)
+    @ResponseBody
     public {{function.ret_type|converttype}} {{function.name}}({{function|unfold_function_params_rest}}) {
-        {{"return" if function.ret_type != "void" else ""}} {{function.service_name|firstlower}}Service.{{function.name}}({{function|param_names}});
+        {{"return" if function.ret_type != "void" else ""}} {{service_name|firstlower}}Service.{{function.name}}({{function|param_names}});
     }
+        {% endif %}
     {% endfor %}
 
 }

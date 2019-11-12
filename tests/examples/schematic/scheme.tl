@@ -1,61 +1,16 @@
-service SchemeService {
-
+service-registry ServiceRegistry{
+    tool=eureka
+    client_mode=False
     deployment {
         version="0.0.1"
-        port=8080
-        lang="java"
-        packaging="jar"
-        host=PC
-        replicas=1
-    }
-
-    communication_style=REST
-
-    api {
-        typedef Scheme [
-            list<ComponentLink> connections
-            list<Connection> connections
-        ]
-
-        typedef TerminalLink [
-            str name
-            str direction
-        ]
-
-        typedef PropertyLink [
-            str property_name
-            i32 value
-        ]
-
-        typedef ComponentLink [
-            str component_name
-            str name
-            list<PropertyLink> properties
-            list<TerminalLink> terminals
-        ]
-
-        typedef Connection [
-            str start_component
-            str start_terminal
-            str end_component
-            str end_terminal
-        ]
-
-        @rest(method=GET)
-        void add(str component_name)
-
-        @rest(method=GET)
-        Connection connect(str start_component, str start_terminal,  str end_component, str end_terminal)
-
-        @rest(method=GET)
-        void set_property_value(str component_name, str property_name, i32 value)
-
-        @rest(method=GET)
-        list<ComponentLink> list_components()
+        port=9091
+        url="http://localhost"
     }
 }
 
-service LibraryService {
+service Library {
+
+    service_registry=ServiceRegistry
 
     deployment {
         version="0.0.1"
@@ -69,58 +24,53 @@ service LibraryService {
     communication_style=REST
 
     api {
+        typedef Registry [
+            list<Component> components
+        ]
+
         typedef Component [
             str name
-            str icon
             list<Terminal> terminals
             list<Property> properties
         ]
 
         typedef Terminal [
-            Component parent
             str name
             str direction
         ]
 
         typedef Property [
-            Component parent
             str name
             str label
+            bool editable
+            bool visible
             i32 default_value
         ]
 
-        typedef TerminalLink [
-            str name
-            str direction
-        ]
 
-        typedef PropertyLink [
-            str property_name
-            i32 value
-        ]
+        @rest(method=POST)
+        void add(Component component)
 
-        typedef ComponentLink [
-            str component_name
-            str name
-            list<PropertyLink> properties
-            list<TerminalLink> terminals
-        ]
+        @rest(method=DELETE)
+        void remove(str componentName)
 
         @rest(method=GET)
-        void add_to_lib(Component component)
+        Component get(str componentName)
 
         @rest(method=GET)
-        ComponentLink get_component(str component_name)
+        list<Component> listLibrary()
 
     }
 }
 
 
-service CompileService {
+service Schematic {
+
+    service_registry=ServiceRegistry
 
     deployment {
         version="0.0.1"
-        port=8080
+        port=8081
         lang="java"
         packaging="jar"
         host=PC
@@ -130,24 +80,171 @@ service CompileService {
     communication_style=REST
 
     api {
-        typedef Netlist [
-            list<Node> nodes
+        typedef Shematic [
+            list<ComponentInstance> components
+            list<Connection> connections
         ]
 
-        typedef Node [
-            str component_type
-            str component_name
+        typedef ComponentInstance[
+            str libraryName
+            str name
+            list<TerminalInstance> terminals
+            list<PropertyInstance> properties
         ]
 
-        void compile(Netlist netlist)
+        typedef TerminalInstance [
+            ComponentInstance parent
+            str name
+            str direction
+        ]
+
+        typedef PropertyInstance [
+            ComponentInstance parent
+            str name
+            i32 value
+        ]
+
+        typedef Connection [
+            str name
+            TerminalInstance start
+            TerminalInstance end
+        ]
+
+        @rest(method=POST)
+        void addComponent(ComponentInstance component)
+
+        @rest(method=DELETE)
+        void removeComponent(str componentName)
+
+        @rest(method=POST)
+        void addConnection(Connection connection)
+
+        @rest(method=DELETE)
+        void removeConnection(str connectionName)
+
+        @rest(method=GET)
+        void setPropertyValue(str componentName, str propertyName, i32 value)
+
+        @rest(method=GET)
+        Shematic getSchematic()
 
     }
 }
 
-connection SchemeService -> LibraryService {
-    get_component[fail_fast]
+
+service ConnectionsValidator {
+
+    service_registry=ServiceRegistry
+
+    deployment {
+        version="0.0.1"
+        port=8082
+        lang="java"
+        packaging="jar"
+        host=PC
+        replicas=1
+    }
+
+    communication_style=REST
+
+    api {
+        typedef Status[
+            i32 code
+            str message
+        ]
+
+        typedef Connection [
+            str start_name
+            str start_direction
+            str end_direction
+            str end_name
+        ]
+
+        @rest(method=GET)
+        bool validate(list<Connection> connections)
+    }
 }
 
-connection SchemeService -> CompileService {
-    compile[fail_fast]
+
+
+service AnsiCCompiler {
+
+    service_registry=ServiceRegistry
+
+    deployment {
+        version="0.0.1"
+        port=8083
+        lang="java"
+        packaging="jar"
+        host=PC
+        replicas=1
+    }
+
+    communication_style=REST
+
+    api {
+
+        typedef ComponentData [
+            str id
+            str name
+            list<ComponentData> parents
+            list<ComponentData> children
+
+        ]
+
+        @rest(method=GET)
+        str compileToAnsiC(list<ComponentData> input)
+    }
+}
+
+service ARMCCompiler {
+
+    service_registry=ServiceRegistry
+
+    deployment {
+        version="0.0.1"
+        port=8084
+        lang="java"
+        packaging="jar"
+        host=PC
+        replicas=1
+    }
+
+    communication_style=REST
+
+    api {
+        typedef ComponentData [
+            str id
+            str name
+            list<ComponentData> parents
+            list<ComponentData> children
+
+        ]
+
+        str compileToArmC(list<ComponentData> input)
+    }
+}
+
+connection Schematic -> Library {
+    get[fail_fast]
+}
+
+connection ConnectionsValidator -> Schematic {
+    getSchematic[fail_fast]
+}
+
+connection AnsiCCompiler -> ConnectionsValidator {
+    validate[fail_fast]
+}
+
+connection AnsiCCompiler -> Schematic {
+    getSchematic[fail_fast]
+}
+
+connection ARMCCompiler -> ConnectionsValidator {
+    validate[fail_fast]
+}
+
+connection ARMCCompiler -> Schematic {
+    getSchematic[fail_fast]
 }

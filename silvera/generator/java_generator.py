@@ -1,7 +1,7 @@
 import os
 from collections import defaultdict
 from jinja2 import Environment, FileSystemLoader
-from silvera.const import MVN_GENERATE, HOST_CONTAINER
+from silvera.const import MVN_GENERATE, HOST_CONTAINER, HTTP_POST
 from silvera.core import (CustomType, ConfigServerDecl, ServiceRegistryDecl,
     ServiceDecl, Service
 )
@@ -213,8 +213,6 @@ def generate_service(service, output_dir):
     controller_data = {
         "service_name": service_name,
         "api": service.type.api,
-        "dep_names": [s.name for s in service.type.dependencies],
-        "dep_functions": service.type.dep_functions
     }
     controller_template = env.get_template("controller.template")
     controller_template.stream(controller_data).dump(
@@ -230,6 +228,7 @@ def generate_service(service, output_dir):
     os.mkdir(model_path)
 
     api = service.type.api
+    typedefs = api.typedefs.extend(service.type.dep_typedefs)
     for typedef in api.typedefs:
         data = {
             "service_name": service_name,
@@ -249,7 +248,8 @@ def generate_service(service, output_dir):
     service_data = {
         "service_name": service_name,
         "package_name": service_name,
-        "functions": service.type.api.functions
+        "functions": service.type.api.functions,
+        "dep_names": [s.name for s in service.type.dependencies],
     }
     service_template = env.get_template("service.template")
     service_template.stream(service_data).dump(
@@ -358,6 +358,13 @@ def unfold_function_params(platform, func, with_anotations=True):
             included in string or not
     """
     if platform == JAVA:
+        if with_anotations and func.http_verb == HTTP_POST:
+            params = func.params
+            if len(params) == 1:
+                param = params[0]
+                param_type = convert_complex_type(JAVA, param.type)
+                return "@RequestBody %s %s" % (param_type, param.name)
+
         params = []
         for p in func.params:
             param = ""

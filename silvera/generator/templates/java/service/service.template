@@ -2,6 +2,7 @@ package com.silvera.{{package_name}}.service;
 
 import org.springframework.stereotype.Service;
 import com.silvera.{{package_name}}.domain.model.*;
+import org.springframework.beans.factory.annotation.Autowired;
 {% if use_circuit_breaker %}
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 {% endif %}
@@ -14,18 +15,21 @@ import java.net.URI;
 @Service
 public class {{service_name}}Service {
 
-
+    {% for dependency in dep_names %}
+    @Autowired
+    {{dependency}}Service {{dependency|firstlower}}Service;
+    {% endfor %}
 
     {% for function in functions %}
     {{generate_cb_annotation(function)}}
     public {{function.ret_type|converttype}} {{function.name}}({{function|unfold_function_params}}) {
         {% if dependency_service %}
         RestTemplate restTemplate = new RestTemplate();
-        URI uri = URI.create("{{get_rest_call(function)}}");
-        {% if function.http_verb == HTTP_GET %}
-        return restTemplate.getForObject(uri, {{function.ret_type|converttype}}.class);
+        {% if function.dep.http_verb == "GET" %}
+        {{"return" if function.ret_type != "void" else ""}} restTemplate.getForObject("{{get_rest_call(function)}}", {{function.ret_type|converttype}}.class, {{function|param_names}});
         {% else %}
-        return restTemplate.postForObject(uri, {{function|param_names}}, {{function.ret_type|converttype}}.class);
+        URI uri = URI.create("{{get_rest_call(function)}}");
+        {{"return" if function.ret_type != "void" else ""}} restTemplate.postForObject(uri, {{function|param_names}}, {{function.ret_type|converttype}}.class);
         {% endif%}
         {% else %}
         throw new java.lang.UnsupportedOperationException("Not implemented yet.");

@@ -205,6 +205,7 @@ class ServiceDecl(ServiceObject):
                          deployment, comm_style, extends)
         self.api = api
         self.dep_functions = []
+        self.dep_typedefs = []
 
     @property
     def functions(self):
@@ -357,7 +358,9 @@ class Function:
         if self.annotation:
             ann = Annotation(None, ann.method, ann.mapping)
 
-        return Function(None, self.name, self.ret_type, params, ann)
+        f = Function(None, self.name, self.ret_type, params, ann)
+        f.http_verb = self.http_verb
+        return f
 
     def __str__(self):
         return "Function %s" % self.name
