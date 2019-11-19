@@ -12,3 +12,6 @@ experimenting/**
 
 silvera/generator/src-gen/*
 !silvera/generator/src-gen/.gitkeep
+
+# pyenv file
+.python-version
