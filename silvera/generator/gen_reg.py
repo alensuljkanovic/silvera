@@ -1,10 +1,10 @@
 import pkg_resources
-from silvera.generator.platforms import JAVA
 
 
 # Registry of all available code generators.
 generators = None
 built_in_generators = {}
+
 
 class GeneratorDesc:
     """Generator description class, used for generator registration and
@@ -63,7 +63,7 @@ def generator_for_language(language):
     generators = collect_generators()
 
     try:
-       return generators[language]
+        return generators[language]
     except KeyError:
         global built_in_generators
 
@@ -107,6 +107,7 @@ def clean_generator_registrations():
     """Clean all generator registrations()"""
     global generators
     generators = {}
+
 
 def collect_generators():
     """Returns a dict of `GeneratorDesc` objects for each registered generator

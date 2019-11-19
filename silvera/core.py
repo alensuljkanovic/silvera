@@ -452,4 +452,3 @@ class TypedList(List):
         super().__init__(parent)
         self.type = type
         self.len = len
-

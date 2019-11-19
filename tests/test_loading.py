@@ -4,7 +4,8 @@ This module tests loading mechanism
 import os
 import pytest
 from silvera.run import load
-from silvera.core import ConfigServerDecl, ServiceRegistryDecl, TypedList, TypeDef
+from silvera.core import ConfigServerDecl, ServiceRegistryDecl, TypedList, \
+    TypeDef
 from silvera.utils import get_root_path
 
 

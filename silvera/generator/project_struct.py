@@ -1,7 +1,6 @@
 """This module contais code for generating project structure in target
 language"""
 import os
-import shutil
 
 
 def create_if_missing(dir_path):
@@ -19,10 +18,10 @@ def java_struct(output_path, app_name):
     app_root = create_if_missing(os.path.join(output_path, app_name))
     app_src = create_if_missing(os.path.join(app_root, "src"))
     app_main = create_if_missing(os.path.join(app_src, "main"))
-    app_test = create_if_missing(os.path.join(app_src, "test"))
+    _ = create_if_missing(os.path.join(app_src, "test"))
 
     app_java = create_if_missing(os.path.join(app_main, "java"))
-    app_res = create_if_missing(os.path.join(app_main, "resources"))
+    _ = create_if_missing(os.path.join(app_main, "resources"))
 
     app_com = create_if_missing(os.path.join(app_java, "com"))
     app_silvera = create_if_missing(os.path.join(app_com, "silvera"))

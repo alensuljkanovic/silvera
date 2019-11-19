@@ -4,8 +4,7 @@ processors are used during parsing.
 """
 from collections import deque, OrderedDict
 from silvera.core import (ServiceDecl, ConfigServerDecl, ServiceRegistryDecl,
-    TypedList, TypeDef, CustomType
-)
+                          TypedList, TypeDef)
 
 
 def process_connections(module):

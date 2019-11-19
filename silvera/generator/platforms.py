@@ -3,7 +3,7 @@ This module contains platform data.
 """
 
 # Platform names
-from silvera.core import CustomType, TypedList, TypeDef, CustomType
+from silvera.core import CustomType, TypedList, TypeDef
 
 JAVA = "java"
 PYTHON = "python"
@@ -194,6 +194,7 @@ def get_numb_of_modules(platform):
 def get_init_file(platform):
     """Returns the init file."""
     return platforms[platform][INIT_FILE]
+
 
 def is_collection(_type):
     if isinstance(_type, TypedList):

@@ -4,12 +4,11 @@ from collections import defaultdict
 from jinja2 import Environment, FileSystemLoader
 from silvera.const import HOST_CONTAINER, HTTP_POST
 from silvera.core import (CustomType, ConfigServerDecl, ServiceRegistryDecl,
-    ServiceDecl, Service
-)
+                          Service)
 from silvera.generator.platforms import (
     JAVA, convert_complex_type, get_def_ret_val, is_collection
 )
-from silvera.utils import get_templates_path, decode_byte_str
+from silvera.utils import get_templates_path
 from silvera.generator.gen_reg import GeneratorDesc
 from silvera.generator.project_struct import java_struct, create_if_missing
 
@@ -230,7 +229,7 @@ def generate_service(service, output_dir):
     controller_template = env.get_template("controller.template")
     controller_template.stream(controller_data).dump(
         os.path.join(controller_path,
-        service_name + "Controller.java")
+                     service_name + "Controller.java")
     )
 
     #
@@ -317,12 +316,12 @@ def generate_service(service, output_dir):
     # Generate run script
     #
     generate_run_script(output_dir, service_name, service_version,
-                         service_port)
+                        service_port)
 
     if service.type.host == HOST_CONTAINER:
         # Generate Dockerfile
         generate_dockerfile(output_dir, service_name, service_version,
-                             service_port)
+                            service_port)
 
         # # Copy wait-for-it.sh
         # from shutil import copy2
@@ -413,7 +412,8 @@ def unfold_function_params(platform, func, with_anotations=True):
 
             if with_anotations and p.query_param:
                 required = "true" if p.default is None else "false"
-                param = '@RequestParam(value="%s", required=%s) ' % (p.name, required)
+                param = '@RequestParam(value="%s", required=%s) ' % (p.name,
+                                                                     required)
 
             param += convert_complex_type(JAVA, p.type) + " "
             param += p.name
@@ -480,7 +480,9 @@ def generate_dockerfile(output_path, app_name, app_version, app_port):
 
     out = os.path.join(output_path, app_name, "Dockerfile")
 
-    d = {"app_name": app_name, "app_version": app_version, "app_port": app_port}
+    d = {"app_name": app_name,
+         "app_version": app_version,
+         "app_port": app_port}
     template.stream(d).dump(out)
 
 

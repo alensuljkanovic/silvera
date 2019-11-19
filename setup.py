@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
-import sys
 import codecs
-from setuptools import setup, find_packages
+from setuptools import setup
+
 
 VERSIONFILE = "silvera/__init__.py"
 VERSION = None
@@ -26,7 +26,8 @@ setup(
     author='Alen Suljkanovic',
     author_email='alienized91@gmail.com',
     license='MIT',
-    packages=["silvera", "silvera.export", "silvera.generator", "silvera.lang"],
+    packages=["silvera", "silvera.export", "silvera.generator",
+              "silvera.lang"],
     include_package_data=True,
     install_requires=["textx", "jinja2"],
     tests_require=[

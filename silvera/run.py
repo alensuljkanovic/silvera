@@ -5,8 +5,7 @@ from silvera.lang.meta import get_metamodel
 from silvera.lang.obj_processors import model_processor
 from silvera.resolvers import RESTResolver, NO_STRATEGY
 from silvera.core import Model
-from silvera.utils import get_root_path
-from silvera.export import export_to_dot
+
 
 def run(src_path, output_dir=None, rest_res_strategy=NO_STRATEGY):
     """Runs Silvera

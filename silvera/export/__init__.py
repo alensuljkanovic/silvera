@@ -69,7 +69,8 @@ def export_to_dot(model, output_path, detail_level=DETAIL_SIMPLE):
                 color = ", fillcolor=antiquewhite"
             if isinstance(decl, ServiceRegistryDecl):
                 color = ", fillcolor=darkseagreen1"
-            if isinstance(decl, ServiceDecl) and detail_level == DETAIL_WITH_FUNCTIONS:
+            if isinstance(decl, ServiceDecl) and \
+                    detail_level == DETAIL_WITH_FUNCTIONS:
                 functions = "|%s" % get_functions(decl)
 
             if detail_level == DETAIL_ALL:
