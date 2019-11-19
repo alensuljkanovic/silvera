@@ -20,7 +20,7 @@ def run(src_path, output_dir=None, rest_res_strategy=NO_STRATEGY):
         output_dir = src_path
     else:
         output_dir = os.path.abspath(output_dir)
-    export_to_dot(model, os.path.join(output_dir, "export.dot"), 1)
+
     generate(model, output_dir)
 
 
@@ -46,7 +46,7 @@ def load(src_path, rest_res_strategy=NO_STRATEGY):
         _metamodel = get_metamodel()
 
     model = Model(src_path)
-    for root, dirs, filenames in os.walk(src_path):
+    for root, _, filenames in os.walk(src_path):
         for filename in fnmatch.filter(filenames, "*.tl"):
             module_path = os.path.join(root, filename)
             module = _metamodel.model_from_file(module_path)
