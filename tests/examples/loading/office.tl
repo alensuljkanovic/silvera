@@ -6,7 +6,7 @@ service OfficeService {
         version="1.0.0"
     }
 
-    communication_style=REST
+    communication_style=rpc
 
     api {
         typedef Worker [
@@ -38,7 +38,7 @@ service NewOfficeService extends OfficeService{
         version="2.0.0"
     }
 
-    communication_style=thrift
+    communication_style=messaging
 
     api {
 

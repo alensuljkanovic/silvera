@@ -31,7 +31,7 @@ service UserService {
         replicas=1
     }
 
-    communication_style=REST
+    communication_style=rpc
 
     api {
         typedef User [
@@ -90,7 +90,7 @@ service PaymentService {
         replicas=1
     }
 
-    communication_style=REST
+    communication_style=rpc
 
     api {
         typedef Payment [
@@ -123,7 +123,7 @@ service ShoppingCartService {
         replicas=1
     }
 
-    communication_style=REST
+    communication_style=rpc
 
     api {
         typedef ShoppingCart [
@@ -160,7 +160,7 @@ service ProductService {
         replicas=1
     }
 
-    communication_style=REST
+    communication_style=rpc
 
     api {
         typedef Product [

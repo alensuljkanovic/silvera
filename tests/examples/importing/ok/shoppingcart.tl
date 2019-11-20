@@ -16,7 +16,7 @@ service ShoppingCartService {
         replicas=1
     }
 
-    communication_style=REST
+    communication_style=rpc
 
     api {
         typedef ShoppingCart [

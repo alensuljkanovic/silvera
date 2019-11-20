@@ -6,7 +6,7 @@ service TestService {
         version="1.0.0"
     }
 
-    communication_style=REST
+    communication_style=rpc
 
     api {
         typedef CustomObject [

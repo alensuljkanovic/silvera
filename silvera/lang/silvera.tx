@@ -131,7 +131,12 @@ HostChoice:
 ;
 
 CommunicationStyle:
-    "REST" | "gRPC" | "thrift" | "kafka" | "RabbitMQ" | "custom"
+    //"REST" | "gRPC" | "thrift" | "kafka" | "RabbitMQ" | "custom"
+    "rpc" | "messaging"
+;
+
+Annotation:
+    "@async" | RESTAnnotation | "@thrift"
 ;
 
 RESTAnnotation:
@@ -148,7 +153,7 @@ HTTPMethod:
 ;
 
 Function:
-    (annotation=RESTAnnotation)?
+    annotations*=Annotation
     ret_type=ReturnType name=ID '(' params*=FunctionParameter[','] ')'
 ;
 

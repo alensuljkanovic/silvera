@@ -21,7 +21,7 @@ service Library {
         replicas=1
     }
 
-    communication_style=REST
+    communication_style=rpc
 
     api {
         typedef Registry [
@@ -77,7 +77,7 @@ service Schematic {
         replicas=1
     }
 
-    communication_style=REST
+    communication_style=rpc
 
     api {
         typedef Shematic [
@@ -145,7 +145,7 @@ service ConnectionsValidator {
         replicas=1
     }
 
-    communication_style=REST
+    communication_style=rpc
 
     api {
         typedef Status[
@@ -180,7 +180,7 @@ service AnsiCCompiler {
         replicas=1
     }
 
-    communication_style=REST
+    communication_style=rpc
 
     api {
 
@@ -210,7 +210,7 @@ service ARMCCompiler {
         replicas=1
     }
 
-    communication_style=REST
+    communication_style=rpc
 
     api {
         typedef ComponentData [

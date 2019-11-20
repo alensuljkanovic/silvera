@@ -82,7 +82,7 @@ class RESTResolver:
     def resolve_model(self, model):
         """Resolve model."""
         for decl in (d for module in model.modules for d in module.decls):
-            if isinstance(decl, ServiceDecl) and decl.uses_rest:
+            if isinstance(decl, ServiceDecl):
                 self.resolve_service(decl)
 
     def resolve_service(self, service):
@@ -91,7 +91,7 @@ class RESTResolver:
             return "/".join(["{%s}" % p.name for p in func_params])
 
         def func_name_mapping(func):
-            ann = func.annotation
+            ann = rest_annotation(func)
             if ann and ann.mapping:
                 fn_mapping = ann.mapping
             else:
@@ -108,7 +108,7 @@ class RESTResolver:
 
         path = "%s/" % name.lower()
         for func in api.functions:
-            ann = func.annotation
+            ann = rest_annotation(func)
             if ann is not None:
                 self._apply_annotation(func)
             else:
@@ -128,7 +128,7 @@ class RESTResolver:
         Args:
             func (Function): function object
         """
-        ann = func.annotation
+        ann = rest_annotation(func)
         func.http_verb = ann.method
 
     def _apply_strategy(self, func):
@@ -193,3 +193,11 @@ class PreferDeleteOverGet(ResolvingStrategy):
 
     def apply(self, func):
         raise NotImplementedError()
+
+
+def rest_annotation(func):
+    for ann in func.annotations:
+        if ann.__class__.__name__ == "RESTAnnotation":
+            return ann
+
+    return None

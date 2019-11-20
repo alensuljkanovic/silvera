@@ -1,7 +1,7 @@
 
 service UserService {
 
-    communication_style=REST
+    communication_style=rpc
 
     api {
         typedef User [
@@ -22,12 +22,12 @@ service UserService {
 
 
 service ProxyService extends UserService {
-    communication_style=thrift
+    communication_style=messaging
 }
 
 service ChangedUserService extends UserService {
 
-    communication_style=REST
+    communication_style=rpc
 
     api {
 

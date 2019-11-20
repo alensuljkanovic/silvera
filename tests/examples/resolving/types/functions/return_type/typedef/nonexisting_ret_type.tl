@@ -1,6 +1,6 @@
 service Schematic {
 
-    communication_style=REST
+    communication_style=rpc
 
     api {
 

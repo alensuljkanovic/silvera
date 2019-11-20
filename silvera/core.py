@@ -222,23 +222,13 @@ class ServiceDecl(ServiceObject):
         for f in self.functions:
             if f.name == func_name:
                 return f
-
-        # # Check if function is contained in a service that self depends upon
-        # f = None
-        # for dep_serv in self.dependencies:
-        #     try:
-        #         f = dep_serv.get_function(func_name)
-        #     except KeyError:
-        #         pass
-        #
-        # if not f:
         raise KeyError("Function not found!")
 
-        # return f
-
-    @property
-    def uses_rest(self):
-        return self.comm_style == REST
+    def has_async(self):
+        for f in self.api.functions:
+            if f.is_async():
+                return True
+        return False
 
     @property
     def domain_objs(self):
@@ -298,7 +288,7 @@ class ConfigServerDecl(Deployable):
 class Function:
     """Object representation of function declaration."""
     def __init__(self, parent, name=None, ret_type=None, params=None,
-                 annotation=None):
+                 annotations=None):
         self.parent = parent
         self.name = name
         self.ret_type = ret_type
@@ -308,7 +298,7 @@ class Function:
         self.http_verb = None
         self.cb_pattern = None
         self.cb_fallback = None
-        self.annotation = annotation
+        self.annotations = annotations if annotations else []
 
     @property
     def service_name(self):
@@ -352,13 +342,17 @@ class Function:
 
         self.rest_path = mapping
 
+    def is_async(self):
+        return "@async" in self.annotations
+
     def clone(self):
         params = [p.clone() for p in self.params]
-        ann = self.annotation
-        if self.annotation:
-            ann = Annotation(None, ann.method, ann.mapping)
 
-        f = Function(None, self.name, self.ret_type, params, ann)
+        annotations = []
+        for ann in self.annotations:
+            annotations.append(Annotation(None, ann.method, ann.mapping))
+
+        f = Function(None, self.name, self.ret_type, params, annotations)
         f.http_verb = self.http_verb
         return f
 

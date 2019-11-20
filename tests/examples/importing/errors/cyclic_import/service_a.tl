@@ -6,7 +6,7 @@ service A {
         version="0.0.1"
     }
 
-    communication_style=REST
+    communication_style=rpc
 
     api {
         bool check_a(str some_param)

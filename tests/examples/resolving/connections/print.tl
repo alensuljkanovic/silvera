@@ -6,7 +6,7 @@ service PrintService {
         version="1.0.0"
     }
 
-    communication_style=REST
+    communication_style=rpc
 
     api {
         typedef Document [
@@ -22,7 +22,7 @@ service PrintService {
 
 service FastPrintService extends PrintService {
 
-    communication_style=REST
+    communication_style=rpc
 
     api {
 
@@ -37,7 +37,7 @@ service OfficeService {
         version="1.0.0"
     }
 
-    communication_style=REST
+    communication_style=rpc
 
     api {
         typedef Worker [
@@ -52,7 +52,7 @@ service OfficeService {
 
 service NewOfficeService extends OfficeService {
 
-    communication_style=REST
+    communication_style=rpc
 
     api {
 
