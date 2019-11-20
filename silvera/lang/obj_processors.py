@@ -5,6 +5,11 @@ processors are used during parsing.
 from collections import deque, OrderedDict
 from silvera.core import (ServiceDecl, ConfigServerDecl, ServiceRegistryDecl,
                           TypedList, TypeDef)
+from silvera.exceptions import SilveraTypeError
+
+
+BASIC_TYPES = {"date", "i16", "i32", "i64", "bool", "int", "void", "str",
+               "double"}
 
 
 def process_connections(module):
@@ -105,41 +110,70 @@ def resolve_custom_types(service_decl):
     """
     api = service_decl.api
     if api is not None:
-        functions = api.functions
 
-        for fnc in functions:
-            if isinstance(fnc.ret_type, TypedList):
-                _resolve_typed_list(service_decl, fnc.ret_type)
-            else:
-                rtd = service_decl.domain_objs.get(fnc.ret_type, None)
-                if rtd is not None:
-                    fnc.ret_type = rtd
-
-            for param in fnc.params:
-                if isinstance(param.type, TypedList):
-                    _resolve_typed_list(service_decl, param.type)
-                else:
-                    td = service_decl.domain_objs.get(param.type, None)
-                    if td is not None:
-                        param.type = td
-
+        # Resolve type definitions
         typedefs = api.typedefs
-        for field in (f for td in typedefs for f in td.fields):
+        for field in (f for td in typedefs for f in td.fields
+                      if not is_type_resolved(f.type)):
             if isinstance(field.type, TypedList):
                 _resolve_typed_list(service_decl, field.type)
             else:
-                ft = service_decl.domain_objs.get(field.type, None)
-                if ft is not None:
-                    field.type = ft
+                try:
+                    ft = service_decl.domain_objs[field.type]
+                except KeyError:
+                    raise SilveraTypeError(service_decl.name, field.type)
+
+                field.type = ft
+
+        # Resolve functions
+        functions = api.functions
+
+        for fnc in functions:
+
+            # Resolve function's return type
+            ret_type = fnc.ret_type
+            if not is_type_resolved(ret_type):
+                if isinstance(ret_type, TypedList):
+                    _resolve_typed_list(service_decl, ret_type)
+                else:
+                    try:
+                        rtd = service_decl.domain_objs[ret_type]
+                    except KeyError:
+                        raise SilveraTypeError(service_decl.name, ret_type)
+
+                    fnc.ret_type = rtd
+
+            # Resolve function's parameters
+            for param in [p for p in fnc.params
+                          if not is_type_resolved(p.type)]:
+                if isinstance(param.type, TypedList):
+                    _resolve_typed_list(service_decl, param.type)
+                else:
+                    try:
+                        td = service_decl.domain_objs[param.type]
+                    except KeyError:
+                        raise SilveraTypeError(service_decl.name, param.type)
+
+                    param.type = td
 
 
 def _resolve_typed_list(service_decl, typed_list):
+    """Resolves type of TypedList."""
     if isinstance(typed_list.type, TypedList):
         _resolve_typed_list(service_decl, typed_list.type)
     else:
-        ft = service_decl.domain_objs.get(typed_list.type, None)
-        if ft is not None:
+        if not is_type_resolved(typed_list.type):
+            try:
+                ft = service_decl.domain_objs[typed_list.type]
+            except KeyError:
+                raise SilveraTypeError(service_decl.name, typed_list.type)
+
             typed_list.type = ft
+
+
+def is_type_resolved(_type):
+    """Helper function that checks if type is already resolved."""
+    return _type in BASIC_TYPES or isinstance(_type, TypeDef)
 
 
 def resolve_deployment_inheritance(base_service, service_decl):

@@ -19,4 +19,4 @@ def example_path():
 
 
 def test_schematic(example_path):
-    run(example_path)
+    run(example_path, output_dir=os.path.join(example_path, "src-gen"))

@@ -169,10 +169,6 @@ DataType:
     Number | Collection | Date | FQN
 ;
 
-CustomType:
-    type=[TypeDef]
-;
-
 Date:
     'date'
 ;

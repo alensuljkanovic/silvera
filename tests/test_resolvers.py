@@ -3,6 +3,7 @@ from silvera.lang.meta import get_metamodel
 from silvera.resolvers import RESTResolver
 from silvera.run import load
 from silvera.utils import get_root_path
+from silvera.exceptions import SilveraTypeError
 import pytest
 import os
 
@@ -111,3 +112,34 @@ def test_with_connections_and_inherit(examples_path):
     assert new_fast_print.rest_path == "newofficeservice/fastprint/"
     assert new_fast_print.dep.http_verb == HTTP_POST
     assert new_fast_print.dep.rest_path == "fastprintservice/fastprint/"
+
+
+def test_function_return_type_resolving_error(examples_path):
+
+    with pytest.raises(Exception):
+        load(os.path.join(examples_path, "types", "functions", "return_type",
+                          "typedef"))
+
+    with pytest.raises(Exception):
+        load(os.path.join(examples_path, "types", "functions", "return_type"
+                          "typed_list"))
+
+
+def test_function_param_type_resolving_error(examples_path):
+
+    with pytest.raises(SilveraTypeError):
+        load(os.path.join(examples_path, "types", "functions", "param",
+                          "typedef"))
+
+    with pytest.raises(SilveraTypeError):
+        load(os.path.join(examples_path, "types", "functions", "param",
+                          "typed_list"))
+
+
+def test_typedef_resolving_error(examples_path):
+
+    with pytest.raises(SilveraTypeError):
+        load(os.path.join(examples_path, "types", "typedefs", "td"))
+
+    with pytest.raises(SilveraTypeError):
+        load(os.path.join(examples_path, "types", "typedefs", "typed_list"))
