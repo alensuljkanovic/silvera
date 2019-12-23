@@ -10,24 +10,33 @@ package com.silvera.{{package_name}}.service;
 
 import org.springframework.stereotype.Service;
 import com.silvera.{{package_name}}.domain.model.*;
+{% if dep_names %}
 import com.silvera.{{package_name}}.domain.dependencies.*;
+{% endif %}
 import com.silvera.{{package_name}}.service.base.*;
 import org.springframework.beans.factory.annotation.Autowired;
 {% if use_circuit_breaker %}
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 {% endif %}
 
+{% if async %}
+import java.util.concurrent.CompletableFuture;
+import org.springframework.scheduling.annotation.Async;
+import com.silvera.{{service_name}}.AsyncConfig;
+{% endif %}
+
 
 @Service
-public class {{service_name}}Service extends Base{{service_name}}Service{
+public class {{service_name}}Service extends Base{{service_name}}Service {
 
     public {{service_name}}Service(){
         super();
     }
 
     {% for function in functions %}
+    {{'@Async(AsyncConfig.CONFIG_NAME)' if function.is_async() else ""}}
     {{generate_cb_annotation(function)}}
-    public {{function.ret_type|converttype}} {{function.name}}({{function|unfold_function_params}}) {
+    public {{function|return_type}} {{function.name}}({{function|unfold_function_params}}) {{'throws InterruptedException ' if function.is_async() else ''}}{
         /*
             TODO: Implement this function!!!
         */
@@ -37,7 +46,7 @@ public class {{service_name}}Service extends Base{{service_name}}Service{
     //
     // This is a fallback method if method '{{function.name}}' fails!
     //
-    public {{function.ret_type|converttype}} {{function.cb_fallback}}({{function|unfold_function_params}}) {
+    public {{function|return_type}} {{function.cb_fallback}}({{function|unfold_function_params}}) {
         return {{get_default_for_cb_pattern(function)}};
     }
     {% endif %}

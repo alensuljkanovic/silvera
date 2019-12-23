@@ -16,5 +16,8 @@ silvera/generator/src-gen/*
 tests/examples/schematic/src-gen/*
 !tests/examples/schematic/src-gen/.gitkeep
 
+tests/examples/async/src-gen/*
+!tests/examples/async/src-gen/.gitkeep
+
 # pyenv file
 .python-version

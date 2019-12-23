@@ -152,6 +152,7 @@ def generate_service(service, output_dir):
     env.filters["firstupper"] = lambda x: x[0].upper() + x[1:]
     env.filters["firstlower"] = lambda x: x[0].lower() + x[1:]
     env.filters["converttype"] = lambda x: convert_complex_type(JAVA, x)
+    env.filters["return_type"] = lambda fnc: get_return_type(fnc)
     env.filters["unfold_function_params"] = lambda x: unfold_function_params(
         JAVA, x, False)
     env.filters["unfold_function_params_rest"] = lambda x: unfold_function_params(
@@ -184,7 +185,7 @@ def generate_service(service, output_dir):
         "service_port": "${PORT:%s}" % service_port,
         "service_version": service_version,
         "use_circuit_breaker": len(service.type.dependencies) > 0,
-        "timestamp": timestamp()
+        "timestamp": timestamp(),
     }
 
     if service.type.config_server:
@@ -214,6 +215,12 @@ def generate_service(service, output_dir):
     app_template = env.get_template("main.template")
     app_template.stream(d).dump(os.path.join(content_path, "App.java"))
 
+    # Generate {{ServiceName}}AsyncConfiguration.java, if needed
+    if service.type.has_async():
+        cfg_template = env.get_template("config.template")
+        cfg_name = service_name + "AsyncConfiguration.java"
+        cfg_template.stream(d).dump(os.path.join(content_path, cfg_name))
+
     #
     # Generate controller
     #
@@ -224,7 +231,8 @@ def generate_service(service, output_dir):
     controller_data = {
         "service_name": service_name,
         "api": service.type.api,
-        "timestamp": timestamp()
+        "timestamp": timestamp(),
+        "async": service.type.has_async(),
     }
     controller_template = env.get_template("controller.template")
     controller_template.stream(controller_data).dump(
@@ -252,22 +260,23 @@ def generate_service(service, output_dir):
         class_template.stream(data).dump(os.path.join(model_path,
                                          typedef.name + ".java"))
 
-    # domain dependecy classes
-    dependencies_path = create_if_missing(
-        os.path.join(domain_path, "dependencies")
-    )
-    for typedef in service.type.dep_typedefs:
-        data = {
-            "dependency": True,
-            "service_name": service_name,
-            "name": typedef.name,
-            "attributes": typedef.fields,
-            "timestamp": timestamp()
-        }
-        class_template = env.get_template("class.template")
-        class_template.stream(data).dump(
-            os.path.join(dependencies_path, typedef.name + ".java")
+    if service.type.dep_typedefs:
+        # domain dependecy classes
+        dependencies_path = create_if_missing(
+            os.path.join(domain_path, "dependencies")
         )
+        for typedef in service.type.dep_typedefs:
+            data = {
+                "dependency": True,
+                "service_name": service_name,
+                "name": typedef.name,
+                "attributes": typedef.fields,
+                "timestamp": timestamp()
+            }
+            class_template = env.get_template("class.template")
+            class_template.stream(data).dump(
+                os.path.join(dependencies_path, typedef.name + ".java")
+            )
     #
     # Generate services
     #
@@ -280,7 +289,8 @@ def generate_service(service, output_dir):
         "package_name": service_name,
         "functions": service.type.api.functions,
         "dep_names": [s.name for s in service.type.dependencies],
-        "timestamp": timestamp()
+        "timestamp": timestamp(),
+        "async": service.type.has_async(),
     }
     base_template = env.get_template("base_service.template")
     base_template.stream(service_data).dump(
@@ -355,6 +365,18 @@ def calculate_type(platform, _type):
     except KeyError:
         if isinstance(_type, CustomType):
             return str(_type)
+
+
+def get_return_type(function):
+    ret_type = convert_complex_type(JAVA, function.ret_type)
+
+    if function.is_async():
+        if ret_type == "void":
+            ret_type = "Void"
+
+        ret_type = "CompletableFuture<%s>" % ret_type
+
+    return ret_type
 
 
 def get_param_names(func):

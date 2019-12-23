@@ -148,8 +148,6 @@ def convert_complex_type(platform, _type):
 
     if isinstance(_type, TypeDef):
         return _type.name
-    if isinstance(_type, CustomType):
-        return _type.type
 
     try:
         return convert_type(platform, _type)

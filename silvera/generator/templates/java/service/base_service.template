@@ -14,6 +14,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 {% endif %}
 
+{% if async %}
+import java.util.concurrent.CompletableFuture;
+import org.springframework.scheduling.annotation.Async;
+import com.silvera.{{service_name}}.AsyncConfig;
+{% endif %}
 
 @Service
 public abstract class Base{{service_name}}Service {
@@ -24,15 +29,16 @@ public abstract class Base{{service_name}}Service {
     {% endfor %}
 
     {% for function in functions %}
+     {{'@Async(AsyncConfig.CONFIG_NAME)' if function.is_async() else ""}}
     {{generate_cb_annotation(function)}}
-    public {{function.ret_type|converttype}} {{function.name}}({{function|unfold_function_params}}) {
+    public {{function|return_type}} {{function.name}}({{function|unfold_function_params}}) {{'throws InterruptedException ' if function.is_async() else ''}}{
         throw new java.lang.UnsupportedOperationException("Not implemented yet.");
     }
     {% if function.cb_pattern and function.cb_pattern != "fail_fast" %}
     //
     // This is a fallback method if method '{{function.name}}' fails!
     //
-    public {{function.ret_type|converttype}} {{function.cb_fallback}}({{function|unfold_function_params}}) {
+    public {{function|return_type}} {{function.cb_fallback}}({{function|unfold_function_params}}) {
         return {{get_default_for_cb_pattern(function)}};
     }
     {% endif %}

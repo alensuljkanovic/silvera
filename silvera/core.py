@@ -2,8 +2,9 @@
 This module contains the implementation of Silvera DSL.
 """
 import os
-from silvera.const import REST
+# from silvera.const import REST
 import urllib.parse as url_parser
+import warnings
 
 
 def fqn_to_path(fqn):
@@ -350,7 +351,8 @@ class Function:
 
         annotations = []
         for ann in self.annotations:
-            annotations.append(Annotation(None, ann.method, ann.mapping))
+            ann_clone = ann if isinstance(ann, str) else ann.clone()
+            annotations.append(ann_clone)
 
         f = Function(None, self.name, self.ret_type, params, annotations)
         f.http_verb = self.http_verb
@@ -377,7 +379,7 @@ class FunctionParameter:
                                  self.name_mapping)
 
 
-class Annotation:
+class RESTAnnotation:
 
     def __init__(self, parent, method=None, mapping=None):
         self.parent = parent
@@ -385,7 +387,7 @@ class Annotation:
         self.mapping = mapping
 
     def clone(self):
-        return Annotation(None, self.method, self.mapping)
+        return RESTAnnotation(None, self.method, self.mapping)
 
 
 class TypeDef:

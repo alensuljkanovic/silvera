@@ -5,6 +5,22 @@
     Date: {{timestamp}}
 */
 
+{% macro function_body(function) %}
+{%- set service_call = service_name|firstlower + "Service." + function.name + "(" + function|param_names + ")" -%}
+{% if function.is_async() %}
+    {% if function.ret_type == "void" %}
+    {{function|return_type}} future = new {{function|return_type}}();
+    {{service_call}};
+    future.complete(null);
+    {% else %}
+    {{function|return_type}} future = {{service_call}};
+    return future.get();
+    {% endif %}
+{% else %}
+    {{"return" if function.ret_type != "void" else ""}} {{service_name|firstlower}}Service.{{function.name}}({{function|param_names}});
+{% endif -%}
+{% endmacro %}
+
 package com.silvera.{{service_name}}.controller;
 
 import java.util.Collection;
@@ -20,6 +36,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.silvera.{{service_name}}.service.*;
 import com.silvera.{{service_name}}.domain.model.*;
 
+{% if async %}
+import java.util.concurrent.CompletableFuture;
+{% endif %}
+
 @RefreshScope
 @RestController
 public class {{service_name}}Controller {
@@ -29,17 +49,18 @@ public class {{service_name}}Controller {
 
 
     {% for function in api.functions %}
+        {% set service_call = service_name|firstlower + "Service." + function.name + "(" + function|param_names %}
         {%if function.http_verb == "POST" %}
     @RequestMapping(value="{{function.rest_path}}", method=RequestMethod.POST)
     @ResponseBody
-    public {{function.ret_type|converttype}} {{function.name}}({{function|unfold_function_params_rest}}) {
-        {{"return" if function.ret_type != "void" else ""}} {{service_name|firstlower}}Service.{{function.name}}({{function|param_names}});
+    public {{function.ret_type|converttype}} {{function.name}}({{function|unfold_function_params_rest}}) {{'throws InterruptedException, java.util.concurrent.ExecutionException ' if function.is_async() else ''}}{
+        {{function_body(function)|indent}}
     }
         {% elif function.http_verb == "GET" %}
     @RequestMapping(value="{{function.rest_path}}", method=RequestMethod.GET)
     @ResponseBody
-    public {{function.ret_type|converttype}} {{function.name}}({{function|unfold_function_params_rest}}) {
-        {{"return" if function.ret_type != "void" else ""}} {{service_name|firstlower}}Service.{{function.name}}({{function|param_names}});
+    public {{function.ret_type|converttype}} {{function.name}}({{function|unfold_function_params_rest}}) {{'throws InterruptedException, java.util.concurrent.ExecutionException ' if function.is_async() else ''}}{
+        {{function_body(function)|indent}}
     }
         {% endif %}
     {% endfor %}
