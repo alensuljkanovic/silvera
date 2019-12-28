@@ -1,7 +1,7 @@
 import os
 import shutil
 import pytest
-from silvera.run import run
+from silvera.run import compile
 from silvera.utils import get_root_path
 
 
@@ -20,4 +20,4 @@ def example_path():
 
 
 def test_web_shop(example_path):
-    run(example_path)
+    compile(example_path)

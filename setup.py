@@ -41,7 +41,7 @@ setup(
 
         'silvera_commands': [
             'check = silvera.cli.check'
-            'generate = silvera.cli.generate'
+            'compile = silvera.cli.compile'
             'list_generators = silvera.cli.list_generators'
         ],
 

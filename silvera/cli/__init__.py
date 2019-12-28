@@ -4,6 +4,7 @@ import silvera.run as runners
 import silvera.generator.generator as gn
 from silvera.generator.gen_reg import collect_generators
 
+
 @click.group()
 @click.option('--debug', default=False, is_flag=True,
               help="Debug/trace output.")
@@ -25,6 +26,7 @@ def check(ctx, project_dir):
 
     click.echo("Everything is OK!")
 
+
 @silvera.command()
 @click.argument('project_dir', type=click.Path(), required=True)
 @click.option('--output-dir', '-o', type=click.Path(), default=None,
@@ -33,9 +35,11 @@ def check(ctx, project_dir):
               help='Strategy to be applied during REST resolving. \
               Default = no strategy')
 @click.pass_context
-def generate(ctx, project_dir, output_dir, rest_strategy):
-    """Generates application code into to provided output directory."""
+def compile(ctx, project_dir, output_dir, rest_strategy):
+    """Compiles application code into to provided output directory."""
     project_dir = os.path.abspath(project_dir)
+
+    click.echo("Compiling...")
     click.echo(project_dir)
     try:
         click.echo("Loading model...")
@@ -57,7 +61,7 @@ def generate(ctx, project_dir, output_dir, rest_strategy):
         click.echo(str(ex))
         return
 
-    click.echo("Code generated successfully!")
+    click.echo("Compilation finished successfully!")
 
 
 @silvera.command()

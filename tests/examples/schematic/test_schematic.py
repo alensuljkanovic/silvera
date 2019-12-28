@@ -1,7 +1,6 @@
 import os
-import shutil
 import pytest
-from silvera.run import run
+from silvera.run import compile
 from silvera.utils import get_root_path
 
 
@@ -9,14 +8,8 @@ from silvera.utils import get_root_path
 def example_path():
     example_path = os.path.join(get_root_path(), "tests", "examples",
                                 "schematic")
-    yield example_path
-
-    # Remove generated folders
-    for s in ["SchemeService", "LibraryService", "CompileService"]:
-        path = os.path.join(example_path, s)
-        if os.path.exists(path):
-            shutil.rmtree(path)
+    return example_path
 
 
 def test_schematic(example_path):
-    run(example_path, output_dir=os.path.join(example_path, "src-gen"))
+    compile(example_path, output_dir=os.path.join(example_path, "src-gen"))

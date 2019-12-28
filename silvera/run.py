@@ -7,11 +7,20 @@ from silvera.resolvers import RESTResolver, NO_STRATEGY
 from silvera.core import Model
 
 
-def run(src_path, output_dir=None, rest_res_strategy=NO_STRATEGY):
-    """Runs Silvera
+def compile(src_path, output_dir=None, rest_res_strategy=NO_STRATEGY):
+    """Runs Silvera compiler
 
     After this function is called, Silvera will process the given .tl file,
-    run a compiler and start an application.
+    and compile it to a chosen target platform.
+
+    Args:
+        src_path (str): path to the Silvera project
+        output_dir (str): path to the directory where compiled application will
+            be stored
+        rest_res_strategy (int): REST resolving strategy.
+
+    Returns:
+        None
     """
     model = load(src_path, rest_res_strategy)
 
@@ -31,6 +40,7 @@ def load(src_path, rest_res_strategy=NO_STRATEGY):
 
     Args:
         src_path(str): path to the project root dir, or to a single .tl file.
+        rest_res_strategy (int): REST resolving strategy.
 
     Returns:
         Model
