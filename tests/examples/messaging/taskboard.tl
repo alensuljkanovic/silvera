@@ -1,0 +1,37 @@
+import "setup.tl"
+import "messaging.tl"
+
+
+service TasksBoard {
+
+    service_registry=ServiceRegistry
+    communication_style=messaging
+
+    api {
+
+        typedef Board [
+            i32 id
+            str title
+            list<TaskView> taskView
+        ]
+
+        typedef TaskView [
+            i32 employeeId
+            i32 taskId
+            str employeeName
+            str taskTitle
+            str taskStatus
+        ]
+
+        @rest(method=POST)
+        @producer(BOARD_CREATED -> Broker.EV_BOARD_CREATED_CHANNEL)
+        Board createBoard(str title)
+
+        @rest(method=POST)
+        @producer(AssignTask -> Broker.CMD_ASSING_TASK_CHANNEL)
+        TaskView assignTask(i32 boardId, i32 employeeId, i32 taskId)
+
+        @rest(method=GET)
+        Board getBoard(i32 id)
+    }
+}

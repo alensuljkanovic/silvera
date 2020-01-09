@@ -201,10 +201,11 @@ class ServiceDecl(ServiceObject):
 
     def __init__(self, parent=None, name=None, config_server=None,
                  service_registry=None, deployment=None, comm_style=None,
-                 api=None, extends=None):
+                 api=None, extends=None, handlers=None):
         super().__init__(parent, name, config_server, service_registry,
                          deployment, comm_style, extends)
         self.api = api
+        self.handlers = handlers
         self.dep_functions = []
         self.dep_typedefs = []
 

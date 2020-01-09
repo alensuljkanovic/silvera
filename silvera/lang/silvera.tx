@@ -9,7 +9,7 @@ Import:
 
 
 Declaration:
-    ConfigServerDecl | ServiceRegistryDecl | ServiceDecl | APIGateway | Connection
+    ConfigServerDecl | ServiceRegistryDecl | ServiceDecl | APIGateway | Connection | MessagePool | MessageBroker
 ;
 
 ConfigServerDecl:
@@ -61,6 +61,7 @@ ServiceDecl:
         'communication_style' '=' comm_style=CommunicationStyle
 
         (api=APIDecl)?
+        (handlers=MessagingHandlers)?
     '}'
 ;
 
@@ -101,6 +102,12 @@ APIDecl:
     '}'
 ;
 
+MessagingHandlers:
+    'handlers' '{'
+        handlers+=Handler
+    '}'
+;
+
 Connection:
     'connection' start=FQN '->' end=FQN '{'
         circuit_break_defs*=CBPerMethod
@@ -115,6 +122,34 @@ CBFailurePattern:
     'fail_fast' | 'fail_silent' | 'fallback_static' | 'fallback_stubbed' | 'fallback_cache' | 'fallback_method'
 ;
 
+MessagePool:
+    'msg-pool' '{'
+        commands*=CommandMessage
+        events?=Events
+    '}'
+;
+
+CommandMessage:
+    'command' name=ID '['
+        fields+=TypeField
+    ']'
+;
+
+Events:
+    'events' '['
+        events+=ID
+    ']'
+;
+
+MessageBroker:
+    'msg-broker' name=ID '{'
+        channels+=MessageChannel
+    '}'
+;
+
+MessageChannel:
+    'channel' name=ID '(' msg_type=ID ')'
+;
 
 TypeDef:
     'typedef' name=ID (':' inherits+=FQN[','])? '['
@@ -136,7 +171,7 @@ CommunicationStyle:
 ;
 
 Annotation:
-    "@async" | RESTAnnotation | "@thrift"
+    "@async" | RESTAnnotation | "@thrift" | MessagingAnnotation
 ;
 
 RESTAnnotation:
@@ -152,6 +187,23 @@ HTTPMethod:
     'POST' | 'PUT' | 'GET' | 'DELETE'
 ;
 
+
+MessagingAnnotation:
+    Producer | Consumer
+;
+
+Producer:
+    '@producer' '(' message=ID '->' channel_fqn=FQN ')'
+;
+
+Consumer:
+    '@consumer' '(' subscribtions+=ConsumerSubs[','] ')'
+;
+
+ConsumerSubs:
+    message=ID '<-' channel_fqn=FQN
+;
+
 Function:
     annotations*=Annotation
     ret_type=ReturnType name=ID '(' params*=FunctionParameter[','] ')'
@@ -161,6 +213,11 @@ FunctionParameter:
     type=DataType name=ID ('='default=DefaultValue)? (':'name_mapping=ID)?
 ;
 
+
+Handler:
+    annotations+=MessagingAnnotation
+    name=ID '(' ')'
+;
 
 DefaultValue:
     'none' | STRING | FLOAT | INT | BOOL
