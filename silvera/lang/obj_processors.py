@@ -4,7 +4,7 @@ processors are used during parsing.
 """
 from collections import deque, OrderedDict
 from silvera.core import (ServiceDecl, ConfigServerDecl, ServiceRegistryDecl,
-                          TypedList, TypeDef)
+                          TypedList, TypeDef, Deployable, Deployment)
 from silvera.exceptions import SilveraTypeError
 
 
@@ -291,6 +291,14 @@ def process_module(module):
         None
     """
     for decl in module.decls:
+        if isinstance(decl, Deployable):
+            # If deployment is not defined, object with default values
+            # will be assigned. But, in case deployment is not set and
+            # decl extends another declaration, then deployment from the
+            # parent declaration will be used.
+            if decl.deployment is None and decl.extends is None:
+                decl.deployment = Deployment(decl)
+
         if isinstance(decl, ServiceDecl):
             resolve_inheritance(module, decl)
             resolve_custom_types(decl)
