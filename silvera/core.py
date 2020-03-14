@@ -87,6 +87,12 @@ class Module:
                 for i in self.imports]
 
     @property
+    def services(self):
+        for decl in self.decls:
+            if isinstance(decl, ServiceDecl):
+                yield decl
+
+    @property
     def service_instances(self):
         for decl in self.decls:
             if isinstance(decl, ServiceDecl):
@@ -154,6 +160,22 @@ class Deployable:
     @property
     def host(self):
         return self.deployment.host
+
+
+class Deployment:
+    """Deployment info container."""
+
+    def __init__(self, parent, version="0.0.1b", url=None, port=None,
+                 lang="java", packaging="jar", host="PC", replicas=1,
+                 restart_policy=None):
+        self.version = version
+        self.url = url
+        self.port = port
+        self.lang = lang
+        self.packaging = packaging
+        self.host = host
+        self.replicas = replicas
+        self.restart_policy = restart_policy
 
 
 class ServiceObject(Deployable):

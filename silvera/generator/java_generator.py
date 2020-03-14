@@ -4,7 +4,7 @@ from collections import defaultdict
 from jinja2 import Environment, FileSystemLoader
 from silvera.const import HOST_CONTAINER, HTTP_POST
 from silvera.core import (CustomType, ConfigServerDecl, ServiceRegistryDecl,
-                          Service)
+                          ServiceDecl)
 from silvera.generator.platforms import (
     JAVA, convert_complex_type, get_def_ret_val, is_collection
 )
@@ -184,16 +184,16 @@ def generate_service(service, output_dir):
         "service_name": service_name,
         "service_port": "${PORT:%s}" % service_port,
         "service_version": service_version,
-        "use_circuit_breaker": len(service.type.dependencies) > 0,
+        "use_circuit_breaker": len(service.dependencies) > 0,
         "timestamp": timestamp(),
     }
 
-    if service.type.config_server:
+    if service.config_server:
         d["config_server_uri"] = "http://localhost:%s" % \
-                                 service.type.config_server.port
+                                 service.config_server.port
 
-    if service.type.service_registry:
-        reg = service.type.service_registry
+    if service.service_registry:
+        reg = service.service_registry
         url = "%s:%s/eureka" % (reg.url, reg.port)
         d["service_registry_url"] = url
 
@@ -216,7 +216,7 @@ def generate_service(service, output_dir):
     app_template.stream(d).dump(os.path.join(content_path, "App.java"))
 
     # Generate {{ServiceName}}AsyncConfiguration.java, if needed
-    if service.type.has_async():
+    if service.has_async():
         cfg_template = env.get_template("config.template")
         cfg_name = service_name + "AsyncConfiguration.java"
         cfg_template.stream(d).dump(os.path.join(content_path, cfg_name))
@@ -230,9 +230,9 @@ def generate_service(service, output_dir):
 
     controller_data = {
         "service_name": service_name,
-        "api": service.type.api,
+        "api": service.api,
         "timestamp": timestamp(),
-        "async": service.type.has_async(),
+        "async": service.has_async(),
     }
     controller_template = env.get_template("controller.template")
     controller_template.stream(controller_data).dump(
@@ -246,7 +246,7 @@ def generate_service(service, output_dir):
     domain_path = create_if_missing(os.path.join(content_path, "domain"))
     model_path = create_if_missing(os.path.join(domain_path, "model"))
 
-    api = service.type.api
+    api = service.api
 
     for typedef in api.typedefs:
         data = {
@@ -260,12 +260,12 @@ def generate_service(service, output_dir):
         class_template.stream(data).dump(os.path.join(model_path,
                                          typedef.name + ".java"))
 
-    if service.type.dep_typedefs:
+    if service.dep_typedefs:
         # domain dependecy classes
         dependencies_path = create_if_missing(
             os.path.join(domain_path, "dependencies")
         )
-        for typedef in service.type.dep_typedefs:
+        for typedef in service.dep_typedefs:
             data = {
                 "dependency": True,
                 "service_name": service_name,
@@ -287,10 +287,10 @@ def generate_service(service, output_dir):
     service_data = {
         "service_name": service_name,
         "package_name": service_name,
-        "functions": service.type.api.functions,
-        "dep_names": [s.name for s in service.type.dependencies],
+        "functions": service.api.functions,
+        "dep_names": [s.name for s in service.dependencies],
         "timestamp": timestamp(),
-        "async": service.type.has_async(),
+        "async": service.has_async(),
     }
     base_template = env.get_template("base_service.template")
     base_template.stream(service_data).dump(
@@ -306,10 +306,10 @@ def generate_service(service, output_dir):
 
     # dependecy services
     fns_by_service = defaultdict(list)
-    for fn in service.type.dep_functions:
+    for fn in service.dep_functions:
         fns_by_service[fn.service_name].append(fn)
 
-    for s in service.type.dependencies:
+    for s in service.dependencies:
         s_data = {
             "service_name": s.name,
             "package_name": service_name,
@@ -328,7 +328,7 @@ def generate_service(service, output_dir):
     generate_run_script(output_dir, service_name, service_version,
                         service_port)
 
-    if service.type.host == HOST_CONTAINER:
+    if service.host == HOST_CONTAINER:
         # Generate Dockerfile
         generate_dockerfile(output_dir, service_name, service_version,
                             service_port)
@@ -343,7 +343,7 @@ def generate_service(service, output_dir):
 _obj_to_fnc = {
     ConfigServerDecl: generate_config_server,
     ServiceRegistryDecl: generate_service_registry,
-    Service: generate_service
+    ServiceDecl: generate_service
 }
 
 

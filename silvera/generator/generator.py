@@ -51,11 +51,13 @@ def generate(model, output_dir, debug=False):
             if serv_registry.host == HOST_CONTAINER:
                 for_compose(serv_registry)
 
-        for service in module.service_instances:
-            lang = service.type.lang
+        for service in module.services:
+            lang = service.lang
+            # port = service.port
             generator = generator_for_language(lang)
+
             generator(service, output_dir, debug)
-            if service.type.host == HOST_CONTAINER:
+            if service.host == HOST_CONTAINER:
                 for_compose(service)
 
     if compose["services"]:
