@@ -19,5 +19,8 @@ tests/examples/schematic/src-gen/*
 tests/examples/async/src-gen/*
 !tests/examples/async/src-gen/.gitkeep
 
+tests/examples/messaging/src-gen/*
+!tests/examples/messaging/src-gen/.gitkeep
+
 # pyenv file
 .python-version
