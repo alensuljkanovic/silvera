@@ -61,7 +61,6 @@ ServiceDecl:
         'communication_style' '=' comm_style=CommunicationStyle
 
         (api=APIDecl)?
-        (handlers=MessagingHandlers)?
     '}'
 ;
 
@@ -102,12 +101,6 @@ APIDecl:
     '}'
 ;
 
-MessagingHandlers:
-    'handlers' '{'
-        handlers+=Handler
-    '}'
-;
-
 Connection:
     'connection' start=FQN '->' end=FQN '{'
         circuit_break_defs*=CBPerMethod
@@ -124,21 +117,28 @@ CBFailurePattern:
 
 MessagePool:
     'msg-pool' '{'
-        commands*=CommandMessage
-        events?=Events
+        groups+=MessageGroup
     '}'
 ;
 
-CommandMessage:
-    'command' name=ID '['
-        fields+=TypeField
+
+MessageGroup:
+    'group' id=ID '['
+        messages+=Message
     ']'
 ;
 
-Events:
-    'events' '['
-        events+=ID
+
+Message:
+    annotations*=ExpirationTimeAnnotation
+    'msg' name=ID '['
+        fields*=TypeField
     ']'
+;
+
+
+ExpirationTimeAnnotation:
+    '@expires_after' '(' timeout=INT ')'
 ;
 
 MessageBroker:
@@ -148,7 +148,20 @@ MessageBroker:
 ;
 
 MessageChannel:
-    'channel' name=ID '(' msg_type=ID ')'
+    annotations*=MessageChannelAnnotations
+    'channel' name=ID '(' msg_type=FQN ')'
+;
+
+MessageChannelAnnotations:
+    PointToPointAnnotation | PersistenceAnnotation
+;
+
+PointToPointAnnotation:
+    '@p2p'
+;
+
+PersistenceAnnotation:
+    '@persistent' '(' 'timeout' '=' timeout=INT ')'
 ;
 
 TypeDef:
@@ -213,11 +226,6 @@ FunctionParameter:
     type=DataType name=ID ('='default=DefaultValue)? (':'name_mapping=ID)?
 ;
 
-
-Handler:
-    annotations+=MessagingAnnotation
-    name=ID '(' ')'
-;
 
 DefaultValue:
     'none' | STRING | FLOAT | INT | BOOL

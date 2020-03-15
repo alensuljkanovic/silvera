@@ -27,16 +27,15 @@ service Task {
 
         @rest(method=GET)
         list<Task> listTasks()
-    }
 
-    handlers {
-
+        @rest(method=PUT)
         @consumer(AssignTask <- Broker.CMD_ASSING_TASK_CHANNEL)
         @producer(TASK_ASSIGNED -> Broker.EV_TASK_ASSIGNED_CHANNEL)
-        assignTask()  // AssignTask command will be generated as a parameter
+        void assignTask(i32 taskId, i32 ownerId)
 
+        @rest(method=PUT)
         @consumer(CloseTask <- Broker.CMD_CLOSE_TASK_CHANNEL)
         @producer(TASK_CLOSED -> Broker.EV_TASK_CLOSED_CHANNEL)
-        closeTask() // CloseTask command will be generated as a parameter
+        void closeTask(i32 taskId)
     }
 }

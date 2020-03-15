@@ -19,9 +19,6 @@ service Dashboard {
 
         @rest(method=GET)
         Status status()
-    }
-
-    handlers {
 
         @consumer(
             BOARD_CREATED <- Broker.EV_BOARD_CREATED_CHANNEL,
@@ -30,8 +27,7 @@ service Dashboard {
             TASK_ASSIGNED <- Broker.EV_TASK_ASSIGNED_CHANNEL,
             TASK_CLOSED <- Broker.EV_TASK_CLOSED_CHANNEL
         )
-        refresh()
+        void refresh()
     }
-
 
 }
