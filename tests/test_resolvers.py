@@ -3,7 +3,7 @@ from silvera.lang.meta import get_metamodel
 from silvera.resolvers import RESTResolver
 from silvera.run import load
 from silvera.utils import get_root_path
-from silvera.exceptions import SilveraTypeError
+from silvera.exceptions import SilveraTypeError, SilveraLoadError
 import pytest
 import os
 
@@ -94,7 +94,7 @@ def test_resolving_with_dependencies(metamodel, examples_path):
 
 
 def test_with_connections_and_inherit(examples_path):
-    model = load(os.path.join(examples_path, "connections"))
+    model = load(os.path.join(examples_path, "connections", "ok"))
 
     resolver = RESTResolver()
     resolver.resolve_model(model)
@@ -112,6 +112,12 @@ def test_with_connections_and_inherit(examples_path):
     assert new_fast_print.rest_path == "newofficeservice/fastprint/"
     assert new_fast_print.dep.http_verb == HTTP_POST
     assert new_fast_print.dep.rest_path == "fastprintservice/fastprint/"
+
+
+def test_connections_with_different_style(examples_path):
+
+    with pytest.raises(SilveraLoadError):
+        load(os.path.join(examples_path, "connections", "error"))
 
 
 def test_function_return_type_resolving_error(examples_path):

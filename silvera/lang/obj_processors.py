@@ -5,7 +5,7 @@ processors are used during parsing.
 from collections import deque, OrderedDict
 from silvera.core import (ServiceDecl, ConfigServerDecl, ServiceRegistryDecl,
                           TypedList, TypeDef, Deployable, Deployment)
-from silvera.exceptions import SilveraTypeError
+from silvera.exceptions import SilveraTypeError, SilveraLoadError
 
 
 BASIC_TYPES = {"date", "i16", "i32", "i64", "bool", "int", "void", "str",
@@ -22,6 +22,19 @@ def process_connections(module):
         #
         start = connection.start
         end = connection.end
+        print(start)
+        print(end)
+
+        if start.comm_style != end.comm_style:
+            raise SilveraLoadError("Cannot connect two services with different"
+                                   " communication styles: "
+                                   "{}[{}] and {}[{}]".format(
+                                       start.name,
+                                       start.comm_style,
+                                       end.name,
+                                       end.comm_style
+                                   ))
+
         if hasattr(start, "circuit_breaked"):
             start.circuit_breaked = True
 
