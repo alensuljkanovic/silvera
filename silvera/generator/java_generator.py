@@ -146,7 +146,13 @@ def generate_service(service, output_dir):
         - bootstrap.properties
         - pom.xml
     """
-    templates_path = os.path.join(get_templates_path(), JAVA, "service")
+    comm_style = service.comm_style
+    templates_path = os.path.join(
+        get_templates_path(),
+        JAVA,
+        "service",
+        comm_style
+    )
 
     env = Environment(loader=FileSystemLoader(templates_path))
     env.filters["firstupper"] = lambda x: x[0].upper() + x[1:]
