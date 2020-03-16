@@ -154,6 +154,21 @@ def generate_service(service, output_dir):
         comm_style
     )
 
+    if comm_style == "rpc":
+        generate_rpc_service(service, templates_path, output_dir)
+
+
+def generate_rpc_service(service, templates_path, output_dir):
+    """Generates code for service that uses RPC method of communication.
+
+    Args:
+        service (ServiceDecl): service object
+        templates_path (str): path to templates
+        output_dir (str): path to the directory where code will be generated.
+
+    Returns:
+        None
+    """
     env = Environment(loader=FileSystemLoader(templates_path))
     env.filters["firstupper"] = lambda x: x[0].upper() + x[1:]
     env.filters["firstlower"] = lambda x: x[0].lower() + x[1:]
