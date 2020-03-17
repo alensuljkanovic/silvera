@@ -123,8 +123,11 @@ MessagePool:
 
 
 MessageGroup:
-    'group' id=ID '['
-        messages+=Message
+    'group' name=ID '['
+        (
+            groups*=MessageGroup |
+            messages*=Message
+        )#
     ']'
 ;
 

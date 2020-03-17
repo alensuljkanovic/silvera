@@ -2,9 +2,10 @@
 This module contains object processors attached to Silvera objects. Object
 processors are used during parsing.
 """
-from collections import deque, OrderedDict
+from collections import deque, OrderedDict, defaultdict
 from silvera.core import (ServiceDecl, ConfigServerDecl, ServiceRegistryDecl,
-                          TypedList, TypeDef, Deployable, Deployment)
+                          TypedList, TypeDef, Deployable, Deployment,
+                          MessageBroker, MessagePool)
 from silvera.exceptions import SilveraTypeError, SilveraLoadError
 
 
@@ -22,8 +23,6 @@ def process_connections(module):
         #
         start = connection.start
         end = connection.end
-        print(start)
-        print(end)
 
         if start.comm_style != end.comm_style:
             raise SilveraLoadError("Cannot connect two services with different"
@@ -293,6 +292,14 @@ def resolve_inheritance(module, service_decl):
     resolve_api_inheritance(base_service, service_decl)
 
 
+def resolve_message_broker(module, broker):
+    pass
+
+
+def resolve_message_pool(modele, msg_pool):
+    pass
+
+
 def process_module(module):
     """Performs special processing of a Module object, such as resolving
     imports and connections.
@@ -333,7 +340,99 @@ def process_module(module):
             if not isinstance(end, ServiceDecl):
                 decl.end = lookup(module, end)
 
+        if isinstance(decl, MessageBroker):
+            resolve_message_broker(module, decl)
+
     process_connections(module)
+
+
+def check_msg_pool(msg_pool):
+    """Checks if all messages and groups are defined correctly.
+
+    Exception will be raised in following cases:
+    1. MessageGroup is empty (no messages defined inside group).
+    2. MessageGroup's ID not unique.
+    3. Message's name within the group is not unique.
+
+    Args:
+        msg_pool (MessagePool): message pool
+
+    Returns:
+        None
+
+    Raises:
+        SilveraLoadException
+    """
+    def to_err_line(item):
+        module = item.msg_pool.parent
+        path = module.path
+        parser = module._tx_parser
+        linecol = parser.pos_to_linecol(item._tx_position)
+        return "\n\t- {}: {} {}".format(path, item.fqn, linecol)
+
+    all_groups = msg_pool.get_all_groups()
+    fqns = defaultdict(list)
+    for group in all_groups:
+        fqns[group.fqn].append(group)
+
+    empty_groups = []
+    for fqn, groups in fqns.items():
+        # Raise exception in case of group redefinition
+        if len(groups) > 1:
+            err_msg = "Redefinition of message group found: "
+            for g in groups:
+                err_msg += to_err_line(g)
+
+            raise SilveraLoadError(err_msg)
+
+        # Check if there are messages in group
+        group = groups[0]
+        if not group.messages:
+            empty_groups.append(group)
+
+        # Check if message names are unique
+        names = defaultdict(list)
+        for m in group.messages:
+            names[m.name].append(m)
+
+        for name, messages in names.items():
+            if len(messages) > 1:
+                err_msg = "Redefinition of message found:"
+                for msg in messages:
+                    err_msg += to_err_line(msg)
+
+                raise SilveraLoadError(err_msg)
+
+    if empty_groups:
+        err_msg = "Group(s) without messages found: "
+        for g in empty_groups:
+            err_msg += to_err_line(g)
+        raise SilveraLoadError(err_msg)
+
+
+def get_msg_pool(model):
+    """Initializes msg_pool attr of model object"""
+    results = []
+    for module in model.modules:
+        parser = module._tx_parser
+
+        for decl in module.decls:
+            if isinstance(decl, MessagePool):
+                results.append((decl,
+                                module.path,
+                                parser.pos_to_linecol(decl._tx_position)))
+
+    if results:
+        if len(results) > 1:
+
+            err_msg = "Multiple declarations of msg-pool found: "
+            for _, file_path, linecol in results:
+                err_msg += "\n\t * {} {}".format(file_path, linecol)
+
+            raise SilveraLoadError(err_msg)
+
+        msg_pool, _, _ = results[0]
+        return msg_pool
 
 
 def model_processor(model):
@@ -347,6 +446,12 @@ def model_processor(model):
     for module in model.modules:
         for dep_path in module.depends_on():
             deps[module].append(dep_path)
+
+    msg_pool = get_msg_pool(model)
+
+    if msg_pool:
+        check_msg_pool(msg_pool)
+        model.msg_pool = msg_pool
 
     # topologically sort modules
     modules = sort(deps)

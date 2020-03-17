@@ -4,7 +4,6 @@ This module contains the implementation of Silvera DSL.
 import os
 # from silvera.const import REST
 import urllib.parse as url_parser
-import warnings
 
 
 def fqn_to_path(fqn):
@@ -17,8 +16,10 @@ class Model:
     """Model object"""
 
     def __init__(self, root_dir, modules=None):
+        super().__init__()
         self.root_dir = root_dir
         self.modules = modules if modules else []
+        self.msg_pool = None
 
     def modules_dict(self):
         return {m.path: m for m in self.modules}
@@ -61,6 +62,7 @@ class Module:
             decls (list): list of declarations within module
             imports (list): list of imports
         """
+        super().__init__()
         self.model = model
         self.imports = imports if imports else []
         self.decls = decls
@@ -135,6 +137,7 @@ class Module:
 class Deployable:
     """Base class for all deployable objects"""
     def __init__(self, deployment=None):
+        super().__init__()
         self.deployment = deployment
 
     @property
@@ -168,6 +171,7 @@ class Deployment:
     def __init__(self, parent, version="0.0.1b", url=None, port=None,
                  lang="java", packaging="jar", host="PC", replicas=1,
                  restart_policy=None):
+        super().__init__()
         self.version = version
         self.url = url
         self.port = port
@@ -176,6 +180,170 @@ class Deployment:
         self.host = host
         self.replicas = replicas
         self.restart_policy = restart_policy
+
+
+class MessageBroker:
+    """Message broker object.
+
+    Its sole responsibility is to deliver messages to a destination. The
+    number of channels is fixed.
+    """
+    def __init__(self, parent, name, channels):
+        super().__init__()
+        self.parent = parent
+        self.name = name
+        self.channels = channels
+
+
+class MessagePool:
+    """Object that contains definitions of all messages used throught the
+    system."""
+    def __init__(self, parent, groups):
+        super().__init__()
+        self.parent = parent
+        self.groups = groups
+
+    @property
+    def messages(self):
+        """Returns list of all messages defined in message pool
+
+        Returns:
+            list
+        """
+        def _recurse(groups, messages=None):
+            """Go recursively through groups and collect messages"""
+            if messages is None:
+                messages = []
+
+            for item in groups:
+                if isinstance(item, MessageGroup):
+                    if item.messages:
+                        messages.extend(item.messages)
+                    _recurse(item.groups, messages)
+
+            return messages
+
+        return _recurse(self.groups)
+
+    def get_all_groups(self):
+        """Returns the list of all MessageGroup objects inside the message
+        pool
+
+        Returns:
+            list
+        """
+        def _recurse(groups, result=None):
+            """Go recursively through groups and collect messages"""
+            if result is None:
+                result = []
+
+            for item in groups:
+                if isinstance(item, MessageGroup):
+                    result.append(item)
+                    _recurse(item.groups, result)
+
+            return result
+
+        return _recurse(self.groups)
+
+    def get(self, msg_fqn):
+
+        for m in self.messages:
+            if m.fqn == msg_fqn:
+                return m
+
+        raise ValueError("Message with given FQN not found in message pool: "
+                         "%s" % msg_fqn)
+
+
+class MsgFQN:
+
+    def __init__(self, parent, name):
+        super().__init__()
+        self.parent = parent
+        self.name = name
+
+    @property
+    def fqn(self):
+        """Returns FQN of a message
+
+        Returns:
+            str
+        """
+        def _recurse_up(item, path=None):
+            if path is None:
+                path = []
+
+            if isinstance(item, MessagePool):
+                return path
+
+            path.append(item.name)
+            return _recurse_up(item.parent, path)
+
+        fqn = _recurse_up(self.parent)
+        if fqn:
+            return ".".join(reversed(fqn)) + "." + self.name
+        else:
+            return self.name
+
+    @property
+    def msg_pool(self):
+        """Returns reference to a MessagePool to which this object belongs."""
+        def _recurse_up(item):
+            if isinstance(item, MessagePool):
+                return item
+
+            return _recurse_up(item.parent)
+
+        return _recurse_up(self)
+
+
+class MessageGroup(MsgFQN):
+
+    def __init__(self, parent, name, groups=None, messages=None):
+        super().__init__(parent=parent, name=name)
+        self.groups = groups
+        self.messages = messages
+
+    @property
+    def messages_dict(self):
+        return {m.name: m for m in self.messages}
+
+
+class Message(MsgFQN):
+    """Message object"""
+    def __init__(self, parent, name, fields=None, annotations=None):
+        super().__init__(parent=parent, name=name)
+        self.fields = fields if fields else []
+        self.annotations = annotations if annotations else []
+
+
+class MessageChannel:
+    """Message channel object."""
+    def __init__(self, parent, name, msg_type, annotations=None):
+        self.parent = parent
+        self.name = name
+        self.msg_type = msg_type
+        self.annotations = annotations if annotations else []
+        self.persistent = False
+
+    def is_p2p(self):
+        """Returns True if channel is Point-to-Point channel. False otherwise.
+
+        Returns:
+            bool
+        """
+        for ann in self.annotations:
+            if ann == "@p2p":
+                return True
+        return False
+
+    @property
+    def persistent(self):
+        for ann in self.annotations:
+            if hasattr(ann, "timeout"):
+                return True
+        return False
 
 
 class ServiceObject(Deployable):
