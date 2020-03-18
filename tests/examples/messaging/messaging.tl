@@ -37,9 +37,9 @@ msg-pool {
 // messages also strictly from the broker.
 msg-broker Broker {
 
-    @p2p  // Marks CMD_ASSING_TASK_CHANNEL as Point-to-Point channel
-    @persistent(timeout=1000)  // CMD_ASSING_TASK_CHANNEL guarantees delivery in a given time frame.
-    channel CMD_ASSING_TASK_CHANNEL(TaskMsgGroup.AssignTask)
+    @p2p  // Marks CMD_ASSIGN_TASK_CHANNEL as Point-to-Point channel
+    @persistent(timeout=1000)  // CMD_ASSIGN_TASK_CHANNEL guarantees delivery in a given time frame.
+    channel CMD_ASSIGN_TASK_CHANNEL(TaskMsgGroup.AssignTask)
 
     @p2p
     @persistent(timeout=1000)

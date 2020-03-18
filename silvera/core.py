@@ -4,6 +4,7 @@ This module contains the implementation of Silvera DSL.
 import os
 # from silvera.const import REST
 import urllib.parse as url_parser
+from collections import defaultdict
 
 
 def fqn_to_path(fqn):
@@ -20,6 +21,7 @@ class Model:
         self.root_dir = root_dir
         self.modules = modules if modules else []
         self.msg_pool = None
+        self.msg_brokers = {}
 
     def modules_dict(self):
         return {m.path: m for m in self.modules}
@@ -126,6 +128,12 @@ class Module:
             if decl.__class__.__name__ == "Connection":
                 yield decl
 
+    @property
+    def msg_brokers(self):
+        for decl in self.decls:
+            if isinstance(decl, MessageBroker):
+                yield decl
+
     def decl_by_name(self, name):
         for decl in self.decls:
             if hasattr(decl, "name") and decl.name == name:
@@ -192,7 +200,38 @@ class MessageBroker:
         super().__init__()
         self.parent = parent
         self.name = name
-        self.channels = channels
+        self._channels = channels
+        self._consumers_per_ch = defaultdict(list)
+        self._producers_per_ch = defaultdict(list)
+
+    @property
+    def channels(self):
+        """Returns dict of all channels defined within broker
+
+        Returns:
+            dict
+        """
+        return {c.name: c for c in self._channels}
+
+    def register_consumer(self, channel_name, consumer):
+        """Register consumer to a channel with a given name.
+
+        Args:
+            channel_name (str): channel name
+            consumer (Function): API function that consumes messages from the
+                channel
+        """
+        self._consumers_per_ch[channel_name].append(consumer)
+
+    def register_producer(self, channel_name, producer):
+        """Register producer to a channel with a given name.
+
+        Args:
+            channel_name (str): channel name
+            producer (Function): API function that produces messages for the
+                channel
+        """
+        self._producers_per_ch[channel_name].append(producer)
 
 
 class MessagePool:
@@ -317,6 +356,12 @@ class Message(MsgFQN):
         self.fields = fields if fields else []
         self.annotations = annotations if annotations else []
 
+    def __str__(self):
+        return "Message: %s" % self.fqn
+
+    def __repr__(self):
+        return str(self)
+
 
 class MessageChannel:
     """Message channel object."""
@@ -429,6 +474,38 @@ class ServiceDecl(ServiceObject):
     def __str__(self):
         return "ServiceDecl: %s" % self.name
 
+    @property
+    def consumes(self):
+        """Returns dict where for each message is shown from which channel
+        the message is consumed.
+
+        Returns:
+            dict
+        """
+        cons = defaultdict(list)
+        for f in self.api.functions:
+            for ann in f.msg_annotations:
+                if isinstance(ann, ConsumerAnnotation):
+                    for subscr in ann.subscriptions:
+                        cons[subscr.message].append(subscr.channel)
+        return cons
+
+    @property
+    def produces(self):
+        """Returns dict where for each message is shown to which channel
+        the message is published.
+
+        Returns:
+            dict
+        """
+        prods = defaultdict(list)
+        for f in self.api.functions:
+            for ann in f.msg_annotations:
+                if isinstance(ann, ProducerAnnotation):
+                    for subscr in ann.subscriptions:
+                        prods[subscr.message].append(subscr.channel)
+        return prods
+
 
 class Service:
     """Object of this class represents an instance of a service that is of
@@ -508,6 +585,13 @@ class Function:
             module = service.parent
         return "{}.{}".format(module.path.replace(".tl", ""), service.name)
 
+    @property
+    def msg_annotations(self):
+        """Returns generator of MessagingAnnotations"""
+        for ann in self.annotations:
+            if isinstance(ann, MessagingAnnotation):
+                yield ann
+
     def add_rest_mappings(self, mapping):
 
         import re
@@ -570,7 +654,17 @@ class FunctionParameter:
                                  self.name_mapping)
 
 
-class RESTAnnotation:
+class Annotation:
+
+    def __init__(self, parent):
+        super().__init__()
+        self.parent = parent
+
+    def clone(self):
+        raise NotImplementedError()
+
+
+class RESTAnnotation(Annotation):
 
     def __init__(self, parent, method=None, mapping=None):
         self.parent = parent
@@ -579,6 +673,23 @@ class RESTAnnotation:
 
     def clone(self):
         return RESTAnnotation(None, self.method, self.mapping)
+
+
+class MessagingAnnotation(Annotation):
+
+    def __init__(self, parent, subscriptions=None):
+        super().__init__(parent)
+        self.subscriptions = subscriptions
+
+
+class ProducerAnnotation(MessagingAnnotation):
+    def __init__(self, parent, subscriptions):
+        super().__init__(parent, subscriptions)
+
+
+class ConsumerAnnotation(MessagingAnnotation):
+    def __init__(self, parent, subscriptions):
+        super().__init__(parent, subscriptions)
 
 
 class TypeDef:

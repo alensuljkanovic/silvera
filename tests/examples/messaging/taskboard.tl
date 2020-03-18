@@ -24,11 +24,11 @@ service TasksBoard {
         ]
 
         @rest(method=POST)
-        @producer(BOARD_CREATED -> Broker.EV_BOARD_CREATED_CHANNEL)
+        @producer(BoardMsgGroup.BOARD_CREATED -> Broker.EV_BOARD_CREATED_CHANNEL)
         Board createBoard(str title)
 
         @rest(method=POST)
-        @producer(AssignTask -> Broker.CMD_ASSING_TASK_CHANNEL)
+        @producer(TaskMsgGroup.AssignTask -> Broker.CMD_ASSIGN_TASK_CHANNEL)
         TaskView assignTask(i32 boardId, i32 employeeId, i32 taskId)
 
         @rest(method=GET)

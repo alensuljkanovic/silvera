@@ -1,10 +1,9 @@
-import "setup.tl"
 import "messaging.tl"
 
 
 service Task {
 
-    service_registry=ServiceRegistry
+    //service_registry=ServiceRegistry
     communication_style=messaging
 
     api {

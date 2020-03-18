@@ -205,19 +205,23 @@ HTTPMethod:
 
 
 MessagingAnnotation:
-    Producer | Consumer
+    ProducerAnnotation | ConsumerAnnotation
 ;
 
-Producer:
-    '@producer' '(' message=ID '->' channel_fqn=FQN ')'
+ProducerAnnotation:
+    '@producer' '(' subscriptions+=ProducerSubs[','] ')'
 ;
 
-Consumer:
-    '@consumer' '(' subscribtions+=ConsumerSubs[','] ')'
+ConsumerAnnotation:
+    '@consumer' '(' subscriptions+=ConsumerSubs[','] ')'
+;
+
+ProducerSubs:
+    message=FQN '->' channel=FQN
 ;
 
 ConsumerSubs:
-    message=ID '<-' channel_fqn=FQN
+    message=FQN '<-' channel=FQN
 ;
 
 Function:

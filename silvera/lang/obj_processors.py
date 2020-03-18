@@ -5,7 +5,7 @@ processors are used during parsing.
 from collections import deque, OrderedDict, defaultdict
 from silvera.core import (ServiceDecl, ConfigServerDecl, ServiceRegistryDecl,
                           TypedList, TypeDef, Deployable, Deployment,
-                          MessageBroker, MessagePool)
+                          MessagePool, ProducerAnnotation)
 from silvera.exceptions import SilveraTypeError, SilveraLoadError
 
 
@@ -120,6 +120,8 @@ def resolve_custom_types(service_decl):
     """Sets appropriate objects for function parameters whose type is domain
     object (typedef).
     """
+    module = service_decl.parent
+
     api = service_decl.api
     if api is not None:
 
@@ -139,6 +141,8 @@ def resolve_custom_types(service_decl):
 
         # Resolve functions
         functions = api.functions
+        model = module.model
+        msg_pool = model.msg_pool
 
         for fnc in functions:
 
@@ -167,6 +171,66 @@ def resolve_custom_types(service_decl):
                         raise SilveraTypeError(service_decl.name, param.type)
 
                     param.type = td
+
+            # Resolve messaging annotations
+            for ann in fnc.msg_annotations:
+                for subscr in ann.subscriptions:
+                    message_fqn = subscr.message
+
+                    # Find Message object represented by given FQN, and
+                    # set reference to it.
+                    try:
+                        subscr.message = msg_pool.get(message_fqn)
+                    except ValueError:
+                        linecol = module._tx_parser.pos_to_linecol(
+                            subscr._tx_position)
+                        raise SilveraLoadError(
+                            "Cannot resolve annotation ({} {}). Message '{}' "
+                            "not defined in message pool.".format(
+                                module.path,
+                                linecol,
+                                message_fqn)
+                        )
+
+                    # Find MessageChannel object represented by given FQN, and
+                    # set reference to it.
+                    channel_fqn = subscr.channel
+                    fqn = channel_fqn.split(".")
+                    broker_name = fqn[0]
+                    try:
+                        broker = model.msg_brokers[broker_name]
+                    except KeyError:
+                        linecol = module._tx_parser.pos_to_linecol(
+                            subscr._tx_position)
+                        raise SilveraLoadError(
+                            "Cannot resolve annotation ({} {}). Broker '{}' "
+                            "not defined.".format(
+                                module.path,
+                                linecol,
+                                broker_name)
+                        )
+
+                    channel_name = fqn[1]
+                    try:
+                        channel = broker.channels[channel_name]
+                        subscr.channel = channel
+                    except KeyError:
+                        linecol = module._tx_parser.pos_to_linecol(
+                            subscr._tx_position)
+                        raise SilveraLoadError(
+                            "Cannot resolve annotation ({} {}). Channel '{}' "
+                            "not defined in broker '{}'".format(
+                                module.path,
+                                linecol,
+                                channel_name,
+                                broker_name)
+                        )
+
+                    # Perform registrations
+                    if isinstance(ann, ProducerAnnotation):
+                        broker.register_producer(channel_name, fnc)
+                    else:
+                        broker.register_consumer(channel_name, fnc)
 
 
 def _resolve_typed_list(service_decl, typed_list):
@@ -292,14 +356,6 @@ def resolve_inheritance(module, service_decl):
     resolve_api_inheritance(base_service, service_decl)
 
 
-def resolve_message_broker(module, broker):
-    pass
-
-
-def resolve_message_pool(modele, msg_pool):
-    pass
-
-
 def process_module(module):
     """Performs special processing of a Module object, such as resolving
     imports and connections.
@@ -340,9 +396,6 @@ def process_module(module):
             if not isinstance(end, ServiceDecl):
                 decl.end = lookup(module, end)
 
-        if isinstance(decl, MessageBroker):
-            resolve_message_broker(module, decl)
-
     process_connections(module)
 
 
@@ -363,13 +416,6 @@ def check_msg_pool(msg_pool):
     Raises:
         SilveraLoadException
     """
-    def to_err_line(item):
-        module = item.msg_pool.parent
-        path = module.path
-        parser = module._tx_parser
-        linecol = parser.pos_to_linecol(item._tx_position)
-        return "\n\t- {}: {} {}".format(path, item.fqn, linecol)
-
     all_groups = msg_pool.get_all_groups()
     fqns = defaultdict(list)
     for group in all_groups:
@@ -435,6 +481,79 @@ def get_msg_pool(model):
         return msg_pool
 
 
+def resolve_channel(msg_channel):
+    """Resolves MessageChannel object.
+
+    Args:
+        msg_channel (MessageChannel): message channel object
+
+    Raises:
+        SilveraLoadError
+    """
+    module = msg_channel.parent.parent
+    model = module.model
+
+    msg_pool = model.msg_pool
+
+    msg_type = msg_channel.msg_type
+    try:
+        # get Message object from pool
+        msg = msg_pool.get(msg_type)
+        # set the actual message object as a type
+        msg_channel.msg_type = msg
+    except ValueError:
+        linecol = module._tx_parser.pos_to_linecol(msg_channel._tx_position)
+        raise SilveraLoadError(
+            "Cannot instantiate message channel '{}'({} {}). Message '{}' not "
+            "defined in message pool.".format(
+                msg_channel.name,
+                module.path,
+                linecol,
+                msg_type
+            ))
+
+
+def resolve_brokers(brokers):
+    """Resolves MessageBroker objects.
+
+    If broker's name if not unique, SilveraLoadError is raised.
+    If channel's name within broker if not unique, SilveraLoadError is raised.
+
+    Args:
+        brokers (list): list of message broker objects
+
+    Raises:
+        SilveraLoadError
+    """
+    visited = defaultdict(list)
+    for b in brokers:
+        ch_dict = defaultdict(list)
+        for channel in b.channels.values():
+            ch_dict[channel.name].append(channel)
+            resolve_channel(channel)
+
+        # Check for channel redefinitions
+        for name, chs in ch_dict.items():
+            if len(chs) > 1:
+                err_msg = "Redefinition of message channel found:"
+                for c in chs:
+                    err_msg += to_err_line(c)
+                raise SilveraLoadError(err_msg)
+
+        visited[b.name].append(b)
+
+    # Check for broker redefinitions
+    for name, brokers in visited.items():
+        if len(brokers) > 1:
+            err_msg = "Redefinition of msg-broker found:"
+            for b in brokers:
+                err_msg += to_err_line(b)
+
+            raise SilveraLoadError(err_msg)
+
+    return {n: b[0] for n, b in visited.items()}
+
+
 def model_processor(model):
     """Object processor for the Model class"""
 
@@ -455,6 +574,22 @@ def model_processor(model):
 
     # topologically sort modules
     modules = sort(deps)
+
+    # collect message brokers if they exist
+    msg_brokers = []
+    for module in reversed(modules.keys()):
+        msg_brokers.extend(list(module.msg_brokers))
+
+    if msg_brokers:
+        if not msg_pool:
+            raise SilveraLoadError("Message pool must be defined in order to "
+                                   "instantiate message brokers.")
+
+        # check if message brokers are valid
+        brokers = resolve_brokers(msg_brokers)
+        model.msg_brokers = brokers
+
+    # process all modules
     for module in reversed(modules.keys()):
         process_module(module)
 
@@ -495,3 +630,10 @@ def sort(modules):
 
     return sorted_graph
 
+
+def to_err_line(item):
+    module = item.msg_pool.parent
+    path = module.path
+    parser = module._tx_parser
+    linecol = parser.pos_to_linecol(item._tx_position)
+    return "\n\t- {}: {} {}".format(path, item.fqn, linecol)

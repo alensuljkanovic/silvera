@@ -72,18 +72,12 @@ def test_same_empty_msg_group(examples_path):
     with pytest.raises(SilveraLoadError) as exc_info:
         load(example)
 
-    exc = exc_info.value
-    print(exc)
-
 
 def test_unique_msg_group_id(examples_path):
     example = os.path.join(examples_path, "group_redefinitions")
 
     with pytest.raises(SilveraLoadError) as exc_info:
         load(example)
-
-    exc = exc_info.value
-    print(exc)
 
 
 def test_unique_msg_name(examples_path):
@@ -93,6 +87,45 @@ def test_unique_msg_name(examples_path):
         load(example)
 
     exc = exc_info.value
-    print(exc)
 
 
+def test_broker(examples_path):
+    example = os.path.join(examples_path, "messaging")
+    model = load(example)
+
+    msg_pool = model.msg_pool
+    broker = model.msg_brokers["Broker"]
+    channels = broker.channels
+    assert len(channels) == 7
+
+    assign_task_channel = channels["CMD_ASSIGN_TASK_CHANNEL"]
+    assign_task_msg = msg_pool.get("TaskMsgGroup.AssignTask")
+
+    assert assign_task_channel.msg_type is assign_task_msg
+
+    task_service = model.find_by_fqn("task.Task")
+
+    # Test `consumes` method
+    consumes = task_service.consumes
+    assert len(consumes) == 2
+    close_task_msg = msg_pool.get("TaskMsgGroup.CloseTask")
+    close_task_channel = channels["CMD_CLOSE_TASK_CHANNEL"]
+    assert consumes == {
+        assign_task_msg: [assign_task_channel],
+        close_task_msg: [close_task_channel]
+    }
+
+    # Test `produces` method
+    produces = task_service.produces
+    assert len(produces) == 3
+    task_created_msg = msg_pool.get("TaskMsgGroup.TASK_CREATED")
+    task_created_ch = channels["EV_TASK_CREATED_CHANNEL"]
+    task_assigned_msg = msg_pool.get("TaskMsgGroup.TASK_ASSIGNED")
+    task_assigned_ch = channels["EV_TASK_ASSIGNED_CHANNEL"]
+    task_closed_msg = msg_pool.get("TaskMsgGroup.TASK_CLOSED")
+    task_closed_ch = channels["EV_TASK_CLOSED_CHANNEL"]
+    assert produces == {
+        task_created_msg: [task_created_ch],
+        task_assigned_msg: [task_assigned_ch],
+        task_closed_msg: [task_closed_ch]
+    }

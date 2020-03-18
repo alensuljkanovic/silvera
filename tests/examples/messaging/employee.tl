@@ -17,7 +17,7 @@ service Employee {
         ]
 
         @rest(method=POST)
-        @producer(EMPLOYEE_CREATED -> Broker.EV_EMPLOYEE_CREATED_CHANNEL)
+        @producer(EmployeeMsgGroup.EMPLOYEE_CREATED -> Broker.EV_EMPLOYEE_CREATED_CHANNEL)
         void create(str fistName, str lastName, str address)
 
         @rest(method=GET)

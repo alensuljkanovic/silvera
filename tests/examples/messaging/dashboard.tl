@@ -21,11 +21,11 @@ service Dashboard {
         Status status()
 
         @consumer(
-            BOARD_CREATED <- Broker.EV_BOARD_CREATED_CHANNEL,
-            EMPLOYEE_CREATED <- Broker.EV_EMPLOYEE_CREATED_CHANNEL,
-            TASK_CREATED <- Broker.EV_TASK_CREATED_CHANNEL,
-            TASK_ASSIGNED <- Broker.EV_TASK_ASSIGNED_CHANNEL,
-            TASK_CLOSED <- Broker.EV_TASK_CLOSED_CHANNEL
+            BoardMsgGroup.BOARD_CREATED <- Broker.EV_BOARD_CREATED_CHANNEL,
+            EmployeeMsgGroup.EMPLOYEE_CREATED <- Broker.EV_EMPLOYEE_CREATED_CHANNEL,
+            TaskMsgGroup.TASK_CREATED <- Broker.EV_TASK_CREATED_CHANNEL,
+            TaskMsgGroup.TASK_ASSIGNED <- Broker.EV_TASK_ASSIGNED_CHANNEL,
+            TaskMsgGroup.TASK_CLOSED <- Broker.EV_TASK_CLOSED_CHANNEL
         )
         void refresh()
     }
