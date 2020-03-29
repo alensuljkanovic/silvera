@@ -23,15 +23,18 @@ service TasksBoard {
             str taskStatus
         ]
 
-        @rest(method=POST)
+        @rest(method=POST, mapping="/board")
         @producer(BoardMsgGroup.BOARD_CREATED -> Broker.EV_BOARD_CREATED_CHANNEL)
-        Board createBoard(str title)
+        Board addBoard(Board board)
 
-        @rest(method=POST)
+        @rest(method=PUT, mapping="/assign/{boardId}/{taskId}/{employeeId}")
         @producer(TaskMsgGroup.AssignTask -> Broker.CMD_ASSIGN_TASK_CHANNEL)
         TaskView assignTask(i32 boardId, i32 taskId, i32 employeeId)
 
-        @rest(method=GET)
+        @rest(method=GET, mapping="/board")
         Board getBoard(i32 id)
+
+        @rest(method=GET, mapping="/board")
+        list<Board> getBoards()
     }
 }

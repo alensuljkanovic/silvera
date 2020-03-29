@@ -18,26 +18,26 @@ service Task {
             i32 priority
         ]
 
-        @rest(method=POST)
-        // method createTask publishes TASK_CREATED event to Broker's EV_TASK_CREATED_CHANNEL channel
+        @rest(method=POST, mapping="/task")
+        // method addTask publishes TASK_CREATED event to Broker's EV_TASK_CREATED_CHANNEL channel
         @producer(TaskMsgGroup.TASK_CREATED -> Broker.EV_TASK_CREATED_CHANNEL)
-        Task createTask(str title, str description, i32 priority)
+        Task addTask(Task task)
 
-        @rest(method=GET)
+        @rest(method=GET, mapping="/task/{id}")
         Task getTask(i32 id)
 
-        @rest(method=GET)
-        list<Task> listTasks()
+        @rest(method=GET, mapping="/task")
+        list<Task> getTasks()
 
-        @rest(method=PUT)
+        @rest(method=PUT, mapping="/task/assign/{taskId}/{ownerId}")
         // method assignTask publishes to TASK_ASSIGNED event to Broker's EV_TASK_ASSIGNED_CHANNEL channel
         @producer(TaskMsgGroup.TASK_ASSIGNED -> Broker.EV_TASK_ASSIGNED_CHANNEL)
         void assignTask(i32 taskId, i32 ownerId)
 
-        @rest(method=PUT)
+        @rest(method=PUT, mapping="/task/close/{id}")
         // method closeTask publishes TASK_CLOSED event to Broker's EV_TASK_CLOSED_CHANNEL channel
         @producer(TaskMsgGroup.TASK_CLOSED -> Broker.EV_TASK_CLOSED_CHANNEL)
-        void closeTask(i32 taskId)
+        void closeTask(i32 id)
 
         internal {
 
@@ -48,8 +48,7 @@ service Task {
             @consumer(TaskMsgGroup.CloseTask <- Broker.CMD_CLOSE_TASK_CHANNEL)
             // method closeTask publishes TASK_CLOSED event to Broker's EV_TASK_CLOSED_CHANNEL channel
             @producer(TaskMsgGroup.TASK_CLOSED -> Broker.EV_TASK_CLOSED_CHANNEL)
-            void closeTask(i32 taskId)
+            void closeTask()
         }
     }
-
 }

@@ -3,7 +3,6 @@ import "messaging.tl"
 
 service Task {
 
-    //service_registry=ServiceRegistry
     communication_style=messaging
 
     api {
@@ -17,26 +16,26 @@ service Task {
             i32 priority
         ]
 
-        @rest(method=POST)
+        @rest(method=POST, mapping="/task")
         // method createTask publishes TASK_CREATED event to Broker's EV_TASK_CREATED_CHANNEL channel
         @producer(TaskMsgGroup.TASK_CREATED -> Broker.EV_TASK_CREATED_CHANNEL)
         Task createTask(str title, str description, i32 priority)
 
-        @rest(method=GET)
+        @rest(method=GET, mapping="/task/{id}")
         Task getTask(i32 id)
 
-        @rest(method=GET)
+        @rest(method=GET, mapping="/task")
         list<Task> listTasks()
 
-        @rest(method=PUT)
+        @rest(method=PUT, mapping="/task/{taskId}/{ownerId}")
         // method assignTask publishes to TASK_ASSIGNED event to Broker's EV_TASK_ASSIGNED_CHANNEL channel
         @producer(TaskMsgGroup.TASK_ASSIGNED -> Broker.EV_TASK_ASSIGNED_CHANNEL)
         void assignTask(i32 taskId, i32 ownerId)
 
-        @rest(method=PUT)
+        @rest(method=PUT, mapping="/task/close/{id}")
         // method closeTask publishes TASK_CLOSED event to Broker's EV_TASK_CLOSED_CHANNEL channel
         @producer(TaskMsgGroup.TASK_CLOSED -> Broker.EV_TASK_CLOSED_CHANNEL)
-        void closeTask(i32 taskId)
+        void closeTask(i32 id)
 
         internal {
 

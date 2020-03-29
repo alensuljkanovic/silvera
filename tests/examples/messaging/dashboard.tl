@@ -17,7 +17,7 @@ service Dashboard {
             i32 closedTasksNum
         ]
 
-        @rest(method=GET)
+        @rest(method=GET, mapping="/board")
         Status status()
 
 
