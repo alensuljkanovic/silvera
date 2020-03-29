@@ -199,12 +199,7 @@ Annotation:
 ;
 
 RESTAnnotation:
-    '@rest' '('
-        (
-            ('method' '=' method=HTTPMethod)? |
-            ('mapping' '=' mapping=STRING)?
-        )#
-    ')'
+    '@rest' '(' 'method' '=' method=HTTPMethod (',' 'mapping' '=' mapping=STRING)? ')'
 ;
 
 HTTPMethod:
