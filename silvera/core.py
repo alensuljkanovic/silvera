@@ -483,7 +483,11 @@ class ServiceDecl(ServiceObject):
             dict
         """
         cons = defaultdict(list)
-        for f in self.api.functions:
+        internal = self.api.internal
+        if not internal:
+            return cons
+
+        for f in internal.functions:
             for ann in f.msg_annotations:
                 if isinstance(ann, ConsumerAnnotation):
                     for subscr in ann.subscriptions:
@@ -591,6 +595,21 @@ class Function:
         for ann in self.annotations:
             if isinstance(ann, MessagingAnnotation):
                 yield ann
+
+    @property
+    def produces(self):
+        """Returns list of tuples that show which messages will be published
+        to which channel.
+
+        Returns:
+            list
+        """
+        result = []
+        for ann in self.msg_annotations:
+            if isinstance(ann, ProducerAnnotation):
+                for subscr in ann.subscriptions:
+                    result.append((subscr.message, subscr.channel))
+        return result
 
     def add_rest_mappings(self, mapping):
 

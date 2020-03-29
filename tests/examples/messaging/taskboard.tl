@@ -29,7 +29,7 @@ service TasksBoard {
 
         @rest(method=POST)
         @producer(TaskMsgGroup.AssignTask -> Broker.CMD_ASSIGN_TASK_CHANNEL)
-        TaskView assignTask(i32 boardId, i32 employeeId, i32 taskId)
+        TaskView assignTask(i32 boardId, i32 taskId, i32 employeeId)
 
         @rest(method=GET)
         Board getBoard(i32 id)

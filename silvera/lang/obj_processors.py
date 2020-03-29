@@ -139,98 +139,116 @@ def resolve_custom_types(service_decl):
 
                 field.type = ft
 
-        # Resolve functions
+        # Resolve public functions
         functions = api.functions
-        model = module.model
-        msg_pool = model.msg_pool
 
         for fnc in functions:
+            _resolve_fnc(module, service_decl, fnc)
 
-            # Resolve function's return type
-            ret_type = fnc.ret_type
-            if not is_type_resolved(ret_type):
-                if isinstance(ret_type, TypedList):
-                    _resolve_typed_list(service_decl, ret_type)
-                else:
-                    try:
-                        rtd = service_decl.domain_objs[ret_type]
-                    except KeyError:
-                        raise SilveraTypeError(service_decl.name, ret_type)
+        # Resove internal functions
+        functions = api.internal.functions if api.internal else []
+        for fnc in functions:
+            _resolve_fnc(module, service_decl, fnc)
 
-                    fnc.ret_type = rtd
 
-            # Resolve function's parameters
-            for param in [p for p in fnc.params
-                          if not is_type_resolved(p.type)]:
-                if isinstance(param.type, TypedList):
-                    _resolve_typed_list(service_decl, param.type)
-                else:
-                    try:
-                        td = service_decl.domain_objs[param.type]
-                    except KeyError:
-                        raise SilveraTypeError(service_decl.name, param.type)
+def _resolve_fnc(module, service_decl, fnc):
+    """Resolves all custom types in function object. That includes return type,
+    parameters, and annotations.
 
-                    param.type = td
+    Args:
+        module (Module): module object
+        service_decl (ServiceDecl): service where function is declared.
+        fnc (Function): function to resolve.
+    """
+    model = module.model
+    msg_pool = model.msg_pool
 
-            # Resolve messaging annotations
-            for ann in fnc.msg_annotations:
-                for subscr in ann.subscriptions:
-                    message_fqn = subscr.message
+    # Resolve function's return type
+    ret_type = fnc.ret_type
+    if not is_type_resolved(ret_type):
+        if isinstance(ret_type, TypedList):
+            _resolve_typed_list(service_decl, ret_type)
+        else:
+            try:
+                rtd = service_decl.domain_objs[ret_type]
+            except KeyError:
+                raise SilveraTypeError(service_decl.name, ret_type)
 
-                    # Find Message object represented by given FQN, and
-                    # set reference to it.
-                    try:
-                        subscr.message = msg_pool.get(message_fqn)
-                    except ValueError:
-                        linecol = module._tx_parser.pos_to_linecol(
-                            subscr._tx_position)
-                        raise SilveraLoadError(
-                            "Cannot resolve annotation ({} {}). Message '{}' "
-                            "not defined in message pool.".format(
-                                module.path,
-                                linecol,
-                                message_fqn)
-                        )
+            fnc.ret_type = rtd
 
-                    # Find MessageChannel object represented by given FQN, and
-                    # set reference to it.
-                    channel_fqn = subscr.channel
-                    fqn = channel_fqn.split(".")
-                    broker_name = fqn[0]
-                    try:
-                        broker = model.msg_brokers[broker_name]
-                    except KeyError:
-                        linecol = module._tx_parser.pos_to_linecol(
-                            subscr._tx_position)
-                        raise SilveraLoadError(
-                            "Cannot resolve annotation ({} {}). Broker '{}' "
-                            "not defined.".format(
-                                module.path,
-                                linecol,
-                                broker_name)
-                        )
+    # Resolve function's parameters
+    for param in [p for p in fnc.params
+                  if not is_type_resolved(p.type)]:
+        if isinstance(param.type, TypedList):
+            _resolve_typed_list(service_decl, param.type)
+        else:
+            try:
+                td = service_decl.domain_objs[param.type]
+            except KeyError:
+                raise SilveraTypeError(service_decl.name, param.type)
 
-                    channel_name = fqn[1]
-                    try:
-                        channel = broker.channels[channel_name]
-                        subscr.channel = channel
-                    except KeyError:
-                        linecol = module._tx_parser.pos_to_linecol(
-                            subscr._tx_position)
-                        raise SilveraLoadError(
-                            "Cannot resolve annotation ({} {}). Channel '{}' "
-                            "not defined in broker '{}'".format(
-                                module.path,
-                                linecol,
-                                channel_name,
-                                broker_name)
-                        )
+            param.type = td
 
-                    # Perform registrations
-                    if isinstance(ann, ProducerAnnotation):
-                        broker.register_producer(channel_name, fnc)
-                    else:
-                        broker.register_consumer(channel_name, fnc)
+
+    # Resolve messaging annotations
+    for ann in fnc.msg_annotations:
+        for subscr in ann.subscriptions:
+            message_fqn = subscr.message
+
+            # Find Message object represented by given FQN, and
+            # set reference to it.
+            try:
+                subscr.message = msg_pool.get(message_fqn)
+            except ValueError:
+                linecol = module._tx_parser.pos_to_linecol(
+                    subscr._tx_position)
+                raise SilveraLoadError(
+                    "Cannot resolve annotation ({} {}). Message '{}' "
+                    "not defined in message pool.".format(
+                        module.path,
+                        linecol,
+                        message_fqn)
+                )
+
+            # Find MessageChannel object represented by given FQN, and
+            # set reference to it.
+            channel_fqn = subscr.channel
+            fqn = channel_fqn.split(".")
+            broker_name = fqn[0]
+            try:
+                broker = model.msg_brokers[broker_name]
+            except KeyError:
+                linecol = module._tx_parser.pos_to_linecol(
+                    subscr._tx_position)
+                raise SilveraLoadError(
+                    "Cannot resolve annotation ({} {}). Broker '{}' "
+                    "not defined.".format(
+                        module.path,
+                        linecol,
+                        broker_name)
+                )
+
+            channel_name = fqn[1]
+            try:
+                channel = broker.channels[channel_name]
+                subscr.channel = channel
+            except KeyError:
+                linecol = module._tx_parser.pos_to_linecol(
+                    subscr._tx_position)
+                raise SilveraLoadError(
+                    "Cannot resolve annotation ({} {}). Channel '{}' "
+                    "not defined in broker '{}'".format(
+                        module.path,
+                        linecol,
+                        channel_name,
+                        broker_name)
+                )
+
+            # Perform registrations
+            if isinstance(ann, ProducerAnnotation):
+                broker.register_producer(channel_name, fnc)
+            else:
+                broker.register_consumer(channel_name, fnc)
 
 
 def _resolve_typed_list(service_decl, typed_list):

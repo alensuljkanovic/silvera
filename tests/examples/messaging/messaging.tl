@@ -37,16 +37,9 @@ msg-pool {
 // messages also strictly from the broker.
 msg-broker Broker {
 
-    @p2p  // Marks CMD_ASSIGN_TASK_CHANNEL as Point-to-Point channel
-    @persistent(timeout=1000)  // CMD_ASSIGN_TASK_CHANNEL guarantees delivery in a given time frame.
     channel CMD_ASSIGN_TASK_CHANNEL(TaskMsgGroup.AssignTask)
-
-    @p2p
-    @persistent(timeout=1000)
     channel CMD_CLOSE_TASK_CHANNEL(TaskMsgGroup.CloseTask)
 
-    // Following channel's are Publish-Subscribe channel, and delivery is not
-    // guaranteed.
     channel EV_BOARD_CREATED_CHANNEL(BoardMsgGroup.BOARD_CREATED)
     channel EV_EMPLOYEE_CREATED_CHANNEL(EmployeeMsgGroup.EMPLOYEE_CREATED)
     channel EV_TASK_CREATED_CHANNEL(TaskMsgGroup.TASK_CREATED)

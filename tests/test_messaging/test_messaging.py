@@ -69,24 +69,22 @@ def test_find_msg_by_fqn(examples_path):
 def test_same_empty_msg_group(examples_path):
     example = os.path.join(examples_path, "empty_group")
 
-    with pytest.raises(SilveraLoadError) as exc_info:
+    with pytest.raises(SilveraLoadError):
         load(example)
 
 
 def test_unique_msg_group_id(examples_path):
     example = os.path.join(examples_path, "group_redefinitions")
 
-    with pytest.raises(SilveraLoadError) as exc_info:
+    with pytest.raises(SilveraLoadError):
         load(example)
 
 
 def test_unique_msg_name(examples_path):
     example = os.path.join(examples_path, "message_redefinition")
 
-    with pytest.raises(SilveraLoadError) as exc_info:
+    with pytest.raises(SilveraLoadError):
         load(example)
-
-    exc = exc_info.value
 
 
 def test_broker(examples_path):

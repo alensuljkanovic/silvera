@@ -98,6 +98,14 @@ APIDecl:
     'api' '{'
         typedefs*=TypeDef
         functions*=Function
+
+        (internal=APIInternal)?
+    '}'
+;
+
+APIInternal:
+    'internal' '{'
+        functions*=Function
     '}'
 ;
 
