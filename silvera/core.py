@@ -495,6 +495,26 @@ class ServiceDecl(ServiceObject):
         return cons
 
     @property
+    def f_consumers(self):
+        """Returns list of all functions that consume messages from channels.
+
+        Returns:
+            list
+        """
+        cons = set()
+        internal = self.api.internal
+        if not internal:
+            return cons
+
+        for f in internal.functions:
+            for ann in f.msg_annotations:
+                if isinstance(ann, ConsumerAnnotation):
+                    for subscr in ann.subscriptions:
+                        cons.add(f)
+
+        return sorted(cons, key=lambda f: f.name)
+
+    @property
     def produces(self):
         """Returns dict where for each message is shown to which channel
         the message is published.
@@ -609,6 +629,34 @@ class Function:
             if isinstance(ann, ProducerAnnotation):
                 for subscr in ann.subscriptions:
                     result.append((subscr.message, subscr.channel))
+        return result
+
+    @property
+    def consumes(self):
+        """Returns list of message-channel pairs for each function that is
+        message consumer
+
+        Returns:
+            list
+        """
+        result = []
+        for ann in self.msg_annotations:
+            if isinstance(ann, ConsumerAnnotation):
+                for subscr in ann.subscriptions:
+                    result.append((subscr.message, subscr.channel))
+        return result
+
+    @property
+    def channels(self):
+        """Returns list of all channels from which the function consumes
+        messages
+
+        Returns:
+            list
+        """
+        result = []
+        for sub in self.consumes:
+            result.append(sub[1].name)
         return result
 
     def add_rest_mappings(self, mapping):

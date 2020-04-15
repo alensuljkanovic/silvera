@@ -7,6 +7,7 @@ from silvera.core import (ServiceDecl, ConfigServerDecl, ServiceRegistryDecl,
                           TypedList, TypeDef, Deployable, Deployment,
                           MessagePool, ProducerAnnotation)
 from silvera.exceptions import SilveraTypeError, SilveraLoadError
+from silvera.utils import available_port
 
 
 BASIC_TYPES = {"date", "i16", "i32", "i64", "bool", "int", "void", "str",
@@ -188,7 +189,6 @@ def _resolve_fnc(module, service_decl, fnc):
                 raise SilveraTypeError(service_decl.name, param.type)
 
             param.type = td
-
 
     # Resolve messaging annotations
     for ann in fnc.msg_annotations:
@@ -391,7 +391,9 @@ def process_module(module):
             # decl extends another declaration, then deployment from the
             # parent declaration will be used.
             if decl.deployment is None and decl.extends is None:
-                decl.deployment = Deployment(decl)
+                deployment = Deployment(decl)
+                deployment.port = available_port(1)
+                decl.deployment = deployment
 
         if isinstance(decl, ServiceDecl):
             resolve_inheritance(module, decl)
@@ -404,6 +406,11 @@ def process_module(module):
             reg = decl.service_registry
             if reg and not isinstance(reg, ServiceRegistryDecl):
                 decl.service_registry = lookup(module, reg)
+
+            # assign port number if not assigned
+            deployment = decl.deployment
+            if deployment.port is None:
+                deployment.port = available_port(deployment.replicas)
 
         if decl.__class__.__name__ == "Connection":
             start = decl.start

@@ -40,7 +40,6 @@ def compile(ctx, project_dir, output_dir, rest_strategy):
     project_dir = os.path.abspath(project_dir)
 
     click.echo("Compiling...")
-    click.echo(project_dir)
     try:
         click.echo("Loading model...")
         model = runners.load(project_dir, rest_strategy)
@@ -53,7 +52,6 @@ def compile(ctx, project_dir, output_dir, rest_strategy):
     else:
         output_dir = os.path.abspath(output_dir)
 
-    click.echo(output_dir)
     try:
         click.echo("Generating code...")
         gn.generate(model, output_dir)

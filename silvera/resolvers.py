@@ -97,16 +97,16 @@ class RESTResolver:
             else:
                 fn_mapping = "%s/" % func.name.lower()
 
-            if func.http_verb == HTTP_GET and func.params:
-                fn_mapping += http_get_params(func.params)
+                if func.http_verb == HTTP_GET and func.params:
+                    fn_mapping += http_get_params(func.params)
 
             return fn_mapping
 
         model = service.parent.model
-        name = service.name
+        # name = service.name
         api = service.api
 
-        path = "%s/" % name.lower()
+        # path = "%s/" % name.lower()
         for func in api.functions:
             ann = rest_annotation(func)
             if ann is not None:
@@ -114,13 +114,13 @@ class RESTResolver:
             else:
                 self._apply_strategy(func)
 
-            func.add_rest_mappings(path + func_name_mapping(func))
+            func.add_rest_mappings(func_name_mapping(func))
 
         for func in service.dep_functions:
             org_serv = model.find_by_fqn(func.service_fqn)
             org_fn = org_serv.get_function(func.name)
             func.http_verb = org_fn.http_verb
-            func.rest_path = path + func_name_mapping(func)
+            func.rest_path = func_name_mapping(func)
 
     def _apply_annotation(self, func):
         """Applies the REST annotation given in .tl file.

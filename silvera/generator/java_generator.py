@@ -146,219 +146,382 @@ def generate_service(service, output_dir):
         - bootstrap.properties
         - pom.xml
     """
-    comm_style = service.comm_style
-    templates_path = os.path.join(
-        get_templates_path(),
-        JAVA,
-        "service",
-        comm_style
-    )
+    if service.comm_style == "rpc":
+        generator = RPCServiceGenerator(service)
+    else:
+        generator = MsgServiceGenerator(service)
 
-    if comm_style == "rpc":
-        generate_rpc_service(service, templates_path, output_dir)
+    generator.generate(output_dir)
 
 
-def generate_rpc_service(service, templates_path, output_dir):
-    """Generates code for service that uses RPC method of communication.
+class ServiceGenerator:
+    """Base class for service generators
 
-    Args:
-        service (ServiceDecl): service object
-        templates_path (str): path to templates
-        output_dir (str): path to the directory where code will be generated.
-
-    Returns:
-        None
+    Attributes:
+        service (Service): core service object
+        _templates_path (str): path to templates used during code generation
     """
-    env = Environment(loader=FileSystemLoader(templates_path))
-    env.filters["firstupper"] = lambda x: x[0].upper() + x[1:]
-    env.filters["firstlower"] = lambda x: x[0].lower() + x[1:]
-    env.filters["converttype"] = lambda x: convert_complex_type(JAVA, x)
-    env.filters["return_type"] = lambda fnc: get_return_type(fnc)
-    env.filters["unfold_function_params"] = lambda x: unfold_function_params(
-        JAVA, x, False)
-    env.filters["unfold_function_params_rest"] = lambda x: unfold_function_params(
-        JAVA, x)
-    env.filters["param_names"] = get_param_names
+    def __init__(self, service):
+        super().__init__()
+        self.service = service
+        self._templates_path = os.path.join(
+            get_templates_path(),
+            JAVA,
+            "service",
+            self.service.comm_style
+        )
 
-    env.globals["generate_cb_annotation"] = generate_cb_annotation
-    env.globals["get_default_for_cb_pattern"] = lambda x: \
-        get_default_for_cb_pattern(JAVA, x)
-    env.globals["get_rest_call"] = lambda x: get_rest_call(JAVA, x)
-    env.globals["default_value_for_type"] = lambda x: \
-        get_def_ret_val(JAVA, x)
+    def _get_env(self):
+        env = Environment(loader=FileSystemLoader(self._templates_path))
+        env.filters["firstupper"] = lambda x: x[0].upper() + x[1:]
+        env.filters["firstlower"] = lambda x: x[0].lower() + x[1:]
+        env.filters["converttype"] = lambda x: convert_complex_type(JAVA, x)
+        env.filters["return_type"] = lambda fnc: get_return_type(fnc)
+        env.filters["unfold_function_params"] = lambda x: unfold_function_params(
+            JAVA, x, False)
+        env.filters["unfold_function_params_rest"] = lambda x: unfold_function_params(
+            JAVA, x)
+        env.filters["param_names"] = get_param_names
+        env.filters["topics"] = lambda f: ", ".join(
+            ['"%s"' % c for c in f.channels]
+        )
 
-    env.tests["collection"] = lambda x: is_collection(x)
+        env.globals["generate_cb_annotation"] = generate_cb_annotation
+        env.globals["get_default_for_cb_pattern"] = lambda x: \
+            get_default_for_cb_pattern(JAVA, x)
+        env.globals["get_rest_call"] = lambda x: get_rest_call(JAVA, x)
+        env.globals["default_value_for_type"] = lambda x: \
+            get_def_ret_val(JAVA, x)
 
-    service_name = service.name
-    service_version = service.version
-    service_port = service.port
+        env.tests["collection"] = lambda x: is_collection(x)
 
-    java_struct(output_dir, service_name)
-    root = os.path.join(output_dir, service_name)
-    res_path = os.path.join(root, "src", "main", "resources")
+        return env
 
-    #
-    # Generate bootstrap.properties
-    #
-    bootstrap_template = env.get_template("bootstrap_properties.template")
-    d = {
-        "service_name": service_name,
-        "service_port": "${PORT:%s}" % service_port,
-        "service_version": service_version,
-        "use_circuit_breaker": len(service.dependencies) > 0,
-        "timestamp": timestamp(),
-    }
+    def generate_main(self, env, content_path, d):
+        """Generate main class: {{ServiceName}}Application.java
 
-    if service.config_server:
-        d["config_server_uri"] = "http://localhost:%s" % \
-                                 service.config_server.port
+        Args:
+            env (Environment): jinja2 enviroment used during generation.
+            content_path (str): path to the parent folder in generated project
+            d (dict): dict with variables for templates
+        """
+        app_template = env.get_template("main.template")
+        app_template.stream(d).dump(os.path.join(content_path, "App.java"))
 
-    if service.service_registry:
-        reg = service.service_registry
-        url = "%s:%s/eureka" % (reg.url, reg.port)
-        d["service_registry_url"] = url
+    def generate_bootstrap_properties(self, env, output_dir, d):
+        """Generate bootstrap.properties
 
-    bootstrap_template.stream(d).dump(os.path.join(res_path,
-                                                   "bootstrap.properties"))
+        Args:
+            env (Environment): jinja2 enviroment used during generation.
+            content_path (str): path to the parent folder in generated project
+            d (dict): dict with variables for templates
+        """
 
-    #
-    # Generate pom.xml
-    #
-    pom_template = env.get_template("pom_xml.template")
-    pom_template.stream(d).dump(os.path.join(root, "pom.xml"))
+        service = self.service
+        root = os.path.join(output_dir, service.name)
+        res_path = os.path.join(root, "src", "main", "resources")
 
-    content_path = os.path.join(root, "src", "main", "java", "com", "silvera",
-                                service_name)
+        bootstrap_template = env.get_template("bootstrap_properties.template")
 
-    #
-    # Generate {{ServiceName}}Application.java
-    #
-    app_template = env.get_template("main.template")
-    app_template.stream(d).dump(os.path.join(content_path, "App.java"))
+        if service.config_server:
+            d["config_server_uri"] = "http://localhost:%s" % \
+                                      service.config_server.port
 
-    # Generate {{ServiceName}}AsyncConfiguration.java, if needed
-    if service.has_async():
-        cfg_template = env.get_template("config.template")
-        cfg_name = service_name + "AsyncConfiguration.java"
-        cfg_template.stream(d).dump(os.path.join(content_path, cfg_name))
+        if service.service_registry:
+            reg = service.service_registry
+            url = "%s:%s/eureka" % (reg.url, reg.port)
+            d["service_registry_url"] = url
 
-    #
-    # Generate controller
-    #
-    controller_path = create_if_missing(
-        os.path.join(content_path, "controller")
-    )
+        bootstrap_template.stream(d).dump(os.path.join(res_path,
+                                                       "bootstrap.properties"))
 
-    controller_data = {
-        "service_name": service_name,
-        "api": service.api,
-        "timestamp": timestamp(),
-        "async": service.has_async(),
-    }
-    controller_template = env.get_template("controller.template")
-    controller_template.stream(controller_data).dump(
-        os.path.join(controller_path,
-                     service_name + "Controller.java")
-    )
+    def generate_pom_xml(self, env, output_dir, d):
+        """Generate pom.xml
 
-    #
-    # Generate domain model
-    #
-    domain_path = create_if_missing(os.path.join(content_path, "domain"))
-    model_path = create_if_missing(os.path.join(domain_path, "model"))
+        Args:
+            env (Environment): jinja2 enviroment used during generation.
+            content_path (str): path to the parent folder in generated project
+            d (dict): dict with variables for templates
+        """
+        service = self.service
+        root = os.path.join(output_dir, service.name)
 
-    api = service.api
+        pom_template = env.get_template("pom_xml.template")
+        pom_template.stream(d).dump(os.path.join(root, "pom.xml"))
 
-    for typedef in api.typedefs:
-        data = {
-            "dependency": False,
-            "service_name": service_name,
-            "name": typedef.name,
-            "attributes": typedef.fields,
+    def generate_config(self, env, content_path):
+        """Generate files in config folder
+
+        Args:
+            env (Environment): jinja2 enviroment used during generation.
+            content_path (str): path to the parent folder in generated project
+        """
+
+    def generate_controllers(self, env, content_path):
+        """Generate controller
+
+        Args:
+            env (Environment): jinja2 enviroment used during generation.
+            content_path (str): path to the parent folder in generated project
+        """
+        controller_path = create_if_missing(
+            os.path.join(content_path, "controller")
+        )
+
+        controller_data = {
+            "service_name": self.service.name,
+            "api": self.service.api,
             "timestamp": timestamp()
         }
-        class_template = env.get_template("class.template")
-        class_template.stream(data).dump(os.path.join(model_path,
-                                         typedef.name + ".java"))
-
-    if service.dep_typedefs:
-        # domain dependecy classes
-        dependencies_path = create_if_missing(
-            os.path.join(domain_path, "dependencies")
+        controller_template = env.get_template(
+            "controller/controller.template")
+        controller_template.stream(controller_data).dump(
+            os.path.join(controller_path,
+                         self.service.name + "Controller.java")
         )
-        for typedef in service.dep_typedefs:
+
+    def generate_domain_model(self, env, content_path):
+        """Generate domain model
+
+        Args:
+            env (Environment): jinja2 enviroment used during generation.
+            content_path (str): path to the parent folder in generated project
+        """
+        domain_path = create_if_missing(os.path.join(content_path, "domain"))
+        model_path = create_if_missing(os.path.join(domain_path, "model"))
+
+        api = self.service.api
+
+        for typedef in api.typedefs:
             data = {
-                "dependency": True,
-                "service_name": service_name,
+                "dependency": False,
+                "service_name": self.service.name,
                 "name": typedef.name,
                 "attributes": typedef.fields,
                 "timestamp": timestamp()
             }
-            class_template = env.get_template("class.template")
-            class_template.stream(data).dump(
-                os.path.join(dependencies_path, typedef.name + ".java")
-            )
-    #
-    # Generate services
-    #
-    service_path = create_if_missing(os.path.join(content_path, "service"))
+            class_template = env.get_template("domain/class.template")
+            class_template.stream(data).dump(os.path.join(model_path,
+                                             typedef.name + ".java"))
 
-    # base service
-    base_path = create_if_missing(os.path.join(service_path, "base"))
-    service_data = {
-        "service_name": service_name,
-        "package_name": service_name,
-        "functions": service.api.functions,
-        "dep_names": [s.name for s in service.dependencies],
-        "timestamp": timestamp(),
-        "async": service.has_async(),
-    }
-    base_template = env.get_template("base_service.template")
-    base_template.stream(service_data).dump(
-        os.path.join(base_path,
-                     "Base" + service_name + "Service.java"))
+    def generate_services(self, env, content_path):
+        """Generate services
 
-    # impl service
-    impl_path = create_if_missing(os.path.join(service_path, "impl"))
-    impl_file = os.path.join(impl_path, service_name + "Service.java")
-    if not os.path.exists(impl_file):
-        impl_template = env.get_template("service.template")
-        impl_template.stream(service_data).dump(impl_file)
+        Args:
+            env (Environment): jinja2 enviroment used during generation.
+            content_path (str): path to the parent folder in generated project
+        """
+        service_path = create_if_missing(os.path.join(content_path, "service"))
+        service = self.service
+        service_name = service.name
 
-    # dependecy services
-    fns_by_service = defaultdict(list)
-    for fn in service.dep_functions:
-        fns_by_service[fn.service_name].append(fn)
-
-    for s in service.dependencies:
-        s_data = {
-            "service_name": s.name,
+        # base service
+        base_path = create_if_missing(os.path.join(service_path, "base"))
+        service_data = {
+            "service_name": service_name,
             "package_name": service_name,
-            "functions": fns_by_service[s.name],
-            "use_circuit_breaker": True,
+            "functions": service.api.functions,
+            "dep_names": [s.name for s in service.dependencies],
             "timestamp": timestamp()
         }
-        service_template = env.get_template("dependency_service.template")
-        service_template.stream(s_data).dump(
+        try:
+            base_template = env.get_template("service/base_service.template")
+            base_template.stream(service_data).dump(
+                os.path.join(base_path,
+                             "Base" + service_name + "Service.java"))
+        except Exception:
+            base_template = env.get_template("service/service_interface.template")
+            base_template.stream(service_data).dump(
+                os.path.join(base_path,
+                             "I" + service_name + "Service.java"))
+
+        # impl service
+        impl_path = create_if_missing(os.path.join(service_path, "impl"))
+        impl_file = os.path.join(impl_path, service_name + "Service.java")
+        if not os.path.exists(impl_file):
+            impl_template = env.get_template("service/service.template")
+            impl_template.stream(service_data).dump(impl_file)
+
+    def generate_messages(self, env, content_path):
+        """Generate message objects
+
+        Args:
+            env (Environment): jinja2 enviroment used during generation.
+            content_path (str): path to the parent folder in generated project
+        """
+        pass
+
+    def generate_run_script(self, output_dir):
+        """Generate run script for the generated application
+
+        Args:
+            env (Environment): jinja2 enviroment used during generation.
+            output_dir (str): path to the output dir
+        """
+        generate_run_script(output_dir,
+                            self.service.name,
+                            self.service.version,
+                            self.service.port)
+
+        if self.service.host == HOST_CONTAINER:
+            # Generate Dockerfile
+            generate_dockerfile(output_dir,
+                                self.service.name,
+                                self.service.version,
+                                self.service.port)
+
+            # # Copy wait-for-it.sh
+            # from shutil import copy2
+            # src = os.path.join(get_root_path(), "silvera", "generator", "utils",
+            #                    "wait-for-it.sh")
+            # copy2(src, root)
+
+    def generate(self, output_dir):
+        """Generate service application.
+
+        Args:
+            output_dir (str): path to the output dir
+        """
+        env = self._get_env()
+
+        service = self.service
+        service_name = service.name
+
+        java_struct(output_dir, service_name)
+        root = os.path.join(output_dir, service_name)
+
+        d = {
+            "service_name": service.name,
+            "service_port": "${PORT:%s}" % service.port,
+            "service_version": service.version,
+            "use_circuit_breaker": len(service.dependencies) > 0,
+            "timestamp": timestamp(),
+        }
+
+        # Generate root files
+        self.generate_bootstrap_properties(env, output_dir, d)
+        self.generate_pom_xml(env, output_dir, d)
+
+        content_path = os.path.join(root, "src", "main", "java", "com",
+                                    "silvera", service_name)
+
+        self.generate_main(env, content_path, d)
+        self.generate_config(env, content_path)
+
+        self.generate_domain_model(env, content_path)
+        self.generate_controllers(env, content_path)
+        self.generate_services(env, content_path)
+        self.generate_messages(env, content_path)
+
+        self.generate_run_script(output_dir)
+
+
+class RPCServiceGenerator(ServiceGenerator):
+    """Generates code for service that uses RPC style of communication"""
+
+    def generate_main(self, env, content_path, d):
+        super().generate_main(env, content_path, d)
+
+        # Generate {{ServiceName}}AsyncConfiguration.java, if needed
+        if self.service.has_async():
+            cfg_template = env.get_template("config/config.template")
+            cfg_name = self.service.name + "AsyncConfiguration.java"
+            cfg_template.stream(d).dump(os.path.join(content_path, cfg_name))
+
+    def generate_services(self, env, content_path):
+        super().generate_services(env, content_path)
+
+        # dependecy services
+        service = self.service
+        fns_by_service = defaultdict(list)
+        for fn in service.dep_functions:
+            fns_by_service[fn.service_name].append(fn)
+
+        base_path = os.path.join(content_path, "service", "base")
+        for s in service.dependencies:
+            s_data = {
+                "service_name": s.name,
+                "package_name": service.name,
+                "functions": fns_by_service[s.name],
+                "use_circuit_breaker": True,
+                "timestamp": timestamp()
+            }
+            service_template = env.get_template(
+                "service/dependency_service.template")
+            service_template.stream(s_data).dump(
+                os.path.join(base_path,
+                             s.name + "Service.java"))
+
+
+class MsgServiceGenerator(ServiceGenerator):
+    """Generates code for service that uses messaging as a style of
+       communication."""
+    def generate_config(self, env, content_path):
+        cfg_path = create_if_missing(os.path.join(content_path, "config"))
+
+        d = {
+            "package_name": self.service.name,
+            "service_name": self.service.name,
+            "timestamp": timestamp(),
+            "producer_exists": len(self.service.produces) > 0,
+            "consumer_exists": len(self.service.consumes) > 0
+        }
+
+        msg_template = env.get_template("config/kafka_config.template")
+        msg_template.stream(d).dump(os.path.join(cfg_path, "KafkaConfig.java"))
+
+    def generate_messages(self, env, content_path):
+        msg_path = create_if_missing(os.path.join(content_path, "messages"))
+
+        d = {
+            "package_name": self.service.name,
+            "timestamp": timestamp()
+        }
+
+        msg_template = env.get_template("message/message.template")
+        msg_template.stream(d).dump(os.path.join(msg_path, "Message.java"))
+
+        ann_template = env.get_template("message/message_annotation.template")
+        ann_template.stream(d).dump(os.path.join(msg_path,
+                                                 "MessageAnnotation.java"))
+
+        field_template = env.get_template("message/message_field.template")
+        field_template.stream(d).dump(os.path.join(msg_path,
+                                                   "MessageField.java"))
+
+    def generate_services(self, env, content_path):
+        #
+        # Generate services
+        #
+        service_path = create_if_missing(os.path.join(content_path, "service"))
+        service = self.service
+        service_name = service.name
+
+        # consumers = []
+        # for f service.api
+
+        # base service
+        base_path = create_if_missing(os.path.join(service_path, "base"))
+        service_data = {
+            "service_name": service_name,
+            "package_name": service_name,
+            "functions": service.api.functions,
+            "dep_names": [s.name for s in service.dependencies],
+            "timestamp": timestamp(),
+            "consumers": service.f_consumers
+        }
+
+        base_template = env.get_template("service/service_interface.template")
+        base_template.stream(service_data).dump(
             os.path.join(base_path,
-                         s.name + "Service.java"))
+                         "I" + service_name + "Service.java"))
 
-    #
-    # Generate run script
-    #
-    generate_run_script(output_dir, service_name, service_version,
-                        service_port)
-
-    if service.host == HOST_CONTAINER:
-        # Generate Dockerfile
-        generate_dockerfile(output_dir, service_name, service_version,
-                            service_port)
-
-        # # Copy wait-for-it.sh
-        # from shutil import copy2
-        # src = os.path.join(get_root_path(), "silvera", "generator", "utils",
-        #                    "wait-for-it.sh")
-        # copy2(src, root)
+        # impl service
+        impl_path = create_if_missing(os.path.join(service_path, "impl"))
+        impl_file = os.path.join(impl_path, service_name + "Service.java")
+        if not os.path.exists(impl_file):
+            impl_template = env.get_template("service/service.template")
+            impl_template.stream(service_data).dump(impl_file)
 
 
 _obj_to_fnc = {
