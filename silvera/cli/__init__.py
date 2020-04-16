@@ -48,7 +48,9 @@ def compile(ctx, project_dir, output_dir, rest_strategy):
         return
 
     if not output_dir:
-        output_dir = project_dir
+        output_dir = os.path.join(project_dir, "output")
+        if not os.path.exists(output_dir):
+            os.mkdir(output_dir)
     else:
         output_dir = os.path.abspath(output_dir)
 
@@ -60,6 +62,7 @@ def compile(ctx, project_dir, output_dir, rest_strategy):
         return
 
     click.echo("Compilation finished successfully!")
+    click.echo("Project generated in: %s" % output_dir)
 
 
 @silvera.command()
