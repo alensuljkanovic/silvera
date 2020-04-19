@@ -3,6 +3,7 @@ import os
 import silvera.run as runners
 import silvera.generator.generator as gn
 from silvera.generator.gen_reg import collect_generators
+from silvera import quickstart
 
 
 @click.group()
@@ -21,10 +22,48 @@ def check(ctx, project_dir):
     try:
         runners.load(project_dir)
     except Exception as ex:
-        click.echo(str(ex))
-        return
+        raise click.ClickException(str(ex))
 
     click.echo("Everything is OK!")
+
+
+@silvera.command()
+@click.argument('project_name')
+@click.option('--registry', '-r',
+              help="Service registry name")
+@click.option('--registry-port', '-rp', type=int,
+              help="Service registry port")
+@click.option('--cfg', '-c',
+              help="Config  server name")
+@click.option('--cfg-path', '-cpath',
+              help="Config  properties path")
+@click.option('--cfg-port', '-cp', type=int,
+              help="Config server port")
+@click.option('--messaging', default=False, is_flag=True,
+              help="Create message broker and message pool.")
+@click.pass_context
+def init(ctx, project_name, registry, registry_port, cfg, cfg_path, cfg_port,
+         messaging):
+    """Creates initial Silvera project"""
+    cwd = os.getcwd()
+
+    click.echo("Creating project '%s' in '%s'" % (project_name,
+                                                  cwd))
+    project_path = os.path.join(cwd, project_name)
+    if os.path.exists(project_path):
+        raise click.ClickException("Project with given name already exists!")
+
+    os.mkdir(project_path)
+    open(os.path.join(project_path, ".silvera-project"), "a").close()
+
+    # registry_name, registry_port = registry
+    click.echo("Generating setup.tl")
+    quickstart.create_setup(project_path, registry, registry_port, cfg,
+                            cfg_path, cfg_port)
+
+    if messaging:
+        click.echo("Generating messaging.tl")
+        quickstart.create_messaging(project_path)
 
 
 @silvera.command()
@@ -44,8 +83,7 @@ def compile(ctx, project_dir, output_dir, rest_strategy):
         click.echo("Loading model...")
         model = runners.load(project_dir, rest_strategy)
     except Exception as ex:
-        click.echo(str(ex))
-        return
+        raise click.ClickException(str(ex))
 
     if not output_dir:
         output_dir = os.path.join(project_dir, "output")
@@ -58,8 +96,7 @@ def compile(ctx, project_dir, output_dir, rest_strategy):
         click.echo("Generating code...")
         gn.generate(model, output_dir)
     except Exception as ex:
-        click.echo(str(ex))
-        return
+        raise click.ClickException(str(ex))
 
     click.echo("Compilation finished successfully!")
     click.echo("Project generated in: %s" % output_dir)
