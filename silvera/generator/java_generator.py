@@ -4,7 +4,7 @@ from collections import defaultdict
 from jinja2 import Environment, FileSystemLoader
 from silvera.const import HOST_CONTAINER, HTTP_POST
 from silvera.core import (CustomType, ConfigServerDecl, ServiceRegistryDecl,
-                          ServiceDecl)
+                          ServiceDecl, APIGateway)
 from silvera.generator.platforms import (
     JAVA, convert_complex_type, get_def_ret_val, is_collection
 )
@@ -126,6 +126,87 @@ def generate_service_registry(serv_registry, output_dir):
     if serv_registry.host == HOST_CONTAINER:
         # Generate Dockerfile
         generate_dockerfile(output_dir, reg_name, reg_version, reg_port)
+
+
+def generate_api_gateway(api_gateway, output_dir):
+    """Creates Zuul API Gateway"""
+
+    def service_registy_defined(gt):
+        """Returns True if service registry is defined within model, False
+        otherwise
+
+        Args:
+            gt (APIGateway): api gateway
+
+        Returs:
+            bool
+        """
+        model = gt.parent.model
+
+        for m in model.modules:
+            for s in m.service_registries:
+                # If service registry is defined, generator will not be empty.
+                return True
+        return False
+
+    templates_path = os.path.join(get_templates_path(), JAVA, "api-gateway")
+    env = Environment(loader=FileSystemLoader(templates_path))
+
+    gname = api_gateway.name
+
+    java_struct(output_dir, gname)
+
+    d = {
+        "gateway_name": gname,
+        "gateway_version": api_gateway.version,
+        "port": "${PORT:%s}" % api_gateway.port,
+        "use_service_registry": service_registy_defined(api_gateway),
+        "gateway_for": [(g.service.name, g.path, g.service.port)
+                        for g in api_gateway.gateway_for],
+        "timestamp": timestamp()
+    }
+
+    gt_path = os.path.join(output_dir, gname)
+    res_path = os.path.join(gt_path, "src", "main", "resources")
+    if not os.path.exists(res_path):
+        os.mkdir(res_path)
+
+    #
+    # Generate bootstrap.properties
+    #
+    bootstrap_template = env.get_template("bootstrap_properties.template")
+    bootstrap_template.stream(d).dump(os.path.join(res_path,
+                                                   "application.properties"))
+
+    #
+    # Generate pom.xml
+    #
+    pom_template = env.get_template("pom_xml.template")
+    pom_template.stream(d).dump(os.path.join(gt_path, "pom.xml"))
+
+    content_path = os.path.join(gt_path, "src", "main", "java", "com",
+                                "silvera", gname)
+
+    #
+    # Generate main class: App.java
+    #
+    app_template = env.get_template("main.template")
+    app_template.stream(d).dump(os.path.join(content_path, "App.java"))
+
+    #
+    # Generate run script
+    #
+    generate_run_script(output_dir,
+                        gname,
+                        api_gateway.version,
+                        api_gateway.port)
+
+    if api_gateway.host == HOST_CONTAINER:
+        # Generate Dockerfile
+        generate_dockerfile(output_dir,
+                            gname,
+                            api_gateway.version,
+                            api_gateway.port)
 
 
 def generate_service(service, output_dir):
@@ -527,7 +608,8 @@ class MsgServiceGenerator(ServiceGenerator):
 _obj_to_fnc = {
     ConfigServerDecl: generate_config_server,
     ServiceRegistryDecl: generate_service_registry,
-    ServiceDecl: generate_service
+    ServiceDecl: generate_service,
+    APIGateway: generate_api_gateway
 }
 
 

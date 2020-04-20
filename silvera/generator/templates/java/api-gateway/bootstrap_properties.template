@@ -1,0 +1,6 @@
+server.port={{port}}
+ribbon.eureka.enabled={{use_service_registry}}
+{% for service_name, path, service_port  in gateway_for %}
+zuul.routes.{{service_name}}.path={{path}}/**
+zuul.routes.{{service_name}}.url=http://localhost:{{service_port}}
+{% endfor %}

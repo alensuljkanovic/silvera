@@ -51,6 +51,13 @@ def generate(model, output_dir, debug=False):
             if serv_registry.host == HOST_CONTAINER:
                 for_compose(serv_registry)
 
+        for gt in module.api_gateways:
+            # Currently, API Gateways can only work in Java.
+            generator = generator_for_language(JAVA)
+            generator(gt, output_dir, debug)
+            if gt.host == HOST_CONTAINER:
+                for_compose(config_serv)
+
         for service in module.services:
             lang = service.lang
             # port = service.port

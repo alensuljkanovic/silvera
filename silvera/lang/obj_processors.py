@@ -5,7 +5,7 @@ processors are used during parsing.
 from collections import deque, OrderedDict, defaultdict
 from silvera.core import (ServiceDecl, ConfigServerDecl, ServiceRegistryDecl,
                           TypedList, TypeDef, Deployable, Deployment,
-                          MessagePool, ProducerAnnotation)
+                          MessagePool, ProducerAnnotation, APIGateway)
 from silvera.exceptions import SilveraTypeError, SilveraLoadError
 from silvera.utils import available_port
 
@@ -374,6 +374,14 @@ def resolve_inheritance(module, service_decl):
     resolve_api_inheritance(base_service, service_decl)
 
 
+def resolve_api_gateway(module, api_gateway):
+
+    for gt in list(api_gateway.gateway_for):
+        if isinstance(gt.service, ServiceDecl):
+            continue
+        gt.service = lookup(module, gt.service)
+
+
 def process_module(module):
     """Performs special processing of a Module object, such as resolving
     imports and connections.
@@ -411,6 +419,9 @@ def process_module(module):
             deployment = decl.deployment
             if deployment.port is None:
                 deployment.port = available_port(deployment.replicas)
+
+        if isinstance(decl, APIGateway):
+            resolve_api_gateway(module, decl)
 
         if decl.__class__.__name__ == "Connection":
             start = decl.start

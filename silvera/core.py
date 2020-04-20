@@ -123,6 +123,12 @@ class Module:
                 yield decl
 
     @property
+    def api_gateways(self):
+        for decl in self.decls:
+            if isinstance(decl, APIGateway):
+                yield decl
+
+    @property
     def connections(self):
         for decl in self.decls:
             if decl.__class__.__name__ == "Connection":
@@ -424,11 +430,7 @@ class APIGateway(ServiceObject):
         super().__init__(parent, name, config_server, service_registry,
                          deployment, comm_style)
 
-        self._gateway_for = gateway_for
-
-    @property
-    def gateway_for(self):
-        return [(g.service, g.url) for g in self._gateway_for]
+        self.gateway_for = gateway_for
 
 
 class ServiceDecl(ServiceObject):

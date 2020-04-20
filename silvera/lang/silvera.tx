@@ -47,7 +47,7 @@ APIGateway:
 ;
 
 GatewayFor:
-    service=[ServiceDecl] 'as' url=STRING
+    service=FQN 'as' path=Path
 ;
 
 ServiceDecl:
@@ -315,6 +315,10 @@ NonTypedDict:
 
 FQN:
     ID+['.']
+;
+
+Path:
+    ('/')? ID+['/']
 ;
 
 // Special rule for comments. Comments start with //
