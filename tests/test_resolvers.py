@@ -28,7 +28,7 @@ def test_no_params_no_strategy(metamodel, examples_path):
     service = model.find_by_fqn("test.TestService")
     func = service.get_function("getAll")
     assert func.http_verb == HTTP_GET
-    assert func.rest_path == "testservice/getall/"
+    assert func.rest_path == "getall/"
 
 
 def test_one_param_no_strategy(metamodel, examples_path):
@@ -41,7 +41,7 @@ def test_one_param_no_strategy(metamodel, examples_path):
     service = model.find_by_fqn("test.TestService")
     func = service.get_function("addCustomObject")
     assert func.http_verb == HTTP_GET
-    assert func.rest_path == "testservice/addcustomobject/{o}"
+    assert func.rest_path == "addcustomobject/{o}"
 
 
 def test_multiple_params_no_strategy(metamodel, examples_path):
@@ -54,7 +54,7 @@ def test_multiple_params_no_strategy(metamodel, examples_path):
     service = model.find_by_fqn("test.TestService")
     func = service.get_function("getObject")
     assert func.http_verb == HTTP_GET
-    assert func.rest_path == "testservice/getobject/{name}/{description}"
+    assert func.rest_path == "getobject/{name}/{description}"
 
 
 def test_one_param_post_annotation(metamodel, examples_path):
@@ -67,7 +67,7 @@ def test_one_param_post_annotation(metamodel, examples_path):
     service = model.find_by_fqn("test.TestService")
     func = service.get_function("addCustomObject")
     assert func.http_verb == HTTP_POST
-    assert func.rest_path == "testservice/addcustomobject/"
+    assert func.rest_path == "addcustomobject/"
 
 
 def test_resolving_with_dependencies(metamodel, examples_path):
@@ -80,17 +80,17 @@ def test_resolving_with_dependencies(metamodel, examples_path):
     print_service = model.find_by_fqn("print.PrintService")
     print_func = print_service.get_function("print")
     assert print_func.http_verb == HTTP_GET
-    assert print_func.rest_path == "printservice/print/{id}"
+    assert print_func.rest_path == "print/{id}"
 
     office_service = model.find_by_fqn("print.OfficeService")
     office_print_func = office_service.get_function("print")
-    assert office_print_func.dep.rest_path == "printservice/print/{id}"
+    assert office_print_func.dep.rest_path == "print/{id}"
     assert office_print_func.dep.http_verb == HTTP_GET
-    assert office_print_func.rest_path == "officeservice/print/{id}"
+    assert office_print_func.rest_path == "print/{id}"
 
     office_print_func = office_service.get_function("addWorker")
     assert office_print_func.http_verb == HTTP_POST
-    assert office_print_func.rest_path == "officeservice/addworker/"
+    assert office_print_func.rest_path == "addworker/"
 
 
 def test_with_connections_and_inherit(examples_path):
@@ -103,15 +103,15 @@ def test_with_connections_and_inherit(examples_path):
 
     new_print = new_office_service.get_function("print")
     assert new_print.http_verb == HTTP_GET
-    assert new_print.rest_path == "newofficeservice/print/{id}"
+    assert new_print.rest_path == "print/{id}"
     assert new_print.dep.http_verb == HTTP_GET
-    assert new_print.dep.rest_path == "fastprintservice/print/{id}"
+    assert new_print.dep.rest_path == "print/{id}"
 
     new_fast_print = new_office_service.get_function("fastPrint")
     assert new_fast_print.http_verb == HTTP_POST
-    assert new_fast_print.rest_path == "newofficeservice/fastprint/"
+    assert new_fast_print.rest_path == "fastprint/"
     assert new_fast_print.dep.http_verb == HTTP_POST
-    assert new_fast_print.dep.rest_path == "fastprintservice/fastprint/"
+    assert new_fast_print.dep.rest_path == "fastprint/"
 
 
 def test_connections_with_different_style(examples_path):

@@ -182,17 +182,17 @@ class Deployable:
 class Deployment:
     """Deployment info container."""
 
-    def __init__(self, parent, version="0.0.1b", url=None, port=None,
-                 lang="java", packaging="jar", host="PC", replicas=1,
+    def __init__(self, parent, version=None, url=None, port=None,
+                 lang=None, packaging=None, host=None, replicas=None,
                  restart_policy=None):
         super().__init__()
-        self.version = version
+        self.version = version if version else "0.0.1b"
         self.url = url
         self.port = port
-        self.lang = lang
-        self.packaging = packaging
-        self.host = host
-        self.replicas = replicas
+        self.lang = lang if lang else "java"
+        self.packaging = packaging if packaging else "jar"
+        self.host = host if host else "PC"
+        self.replicas = replicas if replicas is not None else 1
         self.restart_policy = restart_policy
 
 

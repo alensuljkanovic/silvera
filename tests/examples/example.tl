@@ -34,7 +34,7 @@ api-gateway APIGateway {
     communication_style=rpc
 
     gateway-for {
-        EmployeeSearch as "emp"
+        EmployeeSearch as /emp
     }
 }
 

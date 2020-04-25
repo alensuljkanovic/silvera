@@ -2,7 +2,7 @@ import "print.tl"
 
 service OfficeService {
 
-     deployment {
+    deployment {
         version="1.0.0"
     }
 
@@ -34,7 +34,7 @@ service OfficeService {
 
 service NewOfficeService extends OfficeService{
 
-     deployment {
+    deployment {
         version="2.0.0"
     }
 
