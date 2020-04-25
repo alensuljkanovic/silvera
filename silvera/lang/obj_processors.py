@@ -376,6 +376,10 @@ def resolve_inheritance(module, service_decl):
 
 def resolve_api_gateway(module, api_gateway):
 
+    reg = api_gateway.service_registry
+    if reg and not isinstance(reg, ServiceRegistryDecl):
+        api_gateway.service_registry = lookup(module, reg)
+
     for gt in list(api_gateway.gateway_for):
         if isinstance(gt.service, ServiceDecl):
             continue

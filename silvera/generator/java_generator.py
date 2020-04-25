@@ -131,24 +131,6 @@ def generate_service_registry(serv_registry, output_dir):
 def generate_api_gateway(api_gateway, output_dir):
     """Creates Zuul API Gateway"""
 
-    def service_registy_defined(gt):
-        """Returns True if service registry is defined within model, False
-        otherwise
-
-        Args:
-            gt (APIGateway): api gateway
-
-        Returs:
-            bool
-        """
-        model = gt.parent.model
-
-        for m in model.modules:
-            for s in m.service_registries:
-                # If service registry is defined, generator will not be empty.
-                return True
-        return False
-
     templates_path = os.path.join(get_templates_path(), JAVA, "api-gateway")
     env = Environment(loader=FileSystemLoader(templates_path))
 
@@ -156,14 +138,23 @@ def generate_api_gateway(api_gateway, output_dir):
 
     java_struct(output_dir, gname)
 
+    if api_gateway.service_registry:
+        reg = api_gateway.service_registry
+        reg_url = "%s:%s/eureka" % (reg.url, reg.port)
+        user_service_registry = True
+    else:
+        reg_url = None
+        user_service_registry = False
+
     d = {
         "gateway_name": gname,
         "gateway_version": api_gateway.version,
         "port": "${PORT:%s}" % api_gateway.port,
-        "use_service_registry": service_registy_defined(api_gateway),
+        "service_registry_url": reg_url,
         "gateway_for": [(g.service.name, g.path, g.service.port)
                         for g in api_gateway.gateway_for],
-        "timestamp": timestamp()
+        "timestamp": timestamp(),
+        "user_service_registry": user_service_registry
     }
 
     gt_path = os.path.join(output_dir, gname)
