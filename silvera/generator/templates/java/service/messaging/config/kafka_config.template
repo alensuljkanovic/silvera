@@ -54,7 +54,7 @@ public class KafkaConfig {
         props.put(ConsumerConfig.GROUP_ID_CONFIG, "{{service_name}}");
 
         // Used for deserialization of Message object.
-        JsonDeserializer<Message> deserializer = new JsonDeserializer<>(Message.class);
+        MessageDeserializer deserializer = new MessageDeserializer();
         deserializer.setRemoveTypeHeaders(false);
         deserializer.addTrustedPackages("*");
         deserializer.setUseTypeMapperForKey(true);

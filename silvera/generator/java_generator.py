@@ -243,6 +243,8 @@ class ServiceGenerator:
             self.service.comm_style
         )
 
+        self.model = service.parent.model
+
     def _get_env(self):
         env = Environment(loader=FileSystemLoader(self._templates_path))
         env.filters["firstupper"] = lambda x: x[0].upper() + x[1:]
@@ -531,16 +533,26 @@ class MsgServiceGenerator(ServiceGenerator):
     def generate_config(self, env, content_path):
         cfg_path = create_if_missing(os.path.join(content_path, "config"))
 
+        consumer_exists = len(self.service.consumes) > 0
         d = {
             "package_name": self.service.name,
             "service_name": self.service.name,
             "timestamp": timestamp(),
             "producer_exists": len(self.service.produces) > 0,
-            "consumer_exists": len(self.service.consumes) > 0
+            "consumer_exists": consumer_exists
         }
 
         msg_template = env.get_template("config/kafka_config.template")
         msg_template.stream(d).dump(os.path.join(cfg_path, "KafkaConfig.java"))
+
+        if consumer_exists:
+            msg_pool = self.model.msg_pool
+
+            d["messages"] = sorted(msg_pool.messages, key=lambda x: x.fqn)
+
+            d_template = env.get_template("config/deserializer.template")
+            d_template.stream(d).dump(os.path.join(cfg_path,
+                                      "MessageDeserializer.java"))
 
     def generate_messages(self, env, content_path):
         msg_path = create_if_missing(os.path.join(content_path, "messages"))
@@ -560,6 +572,38 @@ class MsgServiceGenerator(ServiceGenerator):
         field_template = env.get_template("message/message_field.template")
         field_template.stream(d).dump(os.path.join(msg_path,
                                                    "MessageField.java"))
+
+        class_template = env.get_template("message/class.template")
+
+        msg_pool = self.model.msg_pool
+
+        def create_package(group, path, parent_pkg="messages"):
+            """
+            Creates a package for given message group, and generates
+            its messages as Java classes
+            """
+            group_name = group.name.lower()
+            curr_path = create_if_missing(os.path.join(path, group_name))
+
+            curr_pkg = "%s.%s" % (parent_pkg, group_name)
+            for msg in group.messages:
+                d.update({
+                    "service_name": self.service.name,
+                    "pkg": curr_pkg,
+                    "name": msg.name,
+                    "fqn": msg.fqn,
+                    "attributes": msg.fields
+                })
+                class_name = "%s.java" % msg.name
+                class_template.stream(d).dump(os.path.join(curr_path,
+                                                           class_name))
+
+            for g in group.groups:
+                create_package(g, curr_path, curr_pkg)
+
+        # Groups will be packages
+        for group in msg_pool.groups:
+            create_package(group, msg_path)
 
     def generate_services(self, env, content_path):
         #

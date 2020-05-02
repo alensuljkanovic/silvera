@@ -13,7 +13,7 @@
     {% endif%}
 
     {% for msg, channel in function.produces %}
-    Message msg = new Message("{{msg.name}}");
+    Message msg = new Message("{{msg.fqn}}");
     kafkaTemplate.send("{{channel.name}}", msg);
     {% endfor %}
 
@@ -45,7 +45,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
-import com.silvera.{{service_name}}.service.*;
+import com.silvera.{{service_name}}.service.base.*;
 import com.silvera.{{service_name}}.domain.model.*;
 import com.silvera.{{service_name}}.messages.*;
 import org.springframework.web.bind.annotation.*;
@@ -83,7 +83,7 @@ public class {{service_name}}Controller {
         service.{{function.name}}(message);
 
         {% for msg, channel in function.produces %}
-        Message msg = new Message({{msg.name}});
+        Message msg = new Message("{{msg.fqn}}");
         kafkaTemplate.send("{{channel.name}}", msg);
         {% endfor %}
     }
