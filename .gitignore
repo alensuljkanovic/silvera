@@ -3,12 +3,16 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Distribution/packaging
+*.egg-info/
+
 
 experimenting/**
 
 .idea
 .cache
 .vscode
+.history
 
 silvera/generator/src-gen/*
 !silvera/generator/src-gen/.gitkeep
