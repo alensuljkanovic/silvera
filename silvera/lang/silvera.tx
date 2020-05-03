@@ -9,7 +9,7 @@ Import:
 
 
 Declaration:
-    ConfigServerDecl | ServiceRegistryDecl | ServiceDecl | APIGateway | Connection
+    ConfigServerDecl | ServiceRegistryDecl | ServiceDecl | APIGateway | Connection | MessagePool | MessageBroker
 ;
 
 ConfigServerDecl:
@@ -47,7 +47,7 @@ APIGateway:
 ;
 
 GatewayFor:
-    service=[ServiceDecl] 'as' url=STRING
+    service=FQN 'as' path=Path
 ;
 
 ServiceDecl:
@@ -98,6 +98,14 @@ APIDecl:
     'api' '{'
         typedefs*=TypeDef
         functions*=Function
+
+        (internal=APIInternal)?
+    '}'
+;
+
+APIInternal:
+    'internal' '{'
+        functions*=Function
     '}'
 ;
 
@@ -115,6 +123,57 @@ CBFailurePattern:
     'fail_fast' | 'fail_silent' | 'fallback_static' | 'fallback_stubbed' | 'fallback_cache' | 'fallback_method'
 ;
 
+MessagePool:
+    'msg-pool' '{'
+        groups+=MessageGroup
+    '}'
+;
+
+
+MessageGroup:
+    'group' name=ID '['
+        (
+            groups*=MessageGroup |
+            messages*=Message
+        )#
+    ']'
+;
+
+
+Message:
+    annotations*=ExpirationTimeAnnotation
+    'msg' name=ID '['
+        fields*=TypeField
+    ']'
+;
+
+
+ExpirationTimeAnnotation:
+    '@expires_after' '(' timeout=INT ')'
+;
+
+MessageBroker:
+    'msg-broker' name=ID '{'
+        channels+=MessageChannel
+    '}'
+;
+
+MessageChannel:
+    annotations*=MessageChannelAnnotations
+    'channel' name=ID '(' msg_type=FQN ')'
+;
+
+MessageChannelAnnotations:
+    PointToPointAnnotation | PersistenceAnnotation
+;
+
+PointToPointAnnotation:
+    '@p2p'
+;
+
+PersistenceAnnotation:
+    '@persistent' '(' 'timeout' '=' timeout=INT ')'
+;
 
 TypeDef:
     'typedef' name=ID (':' inherits+=FQN[','])? '['
@@ -131,24 +190,45 @@ HostChoice:
 ;
 
 CommunicationStyle:
-    "REST" | "gRPC" | "thrift" | "kafka" | "RabbitMQ" | "custom"
+    //"REST" | "gRPC" | "thrift" | "kafka" | "RabbitMQ" | "custom"
+    "rpc" | "messaging"
+;
+
+Annotation:
+    "@async" | RESTAnnotation | "@thrift" | MessagingAnnotation
 ;
 
 RESTAnnotation:
-    '@rest' '('
-        (
-            ('method' '=' method=HTTPMethod)? |
-            ('mapping' '=' mapping=STRING)?
-        )#
-    ')'
+    '@rest' '(' 'method' '=' method=HTTPMethod (',' 'mapping' '=' mapping=STRING)? ')'
 ;
 
 HTTPMethod:
     'POST' | 'PUT' | 'GET' | 'DELETE'
 ;
 
+
+MessagingAnnotation:
+    ProducerAnnotation | ConsumerAnnotation
+;
+
+ProducerAnnotation:
+    '@producer' '(' subscriptions+=ProducerSubs[','] ')'
+;
+
+ConsumerAnnotation:
+    '@consumer' '(' subscriptions+=ConsumerSubs[','] ')'
+;
+
+ProducerSubs:
+    message=FQN '->' channel=FQN
+;
+
+ConsumerSubs:
+    message=FQN '<-' channel=FQN
+;
+
 Function:
-    (annotation=RESTAnnotation)?
+    annotations*=Annotation
     ret_type=ReturnType name=ID '(' params*=FunctionParameter[','] ')'
 ;
 
@@ -167,10 +247,6 @@ ReturnType:
 
 DataType:
     Number | Collection | Date | FQN
-;
-
-CustomType:
-    type=[TypeDef]
 ;
 
 Date:
@@ -239,6 +315,10 @@ NonTypedDict:
 
 FQN:
     ID+['.']
+;
+
+Path:
+    ('/')? ID+['/']
 ;
 
 // Special rule for comments. Comments start with //

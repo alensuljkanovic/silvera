@@ -22,11 +22,8 @@ class RESTResolver:
     Resolution strategies:
     -------------------------------------------------------------------
     - NO_STRATEGY:
-        - This strategy uses following rules:
-            1. If function has no parameters -> HTTP_GET function.
-            2. If function has multiple parameters -> HTTP_GET function.
-            3. If function has one parameter -> extra info needed, raise an
-                exception.
+        - This strategy uses following rule:
+            - Every function is HTTP_GET function.
 
     - PREFER_POST_OVER_PUT:
         - This strategy uses following rules:
@@ -85,7 +82,7 @@ class RESTResolver:
     def resolve_model(self, model):
         """Resolve model."""
         for decl in (d for module in model.modules for d in module.decls):
-            if isinstance(decl, ServiceDecl) and decl.uses_rest:
+            if isinstance(decl, ServiceDecl):
                 self.resolve_service(decl)
 
     def resolve_service(self, service):
@@ -94,36 +91,36 @@ class RESTResolver:
             return "/".join(["{%s}" % p.name for p in func_params])
 
         def func_name_mapping(func):
-            ann = func.annotation
+            ann = rest_annotation(func)
             if ann and ann.mapping:
                 fn_mapping = ann.mapping
             else:
                 fn_mapping = "%s/" % func.name.lower()
 
-            if func.http_verb == HTTP_GET and func.params:
-                fn_mapping += http_get_params(func.params)
+                if func.http_verb == HTTP_GET and func.params:
+                    fn_mapping += http_get_params(func.params)
 
             return fn_mapping
 
-        model = service.parent
-        name = service.name
+        model = service.parent.model
+        # name = service.name
         api = service.api
 
-        path = "%s/" % name.lower()
+        # path = "%s/" % name.lower()
         for func in api.functions:
-            ann = func.annotation
+            ann = rest_annotation(func)
             if ann is not None:
                 self._apply_annotation(func)
             else:
                 self._apply_strategy(func)
 
-            func.add_rest_mappings(path + func_name_mapping(func))
+            func.add_rest_mappings(func_name_mapping(func))
 
         for func in service.dep_functions:
-            org_serv = model.service_by_name(func.service_name)
+            org_serv = model.find_by_fqn(func.service_fqn)
             org_fn = org_serv.get_function(func.name)
             func.http_verb = org_fn.http_verb
-            func.rest_path = path + func_name_mapping(func)
+            func.rest_path = func_name_mapping(func)
 
     def _apply_annotation(self, func):
         """Applies the REST annotation given in .tl file.
@@ -131,7 +128,7 @@ class RESTResolver:
         Args:
             func (Function): function object
         """
-        ann = func.annotation
+        ann = rest_annotation(func)
         func.http_verb = ann.method
 
     def _apply_strategy(self, func):
@@ -159,14 +156,7 @@ class DefaultStrategy(ResolvingStrategy):
         super().__init__()
 
     def apply(self, func):
-
-        params = func.params
-
-        if not params or len(params) > 1:
-            func.http_verb = HTTP_GET
-        else:
-            raise TypeError("Cannot decide which HTTP method to"
-                            "use for function: '%s'." % func.name)
+        func.http_verb = HTTP_GET
 
 
 class PreferPostOverPut(ResolvingStrategy):
@@ -203,3 +193,11 @@ class PreferDeleteOverGet(ResolvingStrategy):
 
     def apply(self, func):
         raise NotImplementedError()
+
+
+def rest_annotation(func):
+    for ann in func.annotations:
+        if ann.__class__.__name__ == "RESTAnnotation":
+            return ann
+
+    return None

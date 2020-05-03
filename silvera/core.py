@@ -2,8 +2,9 @@
 This module contains the implementation of Silvera DSL.
 """
 import os
-from silvera.const import REST
+# from silvera.const import REST
 import urllib.parse as url_parser
+from collections import defaultdict
 
 
 def fqn_to_path(fqn):
@@ -16,8 +17,11 @@ class Model:
     """Model object"""
 
     def __init__(self, root_dir, modules=None):
+        super().__init__()
         self.root_dir = root_dir
         self.modules = modules if modules else []
+        self.msg_pool = None
+        self.msg_brokers = {}
 
     def modules_dict(self):
         return {m.path: m for m in self.modules}
@@ -60,6 +64,7 @@ class Module:
             decls (list): list of declarations within module
             imports (list): list of imports
         """
+        super().__init__()
         self.model = model
         self.imports = imports if imports else []
         self.decls = decls
@@ -86,6 +91,12 @@ class Module:
                 for i in self.imports]
 
     @property
+    def services(self):
+        for decl in self.decls:
+            if isinstance(decl, ServiceDecl):
+                yield decl
+
+    @property
     def service_instances(self):
         for decl in self.decls:
             if isinstance(decl, ServiceDecl):
@@ -103,7 +114,7 @@ class Module:
             if isinstance(decl, ServiceDecl):
                 if decl.name == service_name:
                     return decl
-        return KeyError("Service with name '%s' not found!" % service_name)
+        raise KeyError("Service with name '%s' not found!" % service_name)
 
     @property
     def service_registries(self):
@@ -118,9 +129,21 @@ class Module:
                 yield decl
 
     @property
+    def api_gateways(self):
+        for decl in self.decls:
+            if isinstance(decl, APIGateway):
+                yield decl
+
+    @property
     def connections(self):
         for decl in self.decls:
             if decl.__class__.__name__ == "Connection":
+                yield decl
+
+    @property
+    def msg_brokers(self):
+        for decl in self.decls:
+            if isinstance(decl, MessageBroker):
                 yield decl
 
     def decl_by_name(self, name):
@@ -134,6 +157,7 @@ class Module:
 class Deployable:
     """Base class for all deployable objects"""
     def __init__(self, deployment=None):
+        super().__init__()
         self.deployment = deployment
 
     @property
@@ -159,6 +183,224 @@ class Deployable:
     @property
     def host(self):
         return self.deployment.host
+
+
+class Deployment:
+    """Deployment info container."""
+
+    def __init__(self, parent, version=None, url=None, port=None,
+                 lang=None, packaging=None, host=None, replicas=None,
+                 restart_policy=None):
+        super().__init__()
+        self.version = version if version else "0.0.1b"
+        self.url = url
+        self.port = port
+        self.lang = lang if lang else "java"
+        self.packaging = packaging if packaging else "jar"
+        self.host = host if host else "PC"
+        self.replicas = replicas if replicas is not None else 1
+        self.restart_policy = restart_policy
+
+
+class MessageBroker:
+    """Message broker object.
+
+    Its sole responsibility is to deliver messages to a destination. The
+    number of channels is fixed.
+    """
+    def __init__(self, parent, name, channels):
+        super().__init__()
+        self.parent = parent
+        self.name = name
+        self._channels = channels
+        self._consumers_per_ch = defaultdict(list)
+        self._producers_per_ch = defaultdict(list)
+
+    @property
+    def channels(self):
+        """Returns dict of all channels defined within broker
+
+        Returns:
+            dict
+        """
+        return {c.name: c for c in self._channels}
+
+    def register_consumer(self, channel_name, consumer):
+        """Register consumer to a channel with a given name.
+
+        Args:
+            channel_name (str): channel name
+            consumer (Function): API function that consumes messages from the
+                channel
+        """
+        self._consumers_per_ch[channel_name].append(consumer)
+
+    def register_producer(self, channel_name, producer):
+        """Register producer to a channel with a given name.
+
+        Args:
+            channel_name (str): channel name
+            producer (Function): API function that produces messages for the
+                channel
+        """
+        self._producers_per_ch[channel_name].append(producer)
+
+
+class MessagePool:
+    """Object that contains definitions of all messages used throught the
+    system."""
+    def __init__(self, parent, groups):
+        super().__init__()
+        self.parent = parent
+        self.groups = groups
+
+    @property
+    def messages(self):
+        """Returns list of all messages defined in message pool
+
+        Returns:
+            list
+        """
+        def _recurse(groups, messages=None):
+            """Go recursively through groups and collect messages"""
+            if messages is None:
+                messages = []
+
+            for item in groups:
+                if isinstance(item, MessageGroup):
+                    if item.messages:
+                        messages.extend(item.messages)
+                    _recurse(item.groups, messages)
+
+            return messages
+
+        return _recurse(self.groups)
+
+    def get_all_groups(self):
+        """Returns the list of all MessageGroup objects inside the message
+        pool
+
+        Returns:
+            list
+        """
+        def _recurse(groups, result=None):
+            """Go recursively through groups and collect messages"""
+            if result is None:
+                result = []
+
+            for item in groups:
+                if isinstance(item, MessageGroup):
+                    result.append(item)
+                    _recurse(item.groups, result)
+
+            return result
+
+        return _recurse(self.groups)
+
+    def get(self, msg_fqn):
+
+        for m in self.messages:
+            if m.fqn == msg_fqn:
+                return m
+
+        raise ValueError("Message with given FQN not found in message pool: "
+                         "%s" % msg_fqn)
+
+
+class MsgFQN:
+
+    def __init__(self, parent, name):
+        super().__init__()
+        self.parent = parent
+        self.name = name
+
+    @property
+    def fqn(self):
+        """Returns FQN of a message
+
+        Returns:
+            str
+        """
+        def _recurse_up(item, path=None):
+            if path is None:
+                path = []
+
+            if isinstance(item, MessagePool):
+                return path
+
+            path.append(item.name)
+            return _recurse_up(item.parent, path)
+
+        fqn = _recurse_up(self.parent)
+        if fqn:
+            return ".".join(reversed(fqn)) + "." + self.name
+        else:
+            return self.name
+
+    @property
+    def msg_pool(self):
+        """Returns reference to a MessagePool to which this object belongs."""
+        def _recurse_up(item):
+            if isinstance(item, MessagePool):
+                return item
+
+            return _recurse_up(item.parent)
+
+        return _recurse_up(self)
+
+
+class MessageGroup(MsgFQN):
+
+    def __init__(self, parent, name, groups=None, messages=None):
+        super().__init__(parent=parent, name=name)
+        self.groups = groups
+        self.messages = messages
+
+    @property
+    def messages_dict(self):
+        return {m.name: m for m in self.messages}
+
+
+class Message(MsgFQN):
+    """Message object"""
+    def __init__(self, parent, name, fields=None, annotations=None):
+        super().__init__(parent=parent, name=name)
+        self.fields = fields if fields else []
+        self.annotations = annotations if annotations else []
+
+    def __str__(self):
+        return "Message: %s" % self.fqn
+
+    def __repr__(self):
+        return str(self)
+
+
+class MessageChannel:
+    """Message channel object."""
+    def __init__(self, parent, name, msg_type, annotations=None):
+        self.parent = parent
+        self.name = name
+        self.msg_type = msg_type
+        self.annotations = annotations if annotations else []
+        self.persistent = False
+
+    def is_p2p(self):
+        """Returns True if channel is Point-to-Point channel. False otherwise.
+
+        Returns:
+            bool
+        """
+        for ann in self.annotations:
+            if ann == "@p2p":
+                return True
+        return False
+
+    @property
+    def persistent(self):
+        for ann in self.annotations:
+            if hasattr(ann, "timeout"):
+                return True
+        return False
 
 
 class ServiceObject(Deployable):
@@ -194,11 +436,7 @@ class APIGateway(ServiceObject):
         super().__init__(parent, name, config_server, service_registry,
                          deployment, comm_style)
 
-        self._gateway_for = gateway_for
-
-    @property
-    def gateway_for(self):
-        return [(g.service, g.url) for g in self._gateway_for]
+        self.gateway_for = gateway_for
 
 
 class ServiceDecl(ServiceObject):
@@ -206,11 +444,13 @@ class ServiceDecl(ServiceObject):
 
     def __init__(self, parent=None, name=None, config_server=None,
                  service_registry=None, deployment=None, comm_style=None,
-                 api=None, extends=None):
+                 api=None, extends=None, handlers=None):
         super().__init__(parent, name, config_server, service_registry,
                          deployment, comm_style, extends)
         self.api = api
+        self.handlers = handlers
         self.dep_functions = []
+        self.dep_typedefs = []
 
     @property
     def functions(self):
@@ -227,23 +467,13 @@ class ServiceDecl(ServiceObject):
         for f in self.functions:
             if f.name == func_name:
                 return f
-
-        # # Check if function is contained in a service that self depends upon
-        # f = None
-        # for dep_serv in self.dependencies:
-        #     try:
-        #         f = dep_serv.get_function(func_name)
-        #     except KeyError:
-        #         pass
-        #
-        # if not f:
         raise KeyError("Function not found!")
 
-        # return f
-
-    @property
-    def uses_rest(self):
-        return self.comm_style == REST
+    def has_async(self):
+        for f in self.api.functions:
+            if f.is_async():
+                return True
+        return False
 
     @property
     def domain_objs(self):
@@ -254,6 +484,62 @@ class ServiceDecl(ServiceObject):
 
     def __repr__(self):
         return str(self)
+
+    @property
+    def consumes(self):
+        """Returns dict where for each message is shown from which channel
+        the message is consumed.
+
+        Returns:
+            dict
+        """
+        cons = defaultdict(list)
+        internal = self.api.internal
+        if not internal:
+            return cons
+
+        for f in internal.functions:
+            for ann in f.msg_annotations:
+                if isinstance(ann, ConsumerAnnotation):
+                    for subscr in ann.subscriptions:
+                        cons[subscr.message].append(subscr.channel)
+        return cons
+
+    @property
+    def f_consumers(self):
+        """Returns list of all functions that consume messages from channels.
+
+        Returns:
+            list
+        """
+        cons = set()
+        internal = self.api.internal
+        if not internal:
+            return cons
+
+        for f in internal.functions:
+            for ann in f.msg_annotations:
+                if isinstance(ann, ConsumerAnnotation):
+                    for subscr in ann.subscriptions:
+                        cons.add(f)
+
+        return sorted(cons, key=lambda f: f.name)
+
+    @property
+    def produces(self):
+        """Returns dict where for each message is shown to which channel
+        the message is published.
+
+        Returns:
+            dict
+        """
+        prods = defaultdict(list)
+        for f in self.api.functions:
+            for ann in f.msg_annotations:
+                if isinstance(ann, ProducerAnnotation):
+                    for subscr in ann.subscriptions:
+                        prods[subscr.message].append(subscr.channel)
+        return prods
 
 
 class Service:
@@ -306,7 +592,7 @@ class ConfigServerDecl(Deployable):
 class Function:
     """Object representation of function declaration."""
     def __init__(self, parent, name=None, ret_type=None, params=None,
-                 annotation=None):
+                 annotations=None):
         self.parent = parent
         self.name = name
         self.ret_type = ret_type
@@ -316,13 +602,73 @@ class Function:
         self.http_verb = None
         self.cb_pattern = None
         self.cb_fallback = None
-        self.annotation = annotation
+        self.annotations = annotations if annotations else []
 
     @property
     def service_name(self):
         if self.dep:
             return self.dep.parent.parent.name
         return self.parent.parent.name
+
+    @property
+    def service_fqn(self):
+        if self.dep:
+            service = self.dep.parent.parent
+            module = service.parent
+        else:
+            service = self.parent.parent
+            module = service.parent
+        return "{}.{}".format(module.path.replace(".tl", ""), service.name)
+
+    @property
+    def msg_annotations(self):
+        """Returns generator of MessagingAnnotations"""
+        for ann in self.annotations:
+            if isinstance(ann, MessagingAnnotation):
+                yield ann
+
+    @property
+    def produces(self):
+        """Returns list of tuples that show which messages will be published
+        to which channel.
+
+        Returns:
+            list
+        """
+        result = []
+        for ann in self.msg_annotations:
+            if isinstance(ann, ProducerAnnotation):
+                for subscr in ann.subscriptions:
+                    result.append((subscr.message, subscr.channel))
+        return result
+
+    @property
+    def consumes(self):
+        """Returns list of message-channel pairs for each function that is
+        message consumer
+
+        Returns:
+            list
+        """
+        result = []
+        for ann in self.msg_annotations:
+            if isinstance(ann, ConsumerAnnotation):
+                for subscr in ann.subscriptions:
+                    result.append((subscr.message, subscr.channel))
+        return result
+
+    @property
+    def channels(self):
+        """Returns list of all channels from which the function consumes
+        messages
+
+        Returns:
+            list
+        """
+        result = []
+        for sub in self.consumes:
+            result.append(sub[1].name)
+        return result
 
     def add_rest_mappings(self, mapping):
 
@@ -350,13 +696,20 @@ class Function:
 
         self.rest_path = mapping
 
+    def is_async(self):
+        return "@async" in self.annotations
+
     def clone(self):
         params = [p.clone() for p in self.params]
-        ann = self.annotation
-        if self.annotation:
-            ann = Annotation(None, ann.method, ann.mapping)
 
-        return Function(None, self.name, self.ret_type, params, ann)
+        annotations = []
+        for ann in self.annotations:
+            ann_clone = ann if isinstance(ann, str) else ann.clone()
+            annotations.append(ann_clone)
+
+        f = Function(None, self.name, self.ret_type, params, annotations)
+        f.http_verb = self.http_verb
+        return f
 
     def __str__(self):
         return "Function %s" % self.name
@@ -381,13 +734,40 @@ class FunctionParameter:
 
 class Annotation:
 
+    def __init__(self, parent):
+        super().__init__()
+        self.parent = parent
+
+    def clone(self):
+        raise NotImplementedError()
+
+
+class RESTAnnotation(Annotation):
+
     def __init__(self, parent, method=None, mapping=None):
         self.parent = parent
         self.method = method
         self.mapping = mapping
 
     def clone(self):
-        return Annotation(None, self.method, self.mapping)
+        return RESTAnnotation(None, self.method, self.mapping)
+
+
+class MessagingAnnotation(Annotation):
+
+    def __init__(self, parent, subscriptions=None):
+        super().__init__(parent)
+        self.subscriptions = subscriptions
+
+
+class ProducerAnnotation(MessagingAnnotation):
+    def __init__(self, parent, subscriptions):
+        super().__init__(parent, subscriptions)
+
+
+class ConsumerAnnotation(MessagingAnnotation):
+    def __init__(self, parent, subscriptions):
+        super().__init__(parent, subscriptions)
 
 
 class TypeDef:
@@ -448,4 +828,3 @@ class TypedList(List):
         super().__init__(parent)
         self.type = type
         self.len = len
-

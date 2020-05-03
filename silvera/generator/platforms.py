@@ -145,6 +145,7 @@ def convert_type(platform, _type):
 
 def convert_complex_type(platform, _type):
     """Converts complex silvera object to a platform type"""
+
     if isinstance(_type, TypeDef):
         return _type.name
 
@@ -153,7 +154,10 @@ def convert_complex_type(platform, _type):
     except KeyError:
         collections = platforms[platform][COLLECTIONS]
         if isinstance(_type, TypedList):
-            return collections[LIST] + "<" + convert_complex_type(platform, _type.type) + ">"
+            tl_type = convert_complex_type(platform, _type.type)
+            if tl_type is None:
+                breakpoint()
+            return collections[LIST] + "<" + tl_type + ">"
 
 
 def get_def_ret_val(platform, _type):
@@ -188,3 +192,9 @@ def get_numb_of_modules(platform):
 def get_init_file(platform):
     """Returns the init file."""
     return platforms[platform][INIT_FILE]
+
+
+def is_collection(_type):
+    if isinstance(_type, TypedList):
+        return True
+    return False

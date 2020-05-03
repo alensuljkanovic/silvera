@@ -1,37 +1,46 @@
 import os
 import fnmatch
-from silvera.generator.generator import SilveraGenerator
+from silvera.generator.generator import generate
 from silvera.lang.meta import get_metamodel
 from silvera.lang.obj_processors import model_processor
+from silvera.resolvers import RESTResolver, NO_STRATEGY
 from silvera.core import Model
-from silvera.utils import get_root_path
 
 
-def run(tl_path, output_dir=None):
-    """Runs Silvera
+def compile(src_path, output_dir=None, rest_res_strategy=NO_STRATEGY):
+    """Runs Silvera compiler
 
     After this function is called, Silvera will process the given .tl file,
-    run a compiler and start an application.
+    and compile it to a chosen target platform.
+
+    Args:
+        src_path (str): path to the Silvera project
+        output_dir (str): path to the directory where compiled application will
+            be stored
+        rest_res_strategy (int): REST resolving strategy.
+
+    Returns:
+        None
     """
-    meta = get_metamodel()
-    model = meta.model_from_file(tl_path)
+    model = load(src_path, rest_res_strategy)
 
     if output_dir is None:
-        output_dir = os.path.join(get_root_path(), "silvera", "generator",
-                                  "src-gen")
+        output_dir = src_path
+    else:
+        output_dir = os.path.abspath(output_dir)
 
-    generator = SilveraGenerator(model)
-    generator.generate(output_dir)
+    generate(model, output_dir)
 
 
 _metamodel = None
 
 
-def load(src_path):
+def load(src_path, rest_res_strategy=NO_STRATEGY):
     """Loads project
 
     Args:
         src_path(str): path to the project root dir, or to a single .tl file.
+        rest_res_strategy (int): REST resolving strategy.
 
     Returns:
         Model
@@ -46,7 +55,7 @@ def load(src_path):
         _metamodel = get_metamodel()
 
     model = Model(src_path)
-    for root, dirs, filenames in os.walk(src_path):
+    for root, _, filenames in os.walk(src_path):
         for filename in fnmatch.filter(filenames, "*.tl"):
             module_path = os.path.join(root, filename)
             module = _metamodel.model_from_file(module_path)
@@ -55,4 +64,8 @@ def load(src_path):
             model.modules.append(module)
 
     model_processor(model)
+
+    resolver = RESTResolver(rest_res_strategy)
+    resolver.resolve_model(model)
+
     return model

@@ -2,8 +2,16 @@
 This module contains object processors attached to Silvera objects. Object
 processors are used during parsing.
 """
-from collections import deque, OrderedDict
-from silvera.core import ServiceDecl, ConfigServerDecl, ServiceRegistryDecl
+from collections import deque, OrderedDict, defaultdict
+from silvera.core import (ServiceDecl, ConfigServerDecl, ServiceRegistryDecl,
+                          TypedList, TypeDef, Deployable, Deployment,
+                          MessagePool, ProducerAnnotation, APIGateway)
+from silvera.exceptions import SilveraTypeError, SilveraLoadError
+from silvera.utils import available_port
+
+
+BASIC_TYPES = {"date", "i16", "i32", "i64", "bool", "int", "void", "str",
+               "double"}
 
 
 def process_connections(module):
@@ -16,6 +24,17 @@ def process_connections(module):
         #
         start = connection.start
         end = connection.end
+
+        if start.comm_style != end.comm_style:
+            raise SilveraLoadError("Cannot connect two services with different"
+                                   " communication styles: "
+                                   "{}[{}] and {}[{}]".format(
+                                       start.name,
+                                       start.comm_style,
+                                       end.name,
+                                       end.comm_style
+                                   ))
+
         if hasattr(start, "circuit_breaked"):
             start.circuit_breaked = True
 
@@ -28,7 +47,59 @@ def process_connections(module):
                 fn_clone.dep = orig_fn
                 start.dep_functions.append(fn_clone)
 
+                ret_type = orig_fn.ret_type
+                if isinstance(ret_type, TypeDef):
+                    start.dep_typedefs.extend(recurse_typedef(ret_type))
+                elif isinstance(ret_type, TypedList):
+                    start.dep_typedefs.extend(recurse_typedef(ret_type.type))
+
         start.dependencies.append(end)
+
+
+def recurse_typedef(typedef, visited=None):
+    """Find all types that the current service will depend upon"""
+    if visited is None:
+        visited = set()
+
+    if typedef in visited:
+        return
+
+    visited.add(typedef)
+
+    for field in typedef.fields:
+        if isinstance(field.type, TypeDef):
+            recurse_typedef(field.type, visited)
+        elif isinstance(field.type, TypedList):
+            recurse_typedef(field.type.type, visited)
+
+    return visited
+
+
+def assign_ref(decl, attr_name, module=None, lookup_name=None):
+    """Assign reference to object attribute.
+
+    Args:
+        decl (Decl): declaration object
+        attr_name (str): attribute name
+        module (Module): module object
+        lookup_name (str): lookup name
+    """
+    if module is None:
+        module = decl.parent
+
+    if lookup_name is None:
+        lookup_name = getattr(decl, attr_name)
+
+    try:
+        ref_obj = lookup(module, lookup_name)
+    except KeyError as ex:
+        linecol = module._tx_parser.pos_to_linecol(decl._tx_position)
+        msg = "Error in module {} {}: {}".format(module.path,
+                                                 linecol,
+                                                 ex)
+        raise KeyError(msg)
+
+    setattr(decl, attr_name, ref_obj)
 
 
 def lookup(module, name):
@@ -77,25 +148,153 @@ def resolve_custom_types(service_decl):
     """Sets appropriate objects for function parameters whose type is domain
     object (typedef).
     """
+    module = service_decl.parent
+
     api = service_decl.api
     if api is not None:
+
+        # Resolve type definitions
+        typedefs = api.typedefs
+        for field in (f for td in typedefs for f in td.fields
+                      if not is_type_resolved(f.type)):
+            if isinstance(field.type, TypedList):
+                _resolve_typed_list(service_decl, field.type)
+            else:
+                try:
+                    ft = service_decl.domain_objs[field.type]
+                except KeyError:
+                    raise SilveraTypeError(service_decl.name, field.type)
+
+                field.type = ft
+
+        # Resolve public functions
         functions = api.functions
 
         for fnc in functions:
-            rtd = service_decl.domain_objs.get(fnc.ret_type, None)
-            if rtd is not None:
-                fnc.ret_type = rtd
+            _resolve_fnc(module, service_decl, fnc)
 
-            for param in fnc.params:
-                td = service_decl.domain_objs.get(param.type, None)
-                if td is not None:
-                    param.type = td
+        # Resove internal functions
+        functions = api.internal.functions if api.internal else []
+        for fnc in functions:
+            _resolve_fnc(module, service_decl, fnc)
 
-        typedefs = api.typedefs
-        for field in (f for td in typedefs for f in td.fields):
-            ft = service_decl.domain_objs.get(field.type, None)
-            if ft is not None:
-                field.type = ft
+
+def _resolve_fnc(module, service_decl, fnc):
+    """Resolves all custom types in function object. That includes return type,
+    parameters, and annotations.
+
+    Args:
+        module (Module): module object
+        service_decl (ServiceDecl): service where function is declared.
+        fnc (Function): function to resolve.
+    """
+    model = module.model
+    msg_pool = model.msg_pool
+
+    # Resolve function's return type
+    ret_type = fnc.ret_type
+    if not is_type_resolved(ret_type):
+        if isinstance(ret_type, TypedList):
+            _resolve_typed_list(service_decl, ret_type)
+        else:
+            try:
+                rtd = service_decl.domain_objs[ret_type]
+            except KeyError:
+                raise SilveraTypeError(service_decl.name, ret_type)
+
+            fnc.ret_type = rtd
+
+    # Resolve function's parameters
+    for param in [p for p in fnc.params
+                  if not is_type_resolved(p.type)]:
+        if isinstance(param.type, TypedList):
+            _resolve_typed_list(service_decl, param.type)
+        else:
+            try:
+                td = service_decl.domain_objs[param.type]
+            except KeyError:
+                raise SilveraTypeError(service_decl.name, param.type)
+
+            param.type = td
+
+    # Resolve messaging annotations
+    for ann in fnc.msg_annotations:
+        for subscr in ann.subscriptions:
+            message_fqn = subscr.message
+
+            # Find Message object represented by given FQN, and
+            # set reference to it.
+            try:
+                subscr.message = msg_pool.get(message_fqn)
+            except ValueError:
+                linecol = module._tx_parser.pos_to_linecol(
+                    subscr._tx_position)
+                raise SilveraLoadError(
+                    "Cannot resolve annotation ({} {}). Message '{}' "
+                    "not defined in message pool.".format(
+                        module.path,
+                        linecol,
+                        message_fqn)
+                )
+
+            # Find MessageChannel object represented by given FQN, and
+            # set reference to it.
+            channel_fqn = subscr.channel
+            fqn = channel_fqn.split(".")
+            broker_name = fqn[0]
+            try:
+                broker = model.msg_brokers[broker_name]
+            except KeyError:
+                linecol = module._tx_parser.pos_to_linecol(
+                    subscr._tx_position)
+                raise SilveraLoadError(
+                    "Cannot resolve annotation ({} {}). Broker '{}' "
+                    "not defined.".format(
+                        module.path,
+                        linecol,
+                        broker_name)
+                )
+
+            channel_name = fqn[1]
+            try:
+                channel = broker.channels[channel_name]
+                subscr.channel = channel
+            except KeyError:
+                linecol = module._tx_parser.pos_to_linecol(
+                    subscr._tx_position)
+                raise SilveraLoadError(
+                    "Cannot resolve annotation ({} {}). Channel '{}' "
+                    "not defined in broker '{}'".format(
+                        module.path,
+                        linecol,
+                        channel_name,
+                        broker_name)
+                )
+
+            # Perform registrations
+            if isinstance(ann, ProducerAnnotation):
+                broker.register_producer(channel_name, fnc)
+            else:
+                broker.register_consumer(channel_name, fnc)
+
+
+def _resolve_typed_list(service_decl, typed_list):
+    """Resolves type of TypedList."""
+    if isinstance(typed_list.type, TypedList):
+        _resolve_typed_list(service_decl, typed_list.type)
+    else:
+        if not is_type_resolved(typed_list.type):
+            try:
+                ft = service_decl.domain_objs[typed_list.type]
+            except KeyError:
+                raise SilveraTypeError(service_decl.name, typed_list.type)
+
+            typed_list.type = ft
+
+
+def is_type_resolved(_type):
+    """Helper function that checks if type is already resolved."""
+    return _type in BASIC_TYPES or isinstance(_type, TypeDef)
 
 
 def resolve_deployment_inheritance(base_service, service_decl):
@@ -189,8 +388,8 @@ def resolve_inheritance(module, service_decl):
     if base_service_name is None:
         return
 
-    base_service = lookup(module, base_service_name)
-    service_decl.extends = base_service
+    assign_ref(service_decl, "extends")
+    base_service = service_decl.extends
 
     if service_decl.config_server is None:
         service_decl.config_server = base_service.config_server
@@ -200,6 +399,18 @@ def resolve_inheritance(module, service_decl):
 
     resolve_deployment_inheritance(base_service, service_decl)
     resolve_api_inheritance(base_service, service_decl)
+
+
+def resolve_api_gateway(module, api_gateway):
+
+    reg = api_gateway.service_registry
+    if reg and not isinstance(reg, ServiceRegistryDecl):
+        assign_ref(api_gateway, "service_registry")
+
+    for gt in list(api_gateway.gateway_for):
+        if isinstance(gt.service, ServiceDecl):
+            continue
+        assign_ref(gt, "service", module=module)
 
 
 def process_module(module):
@@ -213,28 +424,201 @@ def process_module(module):
         None
     """
     for decl in module.decls:
+        if isinstance(decl, Deployable):
+            # If deployment is not defined, object with default values
+            # will be assigned. But, in case deployment is not set and
+            # decl extends another declaration, then deployment from the
+            # parent declaration will be used.
+            if decl.deployment is None and decl.extends is None:
+                deployment = Deployment(decl)
+                deployment.port = available_port(1)
+                decl.deployment = deployment
+
         if isinstance(decl, ServiceDecl):
             resolve_inheritance(module, decl)
             resolve_custom_types(decl)
 
             cfg = decl.config_server
             if cfg and not isinstance(cfg, ConfigServerDecl):
-                decl.config_server = lookup(module, cfg)
+                assign_ref(decl, "config_server")
 
             reg = decl.service_registry
             if reg and not isinstance(reg, ServiceRegistryDecl):
-                decl.service_registry = lookup(module, reg)
+                assign_ref(decl, "service_registry")
+
+            # assign port number if not assigned
+            deployment = decl.deployment
+            if deployment.port is None:
+                deployment.port = available_port(deployment.replicas)
+
+        if isinstance(decl, APIGateway):
+            resolve_api_gateway(module, decl)
 
         if decl.__class__.__name__ == "Connection":
             start = decl.start
             if not isinstance(start, ServiceDecl):
-                decl.start = lookup(module, start)
+                assign_ref(decl, "start")
 
             end = decl.end
             if not isinstance(end, ServiceDecl):
-                decl.end = lookup(module, end)
+                assign_ref(decl, "end")
 
     process_connections(module)
+
+
+def check_msg_pool(msg_pool):
+    """Checks if all messages and groups are defined correctly.
+
+    Exception will be raised in following cases:
+    1. MessageGroup is empty (no messages defined inside group).
+    2. MessageGroup's ID not unique.
+    3. Message's name within the group is not unique.
+
+    Args:
+        msg_pool (MessagePool): message pool
+
+    Returns:
+        None
+
+    Raises:
+        SilveraLoadException
+    """
+    all_groups = msg_pool.get_all_groups()
+    fqns = defaultdict(list)
+    for group in all_groups:
+        fqns[group.fqn].append(group)
+
+    empty_groups = []
+    for fqn, groups in fqns.items():
+        # Raise exception in case of group redefinition
+        if len(groups) > 1:
+            err_msg = "Redefinition of message group found: "
+            for g in groups:
+                err_msg += to_err_line(g)
+
+            raise SilveraLoadError(err_msg)
+
+        # Check if there are messages in group
+        group = groups[0]
+        if not group.messages:
+            empty_groups.append(group)
+
+        # Check if message names are unique
+        names = defaultdict(list)
+        for m in group.messages:
+            names[m.name].append(m)
+
+        for name, messages in names.items():
+            if len(messages) > 1:
+                err_msg = "Redefinition of message found:"
+                for msg in messages:
+                    err_msg += to_err_line(msg)
+
+                raise SilveraLoadError(err_msg)
+
+    if empty_groups:
+        err_msg = "Group(s) without messages found: "
+        for g in empty_groups:
+            err_msg += to_err_line(g)
+        raise SilveraLoadError(err_msg)
+
+
+def get_msg_pool(model):
+    """Initializes msg_pool attr of model object"""
+    results = []
+    for module in model.modules:
+        parser = module._tx_parser
+
+        for decl in module.decls:
+            if isinstance(decl, MessagePool):
+                results.append((decl,
+                                module.path,
+                                parser.pos_to_linecol(decl._tx_position)))
+
+    if results:
+        if len(results) > 1:
+
+            err_msg = "Multiple declarations of msg-pool found: "
+            for _, file_path, linecol in results:
+                err_msg += "\n\t * {} {}".format(file_path, linecol)
+
+            raise SilveraLoadError(err_msg)
+
+        msg_pool, _, _ = results[0]
+        return msg_pool
+
+
+def resolve_channel(msg_channel):
+    """Resolves MessageChannel object.
+
+    Args:
+        msg_channel (MessageChannel): message channel object
+
+    Raises:
+        SilveraLoadError
+    """
+    module = msg_channel.parent.parent
+    model = module.model
+
+    msg_pool = model.msg_pool
+
+    msg_type = msg_channel.msg_type
+    try:
+        # get Message object from pool
+        msg = msg_pool.get(msg_type)
+        # set the actual message object as a type
+        msg_channel.msg_type = msg
+    except ValueError:
+        linecol = module._tx_parser.pos_to_linecol(msg_channel._tx_position)
+        raise SilveraLoadError(
+            "Cannot instantiate message channel '{}'({} {}). Message '{}' not "
+            "defined in message pool.".format(
+                msg_channel.name,
+                module.path,
+                linecol,
+                msg_type
+            ))
+
+
+def resolve_brokers(brokers):
+    """Resolves MessageBroker objects.
+
+    If broker's name if not unique, SilveraLoadError is raised.
+    If channel's name within broker if not unique, SilveraLoadError is raised.
+
+    Args:
+        brokers (list): list of message broker objects
+
+    Raises:
+        SilveraLoadError
+    """
+    visited = defaultdict(list)
+    for b in brokers:
+        ch_dict = defaultdict(list)
+        for channel in b.channels.values():
+            ch_dict[channel.name].append(channel)
+            resolve_channel(channel)
+
+        # Check for channel redefinitions
+        for name, chs in ch_dict.items():
+            if len(chs) > 1:
+                err_msg = "Redefinition of message channel found:"
+                for c in chs:
+                    err_msg += to_err_line(c)
+                raise SilveraLoadError(err_msg)
+
+        visited[b.name].append(b)
+
+    # Check for broker redefinitions
+    for name, brokers in visited.items():
+        if len(brokers) > 1:
+            err_msg = "Redefinition of msg-broker found:"
+            for b in brokers:
+                err_msg += to_err_line(b)
+
+            raise SilveraLoadError(err_msg)
+
+    return {n: b[0] for n, b in visited.items()}
 
 
 def model_processor(model):
@@ -249,8 +633,30 @@ def model_processor(model):
         for dep_path in module.depends_on():
             deps[module].append(dep_path)
 
+    msg_pool = get_msg_pool(model)
+
+    if msg_pool:
+        check_msg_pool(msg_pool)
+        model.msg_pool = msg_pool
+
     # topologically sort modules
     modules = sort(deps)
+
+    # collect message brokers if they exist
+    msg_brokers = []
+    for module in reversed(modules.keys()):
+        msg_brokers.extend(list(module.msg_brokers))
+
+    if msg_brokers:
+        if not msg_pool:
+            raise SilveraLoadError("Message pool must be defined in order to "
+                                   "instantiate message brokers.")
+
+        # check if message brokers are valid
+        brokers = resolve_brokers(msg_brokers)
+        model.msg_brokers = brokers
+
+    # process all modules
     for module in reversed(modules.keys()):
         process_module(module)
 
@@ -291,3 +697,10 @@ def sort(modules):
 
     return sorted_graph
 
+
+def to_err_line(item):
+    module = item.msg_pool.parent
+    path = module.path
+    parser = module._tx_parser
+    linecol = parser.pos_to_linecol(item._tx_position)
+    return "\n\t- {}: {} {}".format(path, item.fqn, linecol)

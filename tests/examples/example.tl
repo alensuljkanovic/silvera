@@ -31,10 +31,10 @@ api-gateway APIGateway {
         replicas=1
     }
 
-    communication_style=REST
+    communication_style=rpc
 
     gateway-for {
-        EmployeeSearch as "emp"
+        EmployeeSearch as /emp
     }
 }
 
@@ -53,7 +53,7 @@ service EmployeeSearch {
         replicas=1
     }
 
-    communication_style=REST
+    communication_style=rpc
 
     api {
         typedef Employee [

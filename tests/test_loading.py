@@ -4,7 +4,8 @@ This module tests loading mechanism
 import os
 import pytest
 from silvera.run import load
-from silvera.core import ConfigServerDecl, ServiceRegistryDecl
+from silvera.core import ConfigServerDecl, ServiceRegistryDecl, TypedList, \
+    TypeDef
 from silvera.utils import get_root_path
 
 
@@ -91,10 +92,44 @@ def test_loading_with_custom_types(examples_path):
 
     office_service = model.find_by_fqn("office.OfficeService")
     worker = office_service.domain_objs["Worker"]
+    task = office_service.domain_objs["Task"]
+
+    #
+    # Check if types of Worker's fields are resolved properly
+    #
+    wk_first_name = worker.fields[1]
+    assert wk_first_name.name == "first_name"
+    assert wk_first_name.type == "str"
+
+    wk_last_name = worker.fields[2]
+    assert wk_last_name.name == "last_name"
+    assert wk_last_name.type == "str"
+
+    wk_tasks = worker.fields[3]
+    assert wk_tasks.name == "tasks"
+    assert isinstance(wk_tasks.type, TypedList)
+    tasks_type = wk_tasks.type
+    assert isinstance(tasks_type.type, TypeDef)
+    assert tasks_type.type is task
+
+    #
+    # Test if return types and types of params are resolved properly
+    #
+    add_worker = office_service.get_function("addWorker")
+    add_param = add_worker.params[2]
+    assert isinstance(add_param.type, TypedList)
+    assert add_param.type.type is task
+
     rm_worker = office_service.get_function("removeWorker")
     rm_param = rm_worker.params[0]
     assert rm_param.type is worker
     assert rm_worker.ret_type is worker
+
+    ls_workers = office_service.get_function("listWorkers")
+    assert not ls_workers.params
+    assert isinstance(ls_workers.ret_type, TypedList)
+    ls_ret_type = ls_workers.ret_type
+    assert ls_ret_type.type is worker
 
     new_office_service = model.find_by_fqn("office.NewOfficeService")
     update_worker = new_office_service.get_function("updateWorker")

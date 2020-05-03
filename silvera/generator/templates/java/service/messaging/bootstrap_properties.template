@@ -1,0 +1,7 @@
+spring.application.name={{service_name}}
+spring.cloud.config.uri={{config_server_uri}}
+eureka.client.serviceUrl.defaultZone={{service_registry_url}}
+eureka.client.healthcheck.enabled = true
+server.port={{service_port}}
+security.basic.enable=false
+management.security.enabled=false

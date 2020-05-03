@@ -14,7 +14,7 @@ service ProductService {
         replicas=1
     }
 
-    communication_style=REST
+    communication_style=rpc
 
     api {
         typedef Product [
