@@ -75,6 +75,33 @@ def recurse_typedef(typedef, visited=None):
     return visited
 
 
+def assign_ref(decl, attr_name, module=None, lookup_name=None):
+    """Assign reference to object attribute.
+
+    Args:
+        decl (Decl): declaration object
+        attr_name (str): attribute name
+        module (Module): module object
+        lookup_name (str): lookup name
+    """
+    if module is None:
+        module = decl.parent
+
+    if lookup_name is None:
+        lookup_name = getattr(decl, attr_name)
+
+    try:
+        ref_obj = lookup(module, lookup_name)
+    except KeyError as ex:
+        linecol = module._tx_parser.pos_to_linecol(decl._tx_position)
+        msg = "Error in module {} {}: {}".format(module.path,
+                                                 linecol,
+                                                 ex)
+        raise KeyError(msg)
+
+    setattr(decl, attr_name, ref_obj)
+
+
 def lookup(module, name):
     """Tries to find object with given `name` for a given `module`.
 
@@ -361,8 +388,8 @@ def resolve_inheritance(module, service_decl):
     if base_service_name is None:
         return
 
-    base_service = lookup(module, base_service_name)
-    service_decl.extends = base_service
+    assign_ref(service_decl, "extends")
+    base_service = service_decl.extends
 
     if service_decl.config_server is None:
         service_decl.config_server = base_service.config_server
@@ -378,12 +405,12 @@ def resolve_api_gateway(module, api_gateway):
 
     reg = api_gateway.service_registry
     if reg and not isinstance(reg, ServiceRegistryDecl):
-        api_gateway.service_registry = lookup(module, reg)
+        assign_ref(api_gateway, "service_registry")
 
     for gt in list(api_gateway.gateway_for):
         if isinstance(gt.service, ServiceDecl):
             continue
-        gt.service = lookup(module, gt.service)
+        assign_ref(gt, "service", module=module)
 
 
 def process_module(module):
@@ -413,11 +440,11 @@ def process_module(module):
 
             cfg = decl.config_server
             if cfg and not isinstance(cfg, ConfigServerDecl):
-                decl.config_server = lookup(module, cfg)
+                assign_ref(decl, "config_server")
 
             reg = decl.service_registry
             if reg and not isinstance(reg, ServiceRegistryDecl):
-                decl.service_registry = lookup(module, reg)
+                assign_ref(decl, "service_registry")
 
             # assign port number if not assigned
             deployment = decl.deployment
@@ -430,11 +457,11 @@ def process_module(module):
         if decl.__class__.__name__ == "Connection":
             start = decl.start
             if not isinstance(start, ServiceDecl):
-                decl.start = lookup(module, start)
+                assign_ref(decl, "start")
 
             end = decl.end
             if not isinstance(end, ServiceDecl):
-                decl.end = lookup(module, end)
+                assign_ref(decl, "end")
 
     process_connections(module)
 
