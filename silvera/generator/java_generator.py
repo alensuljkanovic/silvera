@@ -511,7 +511,8 @@ class RPCServiceGenerator(ServiceGenerator):
         for fn in service.dep_functions:
             fns_by_service[fn.service_name].append(fn)
 
-        base_path = os.path.join(content_path, "service", "base")
+        dp_path = os.path.join(content_path, "service", "dependencies")
+        create_if_missing(dp_path)
         for s in service.dependencies:
             s_data = {
                 "service_name": s.name,
@@ -523,8 +524,8 @@ class RPCServiceGenerator(ServiceGenerator):
             service_template = env.get_template(
                 "service/dependency_service.template")
             service_template.stream(s_data).dump(
-                os.path.join(base_path,
-                             s.name + "Service.java"))
+                os.path.join(dp_path,
+                             s.name + "Client.java"))
 
 
 class MsgServiceGenerator(ServiceGenerator):
@@ -706,7 +707,7 @@ def get_rest_call(platform, func):
         url = 'http://localhost:%s' % port
 
         rest_mapping = func.dep.rest_path
-        return url + "/" + rest_mapping
+        return "/" + rest_mapping
         # return get_java_rest_call(url, rest_mapping)
 
 

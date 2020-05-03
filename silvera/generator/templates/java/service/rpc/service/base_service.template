@@ -25,7 +25,7 @@ public abstract class Base{{service_name}}Service {
 
     {% for dependency in dep_names %}
     @Autowired
-    {{dependency}}Service {{dependency|firstlower}}Service;
+    {{dependency}}Client {{dependency|firstlower}}Client;
     {% endfor %}
 
     {% for function in functions %}

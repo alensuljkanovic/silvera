@@ -36,6 +36,7 @@ public class {{service_name}}Service extends Base{{service_name}}Service {
     {% for function in functions %}
     {{'@Async(AsyncConfig.CONFIG_NAME)' if function.is_async() else ""}}
     {{generate_cb_annotation(function)}}
+    @Override
     public {{function|return_type}} {{function.name}}({{function|unfold_function_params}}) {{'throws InterruptedException ' if function.is_async() else ''}}{
         /*
             TODO: Implement this function!!!
