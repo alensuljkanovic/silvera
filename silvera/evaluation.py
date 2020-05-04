@@ -7,124 +7,174 @@ from collections import defaultdict
 class Evaluator:
     """Performs evaluation of model based on following metrics:
 
-    Coupling
-    --------
-    This metric, for each service, counts the number of services it depends
-    upon.
+    Weighted Service Interface Count (WSIC)
+    ---------------------------------------
+    This metric counts the number of exposed interface operations of a service.
+    Lower values for WSIC are more favorable for the maintainability of a
+    service.
 
-    Fan in
-    ------
-    This metric, for each service, counts the number of functions used by
-    other services. Component with high `fan in` can prove to be a possible
-    bottleneck.
+    Number of Versions per Service (NVS):
+    -------------------------------------
+    The number of versions that are used concurrently in system Y for service
+    S.
 
-    Fan out
-    -------
-    This metric, for each service, counts the number of functions from other
-    services that are called. Lower `fan out` means that the service shows
-    lower dependency towards other services.
+    Services Interdependence in the System (SIY)
+    --------------------------------------------
+    Pairs ⟨S 1 , S 2 ⟩ where service S1 calls S2 while service S2 also calls
+    S1 at some point.
 
+    Absolute Importance of the Service (AIS)
+    ----------------------------------------
+    AIS(S) for a service S is the number of consumers that depend on S, i.e.
+    the number of clients that invoke at least one operation of S
 
+    Absolute Dependence of the Service (ADS)
+    ----------------------------------------
+    ADS(S) is the number of other services that S depends on, i.e. the
+    number of services from which S invokes at least one operation.
+
+    Absolute Criticality of the Service (ACS):
+    ------------------------------------------
+    ACS(S) = AIS(S) × ADS(S)
     """
-    def __init__(self):
-        # self.coupling_results = defaultdict(list)
-        self.fan_in_results = defaultdict(lambda: defaultdict(list))
-        self.fan_out_results = defaultdict(lambda: defaultdict(list))
+    def _cals_wsic(self, service):
+        """Calc WSIC(S) for given service
 
-    def _add_fan_in(self, connection):
-        fan_in = self.fan_in_results
-        start = connection.start
-        end = connection.end
+        Each function increases weight by 1, each param of simple type
+        increases weight by 0.5, while param of complex type increases
+        weight by 0.7.
+        """
+        from silvera.core import TypeDef
+        wsic = 0
+        for function in service.api.functions:
+            wsic += 1
+            for param in function.params:
+                wsic += 0.5
+                if isinstance(param.type, TypeDef):
+                    wsic += 0.2
 
-        for fnc in (cb.method_name for cb in connection.circuit_break_defs):
-            per_service = fan_in[end]
-            per_service[fnc].append(start)
+        return wsic
 
-    def _add_fan_out(self, connection):
-        fan_out = self.fan_out_results
-        start = connection.start
-        end = connection.end
-
-        for fnc in (cb.method_name for cb in connection.circuit_break_defs):
-            per_service = fan_out[start]
-            per_service[end].append(fnc)
+    def _calc_nvs(self, service):
+        """Calc NVS for given service"""
+        replicas = service.deployment.replicas
+        return replicas
 
     def evaluate(self, model):
-        # coupling = self.coupling_results
-        #model_to_graph(model)
-        fan_in = self.fan_in_results
-        fan_out = self.fan_out_results
+        """Evaluate model
 
-        for module in model.modules:
-            for connection in module.connections:
-                self._add_fan_in(connection)
-                self._add_fan_out(connection)
+        Args:
+            model (Model): Model object
 
-        print("\n\n`FAN IN` results:")
-        for serv, results in fan_in.items():
-            print("Service '%s':" % serv.name)
-            total_calls = 0
-            for method, callers in results.items():
-                print("\tFunction: `%s`" % method)
+        Returns:
+            EvaluationResult
+        """
+        result = EvaluationResult()
 
-                print("\t\tNumber of functions calls: %s" % len(callers))
-                print("\t\tCallers: {}".format([s.name for s in callers]))
+        for s in [s for m in model.modules for s in m.service_decls]:
+            result.ads[s.name] = 0
+            result.ais[s.name] = 0
+            result.wsic[s.name] = self._cals_wsic(s)
+            result.nvs[s.name] = self._calc_nvs(s)
 
-                total_calls += len(callers)
+        interdep = defaultdict(set)
+        for c in [c for m in model.modules for c in m.connections]:
+            start = c.start
+            result.ads[start.name] += 1
 
-            print("\t**Total calls**: %s" % total_calls)
+            end = c.end
+            result.ais[end.name] += 1
 
-        print("\n\n`FAN OUT` results:")
-        for serv, results in fan_out.items():
-            print("Service '%s':" % serv.name)
-            total_calls = 0
-            for dep_serv, methods in results.items():
-                print("\tService: `%s`" % dep_serv.name)
+            # `start` service depends upon `end`
+            interdep[start.name].add(end.name)
 
-                print("\t\tNumber of functions called: %s" % len(methods))
-                print("\t\tFunctions called: {}".format(methods))
+        siy = set()
+        for s, deps in interdep.items():
+            for s1, deps1 in interdep.items():
+                if s in deps1 and s1 in deps:
+                    siy.add((s, s1))
 
-                total_calls += len(methods)
+        result.siy = siy
 
-                print("\t**Total calls**: %s" % total_calls)
+        # result.to_report()
 
-            print("\n")
+        return result
 
-    # def coupling_for(self, serv):
-    #     """Returns coupling metric for a given service"""
-    #     if not self.coupling_results:
-    #         raise ValueError("Evaluation must be performed before calling"
-    #                          "this method.")
-    #
-    #     return self.coupling_results[serv]
 
-#
-# def model_to_graph(model):
-#     from networkx import DiGraph
-#
-#     graph = DiGraph()
-#
-#     for module in model.modules:
-#         for serv in module.service_decls:
-#             graph.add_node(serv)
-#     # for module in model.modules:
-#     #     graph.add_nodes_from(list(module.service_decls))
-#
-#     for module in model.modules:
-#         for connection in module.connections:
-#             start = connection.start
-#             end = connection.end
-#
-#             for fnc in (cb.method_name for cb in
-#                         connection.circuit_break_defs):
-#                 graph.add_edge(start, end, method=fnc)
-#             # graph.add_edge(connection.start, connection.end)
-#
-#     print("Nodes:")
-#     print(graph.nodes)
-#     print("Edges:")
-#     print(graph.edges)
-#
-#     print("Succ")
-#     for n in graph.predecessors(model.find_by_fqn("test.DepA2")):
-#         print(n, )
+class EvaluationResult:
+    """Result of evaluation"""
+
+    def __init__(self):
+        self.ais = defaultdict(int)
+        self.ads = defaultdict(int)
+        self.wsic = defaultdict(int)
+        self.nvs = defaultdict(int)
+        self.siy = []
+
+    @property
+    def ais_avg(self):
+        return sum(self.ais.values())/len(self.ais)
+
+    @property
+    def ads_avg(self):
+        return sum(self.ads.values())/len(self.ads)
+
+    @property
+    def wsic_avg(self):
+        return sum(self.wsic.values())/len(self.wsic)
+
+    @property
+    def nvs_avg(self):
+        return sum(self.nvs.values())/len(self.nvs)
+
+    @property
+    def acs(self):
+        return {s: self.ais[s] * self.ads[s] for s in self.ads}
+
+    @property
+    def acs_avg(self):
+        return sum(self.acs.values())/len(self.acs)
+
+    def to_report(self):
+        """Prints report"""
+
+        wsic_avg = self.wsic_avg
+        print("Weighted Service Interface Count (WSIC):")
+        print("\tSystem average: %.2f" % wsic_avg)
+
+        for s in sorted(self.wsic, key=lambda x: self.wsic[x] - wsic_avg):
+            diff = self.wsic[s] - wsic_avg
+            print("\tService:'%s':" % s)
+            print("\t\tWsic[s]: %.2f" % self.wsic[s])
+            print("\t\tDiff from avg: %.2f" % diff)
+
+        print("\n\nAbsolute Importance of the Service (AIS):")
+        print("System average[AIS_avg]:  %.2f" % self.ais_avg)
+        for s, total_calls in self.ais.items():
+            diff = self.ais[s] - self.ais_avg
+            print("\tService '%s':" % s)
+            print("\t\tAIS[s]: %s" % total_calls)
+            print("\t\tAIS[s] - AIS_avg: %.2f" % diff)
+
+        print("\n\nAbsolute Dependence of the Service (ADS)")
+        print("System average: %.2f" % self.ads_avg)
+        for s, total_calls in self.ads.items():
+            diff = self.ads[s] - self.ads_avg
+            print("\tService '%s':" % s)
+            print("\tADS[s]: %s" % total_calls)
+            print("\tADS[s] - ADS_avg: %.2f" % diff)
+
+        print("\n\nAbsolute Criticality of the Service (ACS)")
+        print("System average: %.2f" % self.ads_avg)
+        for s, value in self.acs.items():
+            diff = self.acs[s] - self.acs_avg
+            print("\tService '%s':" % s)
+            print("\t\tACS[s]: %s" % value)
+            print("\t\tACS[s] - ACS_avg: %.2f" % diff)
+
+        print("\n\nServices Interdependence in the System (SIY)")
+        if not self.siy:
+            print("\tNo interdependent pairs found!")
+
+        for s in self.siy:
+            print("\t{}".format(s))

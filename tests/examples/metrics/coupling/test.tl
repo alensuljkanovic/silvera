@@ -5,7 +5,7 @@ service A {
         version="1.0.0"
     }
 
-    communication_style=REST
+    communication_style=rpc
 
     api {
         typedef ObjA [
@@ -24,7 +24,7 @@ service DepA1 {
         version="1.0.0"
     }
 
-    communication_style=REST
+    communication_style=rpc
 
     api {
         typedef ObjDep1 [
@@ -33,7 +33,7 @@ service DepA1 {
         ]
 
         @rest(method=GET)
-        ObjDep1 add(int id, str content)
+        ObjDep1 add(int id, ObjDep1 content)
     }
 }
 
@@ -43,7 +43,7 @@ service DepA2 {
         version="1.0.0"
     }
 
-    communication_style=REST
+    communication_style=rpc
 
     api {
         typedef ObjDep2 [
@@ -62,5 +62,9 @@ connection A -> DepA1 {
 
 
 connection DepA1 -> DepA2 {
-    get[fail_fast]
+    add[fail_fast]
+}
+
+connection DepA2 -> DepA1 {
+    add[fail_fast]
 }
