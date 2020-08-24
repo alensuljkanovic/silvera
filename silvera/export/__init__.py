@@ -1,6 +1,7 @@
 """
 This module contains function that export Silvera module into dot format.
 """
+import os
 from silvera.core import Deployable, ConfigServerDecl, ServiceRegistryDecl, \
     ServiceDecl
 
@@ -97,7 +98,8 @@ def export_to_dot(model, output_path, detail_level=DETAIL_SIMPLE):
 
     str += " }"
 
-    with open(output_path, "w") as f:
+    output_file = os.path.join(output_path, "model.dot")
+    with open(output_file, "w") as f:
         f.write(str)
 
 

@@ -56,7 +56,7 @@ def generate(model, output_dir, debug=False):
             generator = generator_for_language(JAVA)
             generator(gt, output_dir, debug)
             if gt.host == HOST_CONTAINER:
-                for_compose(config_serv)
+                for_compose(gt)
 
         for service in module.services:
             lang = service.lang

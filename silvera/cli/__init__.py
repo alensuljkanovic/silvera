@@ -97,6 +97,8 @@ def compile(ctx, project_dir, output_dir, rest_strategy):
         click.echo("Generating code...")
         gn.generate(model, output_dir)
     except Exception as ex:
+        import traceback
+        traceback.print_exc()
         raise click.ClickException(str(ex))
 
     click.echo("Compilation finished successfully!")
@@ -130,3 +132,27 @@ def list_generators(ctx):
         click.echo("{}-{} -> {}".format(gen_desc.lang_name,
                                         gen_desc.lang_ver,
                                         gen_desc.description))
+
+
+@silvera.command()
+@click.argument('project_dir', type=click.Path(), required=True)
+@click.option('--output-dir', '-o', type=click.Path(), default=None,
+              help='The output dir to generate to. Default = same as input.')
+@click.pass_context
+def visualize(ctx, project_dir, output_dir):
+    """Visualize the architecture for given project."""
+    project_dir = os.path.abspath(project_dir)
+
+    try:
+        click.echo("Loading model...")
+        model = runners.load(project_dir)
+    except Exception as ex:
+        raise click.ClickException(str(ex))
+
+    click.echo("Creating dot file...")
+    from silvera.export import export_to_dot
+
+    if output_dir is None:
+        output_dir = project_dir
+
+    export_to_dot(model, output_dir)
