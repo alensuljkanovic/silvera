@@ -7,9 +7,17 @@
 
 package com.silvera.{{service_name}}.domain.{{"dependencies" if dependency else "model"}};
 
+import org.springframework.data.annotation.Id;
+
 public class {{name}} {
 
+    {%if not id_attr %}
+    @Id
+    private String id;
+    {% endif %}
+
     {% for attr in attributes %}
+    {{"@Id" if attr.isid else ""}}
     private {{attr.type|converttype}} {{attr.name}}{{ "= java.util.Collections.emptyList()" if attr.type is collection else ""}};
     {%- endfor %}
 
@@ -24,4 +32,13 @@ public class {{name}} {
     }
     {% endfor %}
 
+    {%if not id_attr %}
+    public String getId(){
+        return this.id;
+    }
+    {% elif id_attr.name != "id" %}
+    public {{id_attr.type|converttype}} getId(){
+        return this.{{id_attr.name}};
+    }
+    {% endif %}
 }

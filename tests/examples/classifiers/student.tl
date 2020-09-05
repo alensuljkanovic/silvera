@@ -1,0 +1,22 @@
+service StudentService {
+
+    deployment {
+        version="1.0.0"
+    }
+
+    communication_style=rpc
+
+    api {
+        typedef Student [
+            @id str email [max(50)]
+            @required str first_name [max(50), letters_only]
+            @ordered @required str last_name [max(50), letters_only]
+        ]
+
+        @rest(method=POST)
+        void addWorker(str first_name, str last_name)
+
+        @rest(method=POST)
+        Student removeStudent(Student s)
+    }
+}

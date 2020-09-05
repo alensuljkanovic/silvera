@@ -4,3 +4,7 @@ eureka.client.serviceUrl.defaultZone={{service_registry_url}}
 server.port={{service_port}}
 security.basic.enable=false
 management.security.enabled=false
+
+spring.data.mongodb.database={{service_name|lower}}_db
+spring.data.mongodb.port=27017
+spring.data.mongodb.host=localhost

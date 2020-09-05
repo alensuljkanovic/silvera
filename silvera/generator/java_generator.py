@@ -345,7 +345,8 @@ class ServiceGenerator:
         controller_data = {
             "service_name": self.service.name,
             "api": self.service.api,
-            "timestamp": timestamp()
+            "timestamp": timestamp(),
+            "typedefs": self.get_typedefs(self.service),
         }
         controller_template = env.get_template(
             "controller/controller.template")
@@ -367,16 +368,53 @@ class ServiceGenerator:
         api = self.service.api
 
         for typedef in api.typedefs:
+
+            attrs = typedef.fields
+            id_attr = None
+            for attr in attrs:
+                if attr.isid:
+                    id_attr = {"name": attr.name,
+                               "type": attr.type}
+
             data = {
                 "dependency": False,
                 "service_name": self.service.name,
                 "name": typedef.name,
-                "attributes": typedef.fields,
+                "attributes": attrs,
+                "id_attr": id_attr,
                 "timestamp": timestamp()
             }
             class_template = env.get_template("domain/class.template")
             class_template.stream(data).dump(os.path.join(model_path,
                                              typedef.name + ".java"))
+
+    def generate_repositories(self, env, content_path):
+        """Generate repository folder
+
+        Args:
+            env (Environment): jinja2 enviroment used during generation.
+            content_path (str): path to the parent folder in generated project
+        """
+        repo_path = create_if_missing(os.path.join(content_path, "repository"))
+
+        api = self.service.api
+
+        for typedef in api.typedefs:
+
+            id_datatype = "str"
+            for field in typedef.fields:
+                if field.isid:
+                    id_datatype = field.type
+
+            data = {
+                "service_name": self.service.name,
+                "timestamp": timestamp(),
+                "typedef": typedef.name,
+                "id_datatype": id_datatype
+            }
+            class_template = env.get_template("repository/repository.template")
+            class_template.stream(data).dump(os.path.join(repo_path,
+                                             typedef.name + "Repository.java"))
 
     def generate_services(self, env, content_path):
         """Generate services
@@ -389,25 +427,23 @@ class ServiceGenerator:
         service = self.service
         service_name = service.name
 
+        typedefs = self.get_typedefs(service)
+
         # base service
         base_path = create_if_missing(os.path.join(service_path, "base"))
         service_data = {
             "service_name": service_name,
             "package_name": service_name,
             "functions": service.api.functions,
+            "typedefs": typedefs,
             "dep_names": [s.name for s in service.dependencies],
             "timestamp": timestamp()
         }
-        try:
-            base_template = env.get_template("service/base_service.template")
-            base_template.stream(service_data).dump(
-                os.path.join(base_path,
-                             "Base" + service_name + "Service.java"))
-        except Exception:
-            base_template = env.get_template("service/service_interface.template")
-            base_template.stream(service_data).dump(
-                os.path.join(base_path,
-                             "I" + service_name + "Service.java"))
+
+        base_template = env.get_template("service/service_interface.template")
+        base_template.stream(service_data).dump(
+            os.path.join(base_path, "I" + service_name + "Service.java")
+        )
 
         # impl service
         impl_path = create_if_missing(os.path.join(service_path, "impl"))
@@ -415,6 +451,27 @@ class ServiceGenerator:
         if not os.path.exists(impl_file):
             impl_template = env.get_template("service/service.template")
             impl_template.stream(service_data).dump(impl_file)
+
+    def get_typedefs(self, service):
+        """For given service returns type with typedef names and type of the
+        ID attribute
+
+        Args:
+            service (ServiceDecl): service declaration
+
+        Returns:
+            tuple
+        """
+        typedefs = []
+        for t in service.api.typedefs:
+            # if ID is not specified, the type of generated key will be str
+            id_datatype = "str"
+            for field in t.fields:
+                if field.isid:
+                    id_datatype = field.type
+
+            typedefs.append((t.name, id_datatype))
+        return typedefs
 
     def generate_messages(self, env, content_path):
         """Generate message objects
@@ -483,6 +540,7 @@ class ServiceGenerator:
         self.generate_config(env, content_path)
 
         self.generate_domain_model(env, content_path)
+        self.generate_repositories(env, content_path)
         self.generate_controllers(env, content_path)
         self.generate_services(env, content_path)
         self.generate_messages(env, content_path)

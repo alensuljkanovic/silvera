@@ -33,7 +33,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.silvera.{{service_name}}.service.*;
+import com.silvera.{{service_name}}.service.base.I{{service_name}}Service;
 import com.silvera.{{service_name}}.domain.model.*;
 
 {% if async %}
@@ -45,7 +45,36 @@ import java.util.concurrent.CompletableFuture;
 public class {{service_name}}Controller {
 
     @Autowired
-    {{service_name}}Service {{service_name|firstlower}}Service;
+    I{{service_name}}Service {{service_name|firstlower}}Service;
+
+    // Auto-generated CRUD methods
+    {%for typedef, id_datatype in typedefs %}
+    {% set id_datatype = id_datatype|converttype %}
+    @RequestMapping(value="/{{typedef|lower}}", method=RequestMethod.POST)
+    @ResponseBody
+    public {{typedef}} create{{typedef}}(@RequestBody {{typedef}} {{typedef|lower}}){
+        return {{service_name|firstlower}}Service.create{{typedef}}({{typedef|lower}});
+    }
+
+    @RequestMapping(value="/{{typedef|lower}}/{id}", method=RequestMethod.PUT)
+    @ResponseBody
+    public {{typedef}} update{{typedef}}(@PathVariable {{id_datatype}} id, @RequestBody {{typedef}} {{typedef|lower}}){
+        return {{service_name|firstlower}}Service.update{{typedef}}(id, {{typedef|lower}});
+    }
+
+    @RequestMapping(value="/{{typedef|lower}}/{id}", method=RequestMethod.GET)
+    @ResponseBody
+    public {{typedef}} read{{typedef}}(@PathVariable {{id_datatype}} id){
+        return {{service_name|firstlower}}Service.read{{typedef}}(id);
+    }
+
+    @RequestMapping(value="/{{typedef|lower}}/{id}", method=RequestMethod.DELETE)
+    @ResponseBody
+    public void delete{{typedef}}(@PathVariable {{id_datatype}} id){
+        {{service_name|firstlower}}Service.delete{{typedef}}(id);
+    }
+    {% endfor%}
+
 
 
     {% for function in api.functions %}

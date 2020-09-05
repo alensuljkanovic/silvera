@@ -4,7 +4,7 @@ from silvera.core import Module, ServiceDecl, ServiceRegistryDecl, TypeDef, \
     CustomType, DataType, Collection, Sequence, List, TypedList, Number, \
     Function, FunctionParameter, ConfigServerDecl, APIGateway, RESTAnnotation,\
     Deployment, MessagePool, MessageBroker, MessageGroup, Message, \
-    ProducerAnnotation, ConsumerAnnotation
+    ProducerAnnotation, ConsumerAnnotation, TypeField
 
 from silvera.utils import get_root_path
 
@@ -12,7 +12,7 @@ _classes = (Module, ServiceDecl, ServiceRegistryDecl, TypeDef, CustomType,
             DataType, Collection, Sequence, List, TypedList, Number, Function,
             FunctionParameter, ConfigServerDecl, APIGateway, RESTAnnotation,
             Deployment, MessagePool, MessageBroker, MessageGroup, Message,
-            ProducerAnnotation, ConsumerAnnotation)
+            ProducerAnnotation, ConsumerAnnotation, TypeField)
 
 
 def get_metamodel():

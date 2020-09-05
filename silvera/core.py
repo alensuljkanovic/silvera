@@ -782,6 +782,38 @@ class TypeDef:
         return self.name
 
 
+class TypeField:
+
+    def __init__(self, parent, id=None, classifiers=None, type=None,
+                 name=None, constraints=None):
+        self.parent = parent
+        self.id = id
+        self.classifiers = classifiers if classifiers else []
+        self.type = type
+        self.name = name
+        self.constraints = constraints if constraints else []
+
+    @property
+    def isid(self):
+        return any({c.id for c in self.classifiers})
+
+    @property
+    def unique(self):
+        if self.isid:
+            return True
+        return any({c.unique for c in self.classifiers})
+
+    @property
+    def required(self):
+        if self.isid:
+            return True
+        return any({c.required for c in self.classifiers})
+
+    @property
+    def ordered(self):
+        return any({c.ordered for c in self.classifiers})
+
+
 class DataType:
 
     def __init__(self, parent):

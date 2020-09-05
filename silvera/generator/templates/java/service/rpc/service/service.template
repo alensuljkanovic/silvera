@@ -6,10 +6,12 @@
     Date: {{timestamp}}
 */
 
-package com.silvera.{{package_name}}.service;
+package com.silvera.{{package_name}}.service.impl;
 
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 import com.silvera.{{package_name}}.domain.model.*;
+import com.silvera.{{package_name}}.repository.*;
 {% if dep_names %}
 import com.silvera.{{package_name}}.domain.dependencies.*;
 {% endif %}
@@ -27,11 +29,52 @@ import com.silvera.{{service_name}}.AsyncConfig;
 
 
 @Service
-public class {{service_name}}Service extends Base{{service_name}}Service {
+public class {{service_name}}Service implements I{{service_name}}Service {
+
+    {% for dependency in dep_names %}
+    @Autowired
+    {{dependency}}Client {{dependency|firstlower}}Client;
+    {% endfor %}
+
+    {%for typedef, id_datatype in typedefs %}
+    {% set id_datatype = id_datatype|converttype %}
+    @Autowired
+    {{typedef}}Repository {{typedef|lower}}Repository;
+    {% endfor%}
 
     public {{service_name}}Service(){
         super();
     }
+
+    // Auto-generated CRUD methods
+    {%for typedef, id_datatype in typedefs %}
+    {% set id_datatype = id_datatype|converttype %}
+    @Override
+    public {{typedef}} create{{typedef}}({{typedef}} {{typedef|lower}}){
+        {{typedef|lower}}Repository.save({{typedef|lower}});
+        Optional<{{typedef}}> opt = {{typedef|lower}}Repository.findById({{typedef|lower}}.getId());
+        return opt.orElse(null);
+    }
+
+    @Override
+    public {{typedef}} update{{typedef}}({{id_datatype}} id, {{typedef}} {{typedef|lower}}Update){
+        {{typedef}} entity = this.read{{typedef}}(id);
+        {{typedef|lower}}Repository.save({{typedef|lower}}Update);
+        return {{typedef|lower}}Update;
+    }
+
+    @Override
+    public {{typedef}} read{{typedef}}({{id_datatype}} id){
+        Optional<{{typedef}}> opt = {{typedef|lower}}Repository.findById(id);
+        return opt.orElseThrow(IllegalArgumentException::new);
+    }
+
+    @Override
+    public void delete{{typedef}}({{id_datatype}} id){
+        {{typedef}} entity = read{{typedef}}(id);
+        {{typedef|lower}}Repository.delete(entity);
+    }
+    {% endfor%}
 
     {% for function in functions %}
     {{'@Async(AsyncConfig.CONFIG_NAME)' if function.is_async() else ""}}

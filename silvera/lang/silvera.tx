@@ -182,7 +182,19 @@ TypeDef:
 ;
 
 TypeField:
-    (id=INT ':')? type=DataType name=ID
+    (id=INT ':')? classifiers*=TypeFieldClassifier type=DataType name=ID ('[' constraints+=TypeFieldConstraint[','] ']')?
+;
+
+TypeFieldClassifier:
+    id?="@id" | unique?="@unique" | ordered?="@ordered" | required?="@required"
+;
+
+TypeFieldConstraint:
+    name=ID ('(' params*=TypeFieldConstraintsParameter[','] ')')?
+;
+
+TypeFieldConstraintsParameter:
+    STRING | INT
 ;
 
 HostChoice:
