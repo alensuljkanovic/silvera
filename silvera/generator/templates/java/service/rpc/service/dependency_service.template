@@ -5,7 +5,7 @@
     Date: {{timestamp}}
 */
 
-package com.silvera.{{package_name}}.service;
+package com.silvera.{{package_name}}.service.dependencies;
 
 import org.springframework.stereotype.Service;
 import com.silvera.{{package_name}}.domain.model.*;

@@ -21,13 +21,26 @@
 {% endif -%}
 {% endmacro %}
 
+
+{%- macro rest_annotation(function) %}
+{% if function.http_verb == "POST" %}
+    @PostMapping(value = "{{function.rest_path}}")
+{% elif function.http_verb == "GET" %}
+    @GetMapping(value="{{function.rest_path}}")
+{% elif function.http_verb == "PUT" %}
+    @PutMapping(value="{{function.rest_path}}")
+{% elif function.http_verb == "DELETE" %}
+    @DeleteMapping(value="{{function.rest_path}}")
+{% endif %}
+{% endmacro -%}
+
 package com.silvera.{{service_name}}.controller;
 
 import java.util.Collection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -79,19 +92,11 @@ public class {{service_name}}Controller {
 
     {% for function in api.functions %}
         {% set service_call = service_name|firstlower + "Service." + function.name + "(" + function|param_names %}
-        {%if function.http_verb == "POST" %}
-    @RequestMapping(value="{{function.rest_path}}", method=RequestMethod.POST)
+    {{rest_annotation(function)}}
     @ResponseBody
     public {{function.ret_type|converttype}} {{function.name}}({{function|unfold_function_params_rest}}) {{'throws InterruptedException, java.util.concurrent.ExecutionException ' if function.is_async() else ''}}{
         {{function_body(function)|indent}}
     }
-        {% elif function.http_verb == "GET" %}
-    @RequestMapping(value="{{function.rest_path}}", method=RequestMethod.GET)
-    @ResponseBody
-    public {{function.ret_type|converttype}} {{function.name}}({{function|unfold_function_params_rest}}) {{'throws InterruptedException, java.util.concurrent.ExecutionException ' if function.is_async() else ''}}{
-        {{function_body(function)|indent}}
-    }
-        {% endif %}
     {% endfor %}
 
 }

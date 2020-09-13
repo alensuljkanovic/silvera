@@ -12,10 +12,10 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import com.silvera.{{package_name}}.domain.model.*;
 import com.silvera.{{package_name}}.repository.*;
-{% if dep_names %}
-import com.silvera.{{package_name}}.domain.dependencies.*;
-{% endif %}
 import com.silvera.{{package_name}}.service.base.*;
+{% if dep_names %}
+import com.silvera.{{package_name}}.service.dependencies.*;
+{% endif %}
 import org.springframework.beans.factory.annotation.Autowired;
 {% if use_circuit_breaker %}
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;

@@ -789,13 +789,19 @@ def unfold_function_params(platform, func, with_anotations=True):
         params = []
         for p in func.params:
             param = ""
-            if with_anotations and p.url_placeholder:
-                param = "@PathVariable "
-
-            if with_anotations and p.query_param:
-                required = "true" if p.default is None else "false"
-                param = '@RequestParam(value="%s", required=%s) ' % (p.name,
-                                                                     required)
+            if with_anotations:
+                if p.url_placeholder:
+                    param = "@PathVariable "
+                elif p.query_param:
+                    required = "true" if p.default is None else "false"
+                    param = '@RequestParam(value="%s", required=%s) ' % (p.name,
+                                                                         required)
+                else:
+                    param = "@RequestBody "
+            # if with_anotations and p.query_param:
+            #     required = "true" if p.default is None else "false"
+            #     param = '@RequestParam(value="%s", required=%s) ' % (p.name,
+            #                                                          required)
 
             param += convert_complex_type(JAVA, p.type) + " "
             param += p.name
