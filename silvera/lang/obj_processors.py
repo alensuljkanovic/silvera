@@ -14,16 +14,16 @@ BASIC_TYPES = {"date", "i16", "i32", "i64", "bool", "int", "void", "str",
                "double"}
 
 
-def process_connections(module):
+def process_dependency(module):
     """Object processor for the Interface class."""
-    conns = {c for c in module.decls if c.__class__.__name__ == "Connection"}
+    deps = {c for c in module.decls if c.__class__.__name__ == "Dependency"}
 
-    for connection in conns:
+    for dependency in deps:
         #
         # Mark start as 'circuit_breaked'
         #
-        start = connection.start
-        end = connection.end
+        start = dependency.start
+        end = dependency.end
 
         # if start.comm_style != end.comm_style:
         #     raise SilveraLoadError("Cannot connect two services with different"
@@ -39,7 +39,7 @@ def process_connections(module):
             start.circuit_breaked = True
 
         use = {c.method_name: (c.failure_pattern, c.fallback_method)
-               for c in connection.circuit_break_defs}
+               for c in dependency.circuit_break_defs}
 
         for orig_fn in end.api.functions:
             if orig_fn.name in use:
@@ -415,7 +415,7 @@ def resolve_api_gateway(module, api_gateway):
 
 def process_module(module):
     """Performs special processing of a Module object, such as resolving
-    imports and connections.
+    imports and dependencies.
 
     Args:
         module (Module): module object that is being processed
@@ -454,7 +454,7 @@ def process_module(module):
         if isinstance(decl, APIGateway):
             resolve_api_gateway(module, decl)
 
-        if decl.__class__.__name__ == "Connection":
+        if decl.__class__.__name__ == "Dependency":
             start = decl.start
             if not isinstance(start, ServiceDecl):
                 assign_ref(decl, "start")
@@ -463,7 +463,7 @@ def process_module(module):
             if not isinstance(end, ServiceDecl):
                 assign_ref(decl, "end")
 
-    process_connections(module)
+    process_dependency(module)
 
 
 def check_msg_pool(msg_pool):

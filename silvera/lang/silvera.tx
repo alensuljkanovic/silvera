@@ -9,7 +9,7 @@ Import:
 
 
 Declaration:
-    ConfigServerDecl | ServiceRegistryDecl | ServiceDecl | APIGateway | Connection | MessagePool | MessageBroker
+    ConfigServerDecl | ServiceRegistryDecl | ServiceDecl | APIGateway | Dependency | MessagePool | MessageBroker
 ;
 
 ConfigServerDecl:
@@ -109,8 +109,8 @@ APIInternal:
     '}'
 ;
 
-Connection:
-    'connection' start=FQN '->' end=FQN '{'
+Dependency:
+    'dependency' start=FQN '->' end=FQN '{'
         circuit_break_defs*=CBPerMethod
     '}'
 ;

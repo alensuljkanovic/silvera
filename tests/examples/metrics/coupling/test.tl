@@ -56,15 +56,15 @@ service DepA2 {
     }
 }
 
-connection A -> DepA1 {
+dependency A -> DepA1 {
     get[fail_fast]
 }
 
 
-connection DepA1 -> DepA2 {
+dependency DepA1 -> DepA2 {
     add[fail_fast]
 }
 
-connection DepA2 -> DepA1 {
+dependency DepA2 -> DepA1 {
     add[fail_fast]
 }

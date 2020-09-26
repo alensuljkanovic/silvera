@@ -88,7 +88,7 @@ def export_to_dot(model, output_path, detail_level=DETAIL_SIMPLE):
                 str += '  {} -> {}[label="config", color=orange]\n'.format(
                     decl.name, decl.config_server.name)
 
-    for conn in (conn for m in model.modules for conn in m.connections):
+    for conn in (conn for m in model.modules for conn in m.dependencies):
         cb_methods = [cb.method_name for cb in conn.circuit_break_defs]
         for method in cb_methods:
             str += '  {} -> {}[label="{}()"]\n'.format(

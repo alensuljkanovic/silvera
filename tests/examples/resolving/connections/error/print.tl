@@ -42,7 +42,7 @@ service OfficeService {
 }
 
 
-connection OfficeService -> PrintService {
+dependency OfficeService -> PrintService {
     print[fail_fast]
 }
 

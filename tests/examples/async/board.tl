@@ -124,10 +124,10 @@ service TasksBoard {
     }
 }
 
-connection TasksBoard -> Employee {
+dependency TasksBoard -> Employee {
     getEmployee[fail_fast]
 }
 
-connection TasksBoard -> Task {
+dependency TasksBoard -> Task {
     getTask[fail_fast]
 }

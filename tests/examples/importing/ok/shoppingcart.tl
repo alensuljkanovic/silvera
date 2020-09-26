@@ -40,11 +40,11 @@ service ShoppingCartService {
 }
 
 
-connection ShoppingCartService -> user.UserService {
+dependency ShoppingCartService -> user.UserService {
     checkUser[fail_silent]
 }
 
 
-connection ShoppingCartService -> product.ProductService {
+dependency ShoppingCartService -> product.ProductService {
     checkProduct[fail_silent]
 }

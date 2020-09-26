@@ -93,7 +93,7 @@ def test_resolving_with_dependencies(metamodel, examples_path):
     assert office_print_func.rest_path == "addworker/"
 
 
-def test_with_connections_and_inherit(examples_path):
+def test_with_dependencies_and_inherit(examples_path):
     model = load(os.path.join(examples_path, "connections", "ok"))
 
     resolver = RESTResolver()
@@ -112,12 +112,6 @@ def test_with_connections_and_inherit(examples_path):
     assert new_fast_print.rest_path == "fastprint/"
     assert new_fast_print.dep.http_verb == HTTP_POST
     assert new_fast_print.dep.rest_path == "fastprint/"
-
-
-def test_connections_with_different_style(examples_path):
-
-    with pytest.raises(SilveraLoadError):
-        load(os.path.join(examples_path, "connections", "error"))
 
 
 def test_function_return_type_resolving_error(examples_path):

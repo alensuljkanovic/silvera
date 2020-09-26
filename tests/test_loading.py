@@ -38,9 +38,9 @@ def test_load_ok(examples_path):
 
     # Check if references towards other services are resolved properly
     payment_module = model.find_by_path("payment.tl")
-    connections = list(payment_module.connections)
+    dependencies = list(payment_module.dependencies)
     # Check connection PaymentService -> user.UserService
-    pay_to_user = connections[0]
+    pay_to_user = dependencies[0]
     assert pay_to_user.start is payment_service
     assert pay_to_user.end is user_service
 

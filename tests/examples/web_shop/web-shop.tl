@@ -184,22 +184,22 @@ service ProductService {
 }
 
 
-connection PaymentService -> UserService {
+dependency PaymentService -> UserService {
     checkPaymentInfo[fail_fast]
 }
 
 
-connection PaymentService -> ProductService {
+dependency PaymentService -> ProductService {
     getProductQTY[fallback_method getProductQTYFallback]
 }
 
 
-connection ShoppingCartService -> UserService {
+dependency ShoppingCartService -> UserService {
     checkUser[fail_silent]
 }
 
 
-connection ShoppingCartService -> ProductService {
+dependency ShoppingCartService -> ProductService {
     checkProduct[fail_silent]
 }
 

@@ -78,7 +78,7 @@ class Evaluator:
             result.nvs[s.name] = self._calc_nvs(s)
 
         interdep = defaultdict(set)
-        for c in [c for m in model.modules for c in m.connections]:
+        for c in [c for m in model.modules for c in m.dependencies]:
             start = c.start
             result.ads[start.name] += 1
 

@@ -35,11 +35,11 @@ service PaymentService {
     }
 }
 
-connection PaymentService -> UserService {
+dependency PaymentService -> UserService {
     checkPaymentInfo[fail_fast]
 }
 
 
-connection PaymentService -> ProductService {
+dependency PaymentService -> ProductService {
     getProductQTY[fallback_method getProductQTYFallback]
 }

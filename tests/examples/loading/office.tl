@@ -45,6 +45,6 @@ service NewOfficeService extends OfficeService{
     }
 }
 
-connection OfficeService -> PrintService {
+dependency OfficeService -> PrintService {
     print[fail_fast]
 }

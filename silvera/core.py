@@ -135,9 +135,9 @@ class Module:
                 yield decl
 
     @property
-    def connections(self):
+    def dependencies(self):
         for decl in self.decls:
-            if decl.__class__.__name__ == "Connection":
+            if decl.__class__.__name__ == "Dependency":
                 yield decl
 
     @property
@@ -421,8 +421,6 @@ class ServiceObject(Deployable):
         self.comm_style = comm_style
 
         # Services upon whom this service depends on.
-        # Depedencies are defined by creating connections towards other
-        # services in .tl file.
         self.dependencies = []
 
 

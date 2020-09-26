@@ -225,26 +225,26 @@ service ARMCCompiler {
     }
 }
 
-connection Schematic -> Library {
+dependency Schematic -> Library {
     get[fail_fast]
 }
 
-connection ConnectionsValidator -> Schematic {
+dependency ConnectionsValidator -> Schematic {
     getSchematic[fail_fast]
 }
 
-connection AnsiCCompiler -> ConnectionsValidator {
+dependency AnsiCCompiler -> ConnectionsValidator {
     validate[fail_fast]
 }
 
-connection AnsiCCompiler -> Schematic {
+dependency AnsiCCompiler -> Schematic {
     getSchematic[fail_fast]
 }
 
-connection ARMCCompiler -> ConnectionsValidator {
+dependency ARMCCompiler -> ConnectionsValidator {
     validate[fail_fast]
 }
 
-connection ARMCCompiler -> Schematic {
+dependency ARMCCompiler -> Schematic {
     getSchematic[fail_fast]
 }
