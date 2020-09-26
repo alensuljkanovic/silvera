@@ -15,6 +15,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 public interface I{{service_name}}Service {
 
+    // Auto-generated CRUD methods
+    {%for typedef, id_datatype, _ in typedefs %}
+    {% set id_datatype = id_datatype|converttype %}
+    public {{typedef}} create{{typedef}}({{typedef}} {{typedef|lower}});
+    public {{typedef}} update{{typedef}}({{id_datatype}} id, {{typedef}} {{typedef|lower}}Update);
+    public {{typedef}} read{{typedef}}({{id_datatype}} id);
+    public void delete{{typedef}}({{id_datatype}} id);
+    {% endfor%}
+
     {% for function in functions %}
     public {{function|return_type}} {{function.name}}({{function|unfold_function_params}});
     {% endfor %}

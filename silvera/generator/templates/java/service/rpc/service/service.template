@@ -36,7 +36,7 @@ public class {{service_name}}Service implements I{{service_name}}Service {
     {{dependency}}Client {{dependency|firstlower}}Client;
     {% endfor %}
 
-    {%for typedef, id_datatype in typedefs %}
+    {%for typedef, id_datatype, _ in typedefs %}
     {% set id_datatype = id_datatype|converttype %}
     @Autowired
     {{typedef}}Repository {{typedef|lower}}Repository;
@@ -47,7 +47,7 @@ public class {{service_name}}Service implements I{{service_name}}Service {
     }
 
     // Auto-generated CRUD methods
-    {%for typedef, id_datatype in typedefs %}
+    {%for typedef, id_datatype, _ in typedefs %}
     {% set id_datatype = id_datatype|converttype %}
     @Override
     public {{typedef}} create{{typedef}}({{typedef}} {{typedef|lower}}){

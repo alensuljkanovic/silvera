@@ -8,16 +8,81 @@
 
 package com.silvera.{{package_name}}.service.impl;
 
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 import com.silvera.{{package_name}}.domain.model.*;
 import com.silvera.{{package_name}}.service.base.*;
+import com.silvera.{{package_name}}.repository.*;
 import com.silvera.{{package_name}}.messages.*;
-
-
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
+{% if dep_names %}
+import com.silvera.{{package_name}}.service.dependencies.*;
+{% endif %}
 
 @Service
 public class {{service_name}}Service implements I{{service_name}}Service {
 
+    {%for typedef, id_datatype, _ in typedefs %}
+    {% set id_datatype = id_datatype|converttype %}
+    @Autowired
+    {{typedef}}Repository {{typedef|lower}}Repository;
+    {% endfor%}
+
+    {% for dependency in dep_names %}
+    @Autowired
+    {{dependency}}Client {{dependency|firstlower}}Client;
+    {% endfor %}
+
+    @Autowired
+    KafkaTemplate<String, Message> kafkaTemplate;
+
+    // Auto-generated CRUD methods
+    {%for typedef, id_datatype, event_for in typedefs %}
+    {% set id_datatype = id_datatype|converttype %}
+    @Override
+    public {{typedef}} create{{typedef}}({{typedef}} {{typedef|lower}}){
+        {{typedef|lower}}Repository.save({{typedef|lower}});
+
+        {% if "c" in event_for %}
+        Message msg = new Message("{{typedef}}MsgGroup.{{typedef|upper}}_CREATED");
+        kafkaTemplate.send("EV_{{typedef|upper}}_CREATED_CHANNEL", msg);
+        {% endif %}
+
+        Optional<{{typedef}}> opt = {{typedef|lower}}Repository.findById({{typedef|lower}}.getId());
+        return opt.orElse(null);
+    }
+
+    @Override
+    public {{typedef}} update{{typedef}}({{id_datatype}} id, {{typedef}} {{typedef|lower}}Update){
+        {{typedef}} entity = this.read{{typedef}}(id);
+        {{typedef|lower}}Repository.save({{typedef|lower}}Update);
+
+        {% if "u" in event_for %}
+        Message msg = new Message("{{typedef}}MsgGroup.{{typedef|upper}}_UPDATED");
+        kafkaTemplate.send("EV_{{typedef|upper}}_UPDATED_CHANNEL", msg);
+        {% endif %}
+
+        return {{typedef|lower}}Update;
+    }
+
+    @Override
+    public {{typedef}} read{{typedef}}({{id_datatype}} id){
+        Optional<{{typedef}}> opt = {{typedef|lower}}Repository.findById(id);
+        return opt.orElseThrow(IllegalArgumentException::new);
+    }
+
+    @Override
+    public void delete{{typedef}}({{id_datatype}} id){
+        {{typedef}} entity = read{{typedef}}(id);
+        {{typedef|lower}}Repository.delete(entity);
+
+        {% if "d" in event_for %}
+        Message msg = new Message("{{typedef}}MsgGroup.{{typedef|upper}}_DELETED");
+        kafkaTemplate.send("EV_{{typedef|upper}}_DELETED_CHANNEL", msg);
+        {% endif %}
+    }
+    {% endfor%}
 
     {% for function in functions %}
     @Override
@@ -35,6 +100,12 @@ public class {{service_name}}Service implements I{{service_name}}Service {
         /*
             TODO: Implement this function!!!
         */
+
+        {% for msg, channel in function.produces %}
+        //Message msg = new Message("{{msg.fqn}}");
+        //kafkaTemplate.send("{{channel.name}}", msg);
+        {% endfor %}
+
         throw new java.lang.UnsupportedOperationException("Not implemented yet.");
     }
     {% endfor %}

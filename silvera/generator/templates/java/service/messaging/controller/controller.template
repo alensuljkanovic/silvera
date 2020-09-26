@@ -6,20 +6,7 @@
 */
 
 {% macro function_body(function) %}
-    {% if function.ret_type == "void" %}
-    service.{{function.name}}({{function|param_names}});
-    {% else %}
-    {{function.ret_type|converttype}} result = service.{{function.name}}({{function|param_names}});
-    {% endif%}
-
-    {% for msg, channel in function.produces %}
-    Message msg = new Message("{{msg.fqn}}");
-    kafkaTemplate.send("{{channel.name}}", msg);
-    {% endfor %}
-
-    {% if function.ret_type != "void" %}
-    return result;
-    {% endif %}
+    {{"return" if function.ret_type != "void" else ""}} {{service_name|firstlower}}Service.{{function.name}}({{function|param_names}});
 {% endmacro %}
 
 {%- macro rest_annotation(function) %}
@@ -58,10 +45,35 @@ import org.springframework.kafka.core.KafkaTemplate;
 public class {{service_name}}Controller {
 
     @Autowired
-    I{{service_name}}Service service;
+    I{{service_name}}Service {{service_name|firstlower}}Service;
 
-    @Autowired
-    KafkaTemplate<String, Message> kafkaTemplate;
+    // Auto-generated CRUD methods
+    {%for typedef, id_datatype, _ in typedefs %}
+    {% set id_datatype = id_datatype|converttype %}
+    @RequestMapping(value="/{{typedef|lower}}", method=RequestMethod.POST)
+    @ResponseBody
+    public {{typedef}} create{{typedef}}(@RequestBody {{typedef}} {{typedef|lower}}){
+        return {{service_name|firstlower}}Service.create{{typedef}}({{typedef|lower}});
+    }
+
+    @RequestMapping(value="/{{typedef|lower}}/{id}", method=RequestMethod.PUT)
+    @ResponseBody
+    public {{typedef}} update{{typedef}}(@PathVariable {{id_datatype}} id, @RequestBody {{typedef}} {{typedef|lower}}){
+        return {{service_name|firstlower}}Service.update{{typedef}}(id, {{typedef|lower}});
+    }
+
+    @RequestMapping(value="/{{typedef|lower}}/{id}", method=RequestMethod.GET)
+    @ResponseBody
+    public {{typedef}} read{{typedef}}(@PathVariable {{id_datatype}} id){
+        return {{service_name|firstlower}}Service.read{{typedef}}(id);
+    }
+
+    @RequestMapping(value="/{{typedef|lower}}/{id}", method=RequestMethod.DELETE)
+    @ResponseBody
+    public void delete{{typedef}}(@PathVariable {{id_datatype}} id){
+        {{service_name|firstlower}}Service.delete{{typedef}}(id);
+    }
+    {% endfor%}
 
     //
     // Public functions
@@ -80,12 +92,7 @@ public class {{service_name}}Controller {
     {% set topics = function|topics %}
     @KafkaListener(topics = { {{topics}} })
     public void {{function.name}}(Message message){
-        service.{{function.name}}(message);
-
-        {% for msg, channel in function.produces %}
-        Message msg = new Message("{{msg.fqn}}");
-        kafkaTemplate.send("{{channel.name}}", msg);
-        {% endfor %}
+        {{service_name|firstlower}}Service.{{function.name}}(message);
     }
     {% endfor %}
 }

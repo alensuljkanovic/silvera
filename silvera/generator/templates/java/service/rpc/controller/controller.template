@@ -61,7 +61,7 @@ public class {{service_name}}Controller {
     I{{service_name}}Service {{service_name|firstlower}}Service;
 
     // Auto-generated CRUD methods
-    {%for typedef, id_datatype in typedefs %}
+    {%for typedef, id_datatype, _ in typedefs %}
     {% set id_datatype = id_datatype|converttype %}
     @RequestMapping(value="/{{typedef|lower}}", method=RequestMethod.POST)
     @ResponseBody

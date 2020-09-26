@@ -711,6 +711,10 @@ class Function:
         f.http_verb = self.http_verb
         return f
 
+    @property
+    def is_ret_type_a_list(self):
+        return isinstance(self.ret_type, List)
+
     def __str__(self):
         return "Function %s" % self.name
 
@@ -772,14 +776,32 @@ class ConsumerAnnotation(MessagingAnnotation):
 
 class TypeDef:
 
-    def __init__(self, parent, name=None, inherits=None, fields=None):
+    def __init__(self, parent, name=None, inherits=None, fields=None,
+                 crud=None):
         self.parent = parent
         self.name = name
         self.inherits = inherits if inherits else []
         self.fields = fields if fields else []
+        self.crud = crud
 
     def __str__(self):
         return self.name
+
+    @property
+    def pub_create(self):
+        return "c" in self.crud.event_for
+
+    @property
+    def pub_read(self):
+        return "r" in self.crud.event_for
+
+    @property
+    def pub_update(self):
+        return "u" in self.crud.event_for
+
+    @property
+    def pub_delete(self):
+        return "d" in self.crud.event_for
 
 
 class TypeField:

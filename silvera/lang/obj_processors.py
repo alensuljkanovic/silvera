@@ -25,15 +25,15 @@ def process_connections(module):
         start = connection.start
         end = connection.end
 
-        if start.comm_style != end.comm_style:
-            raise SilveraLoadError("Cannot connect two services with different"
-                                   " communication styles: "
-                                   "{}[{}] and {}[{}]".format(
-                                       start.name,
-                                       start.comm_style,
-                                       end.name,
-                                       end.comm_style
-                                   ))
+        # if start.comm_style != end.comm_style:
+        #     raise SilveraLoadError("Cannot connect two services with different"
+        #                            " communication styles: "
+        #                            "{}[{}] and {}[{}]".format(
+        #                                start.name,
+        #                                start.comm_style,
+        #                                end.name,
+        #                                end.comm_style
+        #                            ))
 
         if hasattr(start, "circuit_breaked"):
             start.circuit_breaked = True

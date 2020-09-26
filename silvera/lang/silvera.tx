@@ -176,9 +176,17 @@ PersistenceAnnotation:
 ;
 
 TypeDef:
-    'typedef' name=ID (':' inherits+=FQN[','])? '['
+    (crud=TypedefCrud)? 'typedef' name=ID (':' inherits+=FQN[','])? '['
         fields+=TypeField
     ']'
+;
+
+TypedefCrud:
+    '@crud' ('(' 'event_for' '=' event_for+=EventFor ')')?
+;
+
+EventFor:
+    'c' | 'r' | 'u' | 'd'
 ;
 
 TypeField:

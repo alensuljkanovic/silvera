@@ -13,7 +13,7 @@ import com.silvera.{{package_name}}.domain.model.*;
 public interface I{{service_name}}Service {
 
     // Auto-generated CRUD methods
-    {%for typedef, id_datatype in typedefs %}
+    {%for typedef, id_datatype, _ in typedefs %}
     {% set id_datatype = id_datatype|converttype %}
     public {{typedef}} create{{typedef}}({{typedef}} {{typedef|lower}});
     public {{typedef}} update{{typedef}}({{id_datatype}} id, {{typedef}} {{typedef|lower}}Update);

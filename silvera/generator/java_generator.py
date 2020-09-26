@@ -6,7 +6,7 @@ from silvera.const import HOST_CONTAINER, HTTP_POST
 from silvera.core import (CustomType, ConfigServerDecl, ServiceRegistryDecl,
                           ServiceDecl, APIGateway)
 from silvera.generator.platforms import (
-    JAVA, convert_complex_type, get_def_ret_val, is_collection
+    JAVA, convert_complex_type, get_def_ret_val, is_collection, convert_list_to_array
 )
 from silvera.utils import get_templates_path
 from silvera.generator.gen_reg import GeneratorDesc
@@ -250,6 +250,9 @@ class ServiceGenerator:
         env.filters["firstupper"] = lambda x: x[0].upper() + x[1:]
         env.filters["firstlower"] = lambda x: x[0].lower() + x[1:]
         env.filters["converttype"] = lambda x: convert_complex_type(JAVA, x)
+        env.filters["convertlisttoarray"] = lambda x: convert_list_to_array(
+            JAVA, x
+        )
         env.filters["return_type"] = lambda fnc: get_return_type(fnc)
         env.filters["unfold_function_params"] = lambda x: unfold_function_params(
             JAVA, x, False)
@@ -388,6 +391,24 @@ class ServiceGenerator:
             class_template.stream(data).dump(os.path.join(model_path,
                                              typedef.name + ".java"))
 
+        if self.service.dep_typedefs:
+            # domain dependency classes
+            dependencies_path = create_if_missing(
+                os.path.join(domain_path, "dependencies")
+            )
+            for typedef in self.service.dep_typedefs:
+                data = {
+                    "dependency": True,
+                    "service_name": self.service.name,
+                    "name": typedef.name,
+                    "attributes": typedef.fields,
+                    "timestamp": timestamp()
+                }
+                class_template = env.get_template("domain/class.template")
+                class_template.stream(data).dump(
+                    os.path.join(dependencies_path, typedef.name + ".java")
+                )
+
     def generate_repositories(self, env, content_path):
         """Generate repository folder
 
@@ -437,7 +458,8 @@ class ServiceGenerator:
             "functions": service.api.functions,
             "typedefs": typedefs,
             "dep_names": [s.name for s in service.dependencies],
-            "timestamp": timestamp()
+            "timestamp": timestamp(),
+            "consumers": service.f_consumers,
         }
 
         base_template = env.get_template("service/service_interface.template")
@@ -452,6 +474,31 @@ class ServiceGenerator:
             impl_template = env.get_template("service/service.template")
             impl_template.stream(service_data).dump(impl_file)
 
+        if service.dependencies:
+            self.generate_serv_dependencies(env, service, content_path)
+
+    def generate_serv_dependencies(self, env, service, content_path):
+        dp_path = os.path.join(content_path, "service", "dependencies")
+        create_if_missing(dp_path)
+
+        fns_by_service = defaultdict(list)
+        for fn in service.dep_functions:
+            fns_by_service[fn.service_name].append(fn)
+
+        for s in service.dependencies:
+            s_data = {
+                "service_name": s.name,
+                "package_name": service.name,
+                "functions": fns_by_service[s.name],
+                "use_circuit_breaker": True,
+                "timestamp": timestamp()
+            }
+            service_template = env.get_template(
+                "service/dependency_service.template")
+            service_template.stream(s_data).dump(
+                os.path.join(dp_path,
+                             s.name + "Client.java"))
+
     def get_typedefs(self, service):
         """For given service returns type with typedef names and type of the
         ID attribute
@@ -464,13 +511,15 @@ class ServiceGenerator:
         """
         typedefs = []
         for t in service.api.typedefs:
+            if not t.crud:
+                continue
             # if ID is not specified, the type of generated key will be str
             id_datatype = "str"
             for field in t.fields:
                 if field.isid:
                     id_datatype = field.type
 
-            typedefs.append((t.name, id_datatype))
+            typedefs.append((t.name, id_datatype, t.crud.event_for))
         return typedefs
 
     def generate_messages(self, env, content_path):
@@ -560,30 +609,30 @@ class RPCServiceGenerator(ServiceGenerator):
             cfg_name = self.service.name + "AsyncConfiguration.java"
             cfg_template.stream(d).dump(os.path.join(content_path, cfg_name))
 
-    def generate_services(self, env, content_path):
-        super().generate_services(env, content_path)
-
-        # dependecy services
-        service = self.service
-        fns_by_service = defaultdict(list)
-        for fn in service.dep_functions:
-            fns_by_service[fn.service_name].append(fn)
-
-        dp_path = os.path.join(content_path, "service", "dependencies")
-        create_if_missing(dp_path)
-        for s in service.dependencies:
-            s_data = {
-                "service_name": s.name,
-                "package_name": service.name,
-                "functions": fns_by_service[s.name],
-                "use_circuit_breaker": True,
-                "timestamp": timestamp()
-            }
-            service_template = env.get_template(
-                "service/dependency_service.template")
-            service_template.stream(s_data).dump(
-                os.path.join(dp_path,
-                             s.name + "Client.java"))
+    # def generate_services(self, env, content_path):
+    #     super().generate_services(env, content_path)
+    #
+    #     # dependecy services
+    #     service = self.service
+    #     fns_by_service = defaultdict(list)
+    #     for fn in service.dep_functions:
+    #         fns_by_service[fn.service_name].append(fn)
+    #
+    #     dp_path = os.path.join(content_path, "service", "dependencies")
+    #     create_if_missing(dp_path)
+    #     for s in service.dependencies:
+    #         s_data = {
+    #             "service_name": s.name,
+    #             "package_name": service.name,
+    #             "functions": fns_by_service[s.name],
+    #             "use_circuit_breaker": True,
+    #             "timestamp": timestamp()
+    #         }
+    #         service_template = env.get_template(
+    #             "service/dependency_service.template")
+    #         service_template.stream(s_data).dump(
+    #             os.path.join(dp_path,
+    #                          s.name + "Client.java"))
 
 
 class MsgServiceGenerator(ServiceGenerator):
@@ -592,12 +641,20 @@ class MsgServiceGenerator(ServiceGenerator):
     def generate_config(self, env, content_path):
         cfg_path = create_if_missing(os.path.join(content_path, "config"))
 
+        def prod_exists(service):
+            if len(service.consumes) > 0:
+                return True
+
+            for t in service.api.typedefs:
+                if t.crud:
+                    return True
+
         consumer_exists = len(self.service.consumes) > 0
         d = {
             "package_name": self.service.name,
             "service_name": self.service.name,
             "timestamp": timestamp(),
-            "producer_exists": len(self.service.produces) > 0,
+            "producer_exists": prod_exists(self.service),
             "consumer_exists": consumer_exists
         }
 
@@ -664,39 +721,39 @@ class MsgServiceGenerator(ServiceGenerator):
         for group in msg_pool.groups:
             create_package(group, msg_path)
 
-    def generate_services(self, env, content_path):
-        #
-        # Generate services
-        #
-        service_path = create_if_missing(os.path.join(content_path, "service"))
-        service = self.service
-        service_name = service.name
-
-        # consumers = []
-        # for f service.api
-
-        # base service
-        base_path = create_if_missing(os.path.join(service_path, "base"))
-        service_data = {
-            "service_name": service_name,
-            "package_name": service_name,
-            "functions": service.api.functions,
-            "dep_names": [s.name for s in service.dependencies],
-            "timestamp": timestamp(),
-            "consumers": service.f_consumers
-        }
-
-        base_template = env.get_template("service/service_interface.template")
-        base_template.stream(service_data).dump(
-            os.path.join(base_path,
-                         "I" + service_name + "Service.java"))
-
-        # impl service
-        impl_path = create_if_missing(os.path.join(service_path, "impl"))
-        impl_file = os.path.join(impl_path, service_name + "Service.java")
-        if not os.path.exists(impl_file):
-            impl_template = env.get_template("service/service.template")
-            impl_template.stream(service_data).dump(impl_file)
+    # def generate_services(self, env, content_path):
+    #     #
+    #     # Generate services
+    #     #
+    #     service_path = create_if_missing(os.path.join(content_path, "service"))
+    #     service = self.service
+    #     service_name = service.name
+    #
+    #     # consumers = []
+    #     # for f service.api
+    #
+    #     # base service
+    #     base_path = create_if_missing(os.path.join(service_path, "base"))
+    #     service_data = {
+    #         "service_name": service_name,
+    #         "package_name": service_name,
+    #         "functions": service.api.functions,
+    #         "dep_names": [s.name for s in service.dependencies],
+    #         "timestamp": timestamp(),
+    #         "consumers": service.f_consumers
+    #     }
+    #
+    #     base_template = env.get_template("service/service_interface.template")
+    #     base_template.stream(service_data).dump(
+    #         os.path.join(base_path,
+    #                      "I" + service_name + "Service.java"))
+    #
+    #     # impl service
+    #     impl_path = create_if_missing(os.path.join(service_path, "impl"))
+    #     impl_file = os.path.join(impl_path, service_name + "Service.java")
+    #     if not os.path.exists(impl_file):
+    #         impl_template = env.get_template("service/service.template")
+    #         impl_template.stream(service_data).dump(impl_file)
 
 
 _obj_to_fnc = {
