@@ -537,8 +537,26 @@ class ServiceDecl(ServiceObject):
                 if isinstance(ann, ProducerAnnotation):
                     for subscr in ann.subscriptions:
                         prods[subscr.message].append(subscr.channel)
+
+        for t in self.api.typedefs:
+            for msg, values in t.produces.items():
+                prods[msg].append(values)
         return prods
 
+    @property
+    def consumers_per_message(self):
+        cons = defaultdict(set)
+        internal = self.api.internal
+        if not internal:
+            return cons
+
+        for f in internal.functions:
+            for ann in f.msg_annotations:
+                if isinstance(ann, ConsumerAnnotation):
+                    for subscr in ann.subscriptions:
+                        cons[subscr.message].add(f)
+
+        return cons
 
 class Service:
     """Object of this class represents an instance of a service that is of
@@ -782,24 +800,43 @@ class TypeDef:
         self.fields = fields if fields else []
         self.crud = crud
 
+        self.crud_dict = {}
+
+        if "@crud" in [t.operation for t in crud]:
+            self.crud_dict["@create"] = None
+            self.crud_dict["@read"] = None
+            self.crud_dict["@update"] = None
+            self.crud_dict["@delete"] = None
+
+        for td_crud in [t for t in crud if t.operation != "@crud"]:
+            if td_crud.message:
+
+                pkg = td_crud.message.split(".")
+                class_path = ""
+                if len(pkg) > 1:
+                    for part in pkg[:-1]:
+                        class_path += part.lower() + "."
+                class_path += pkg[-1]
+                self.crud_dict[td_crud.operation] = (td_crud.message,
+                                                     td_crud.channel.split(".")[1],
+                                                     class_path)
+            else:
+                self.crud_dict[td_crud.operation] = None
+
+    @property
+    def produces(self):
+        prods = defaultdict(set)
+        for t in self.crud:
+            if t.message:
+                prods[t.message].add(t.channel)
+        return prods
+
     def __str__(self):
         return self.name
 
     @property
-    def pub_create(self):
-        return "c" in self.crud.event_for
-
-    @property
-    def pub_read(self):
-        return "r" in self.crud.event_for
-
-    @property
-    def pub_update(self):
-        return "u" in self.crud.event_for
-
-    @property
-    def pub_delete(self):
-        return "d" in self.crud.event_for
+    def event_for(self):
+        return {k: v for k, v in self.crud_dict.items() if v is not None}
 
 
 class TypeField:

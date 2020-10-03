@@ -8,6 +8,7 @@
 package com.silvera.{{package_name}}.config;
 
 import com.silvera.{{package_name}}.messages.Message;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -27,9 +28,10 @@ import java.util.Map;
 @Configuration
 public class KafkaConfig {
 
-    {% if producer_exists %}
+    {% for msg_fqn in produced_msgs %}
+    {%- set msg_name = msg_fqn|replace(".", "_") -%}
     @Bean
-    public ProducerFactory<String, Message> producerFactory() {
+    public ProducerFactory<String, com.silvera.{{package_name}}.messages.{{msg_fqn}}> {{msg_name}}ProducerFactory() {
         Map<String, Object> config = new HashMap<>();
 
         config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "127.0.0.1:9092");
@@ -41,20 +43,21 @@ public class KafkaConfig {
 
 
     @Bean
-    public KafkaTemplate<String, Message> kafkaTemplate() {
-        return new KafkaTemplate<>(producerFactory());
+    public KafkaTemplate<String, com.silvera.{{package_name}}.messages.{{msg_fqn}}> {{msg_name}}KafkaTemplate() {
+        return new KafkaTemplate<>({{msg_name}}ProducerFactory());
     }
-    {% endif %}
+    {% endfor %}
 
-    {% if consumer_exists %}
+    {% for class_fqn in consumed_msgs %}
+    {%- set class_name = class_fqn.replace(".", "") -%}
     @Bean
-    public ConsumerFactory<String, Message> consumerFactory(){
+    public ConsumerFactory<String, com.silvera.{{package_name}}.messages.{{class_fqn}}> {{class_name}}ConsumerFactory(){
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "127.0.0.1:9092");
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "{{service_name}}");
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "{{service_name}}{{loop.index}}");
 
         // Used for deserialization of Message object.
-        MessageDeserializer deserializer = new MessageDeserializer();
+        JsonDeserializer deserializer = new JsonDeserializer<>(com.silvera.{{package_name}}.messages.{{class_fqn}}.class);
         deserializer.setRemoveTypeHeaders(false);
         deserializer.addTrustedPackages("*");
         deserializer.setUseTypeMapperForKey(true);
@@ -66,12 +69,18 @@ public class KafkaConfig {
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, Message> kafkaListenerContainerFactory(){
-        ConcurrentKafkaListenerContainerFactory<String, Message> factory = new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(consumerFactory());
+    public ConcurrentKafkaListenerContainerFactory<String, com.silvera.{{package_name}}.messages.{{class_fqn}}> {{class_name}}KafkaListenerContainerFactory(){
+        ConcurrentKafkaListenerContainerFactory<String, com.silvera.{{package_name}}.messages.{{class_fqn}}> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory({{class_name}}ConsumerFactory());
         return factory;
     }
-    {% endif %}
+    {% endfor %}
 
+    {% for channel in consumed_channels %}
+    @Bean
+    public NewTopic topic{{loop.index}}(){
+        return new NewTopic("{{channel}}",1, (short) 1);
+    }
+    {% endfor %}
 
 }

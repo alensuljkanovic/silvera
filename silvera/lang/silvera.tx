@@ -176,17 +176,17 @@ PersistenceAnnotation:
 ;
 
 TypeDef:
-    (crud=TypedefCrud)? 'typedef' name=ID (':' inherits+=FQN[','])? '['
+    crud*=TypedefCrud 'typedef' name=ID (':' inherits+=FQN[','])? '['
         fields+=TypeField
     ']'
 ;
 
 TypedefCrud:
-    '@crud' ('(' 'event_for' '=' event_for+=EventFor ')')?
+    operation=CrudOperation ('(' message=FQN '->' channel=FQN ')')?
 ;
 
-EventFor:
-    'c' | 'r' | 'u' | 'd'
+CrudOperation:
+    '@crud' | '@create' | '@read' | '@update' | '@delete'
 ;
 
 TypeField:

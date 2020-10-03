@@ -155,17 +155,22 @@ def resolve_custom_types(service_decl):
 
         # Resolve type definitions
         typedefs = api.typedefs
-        for field in (f for td in typedefs for f in td.fields
-                      if not is_type_resolved(f.type)):
-            if isinstance(field.type, TypedList):
-                _resolve_typed_list(service_decl, field.type)
-            else:
-                try:
-                    ft = service_decl.domain_objs[field.type]
-                except KeyError:
-                    raise SilveraTypeError(service_decl.name, field.type)
+        for td in typedefs:
+            for td_crud in [t for t in td.crud if t.operation != "@crud"]:
+                _resolve_msg_inst(module, td_crud)
+                _resolve_ch_inst(module, td_crud)
 
-                field.type = ft
+            for field in (f for f in td.fields
+                          if not is_type_resolved(f.type)):
+                if isinstance(field.type, TypedList):
+                    _resolve_typed_list(service_decl, field.type)
+                else:
+                    try:
+                        ft = service_decl.domain_objs[field.type]
+                    except KeyError:
+                        raise SilveraTypeError(service_decl.name, field.type)
+
+                    field.type = ft
 
         # Resolve public functions
         functions = api.functions
@@ -277,6 +282,71 @@ def _resolve_fnc(module, service_decl, fnc):
             else:
                 broker.register_consumer(channel_name, fnc)
 
+
+def _resolve_msg_inst(module, msg_container):
+    if msg_container.message is None:
+        return
+    # Find Message object represented by given FQN, and
+    # set reference to it.
+    msg_pool = module.model.msg_pool
+    message_fqn = msg_container.message
+    try:
+        msg_container.message = msg_pool.get(message_fqn)
+    except ValueError:
+        linecol = module._tx_parser.pos_to_linecol(
+            msg_container._tx_position)
+        raise SilveraLoadError(
+            "Cannot resolve annotation ({} {}). Message '{}' "
+            "not defined in message pool.".format(
+                module.path,
+                linecol,
+                message_fqn)
+        )
+
+
+def _resolve_ch_inst(module, channel_container):
+    if channel_container.channel is None:
+        return
+    # Find MessageChannel object represented by given FQN, and
+    # set reference to it.
+    model = module.model
+    channel_fqn = channel_container.channel
+    fqn = channel_fqn.split(".")
+    broker_name = fqn[0]
+    try:
+        broker = model.msg_brokers[broker_name]
+    except KeyError:
+        linecol = module._tx_parser.pos_to_linecol(
+            channel_container._tx_position)
+        raise SilveraLoadError(
+            "Cannot resolve annotation ({} {}). Broker '{}' "
+            "not defined.".format(
+                module.path,
+                linecol,
+                broker_name)
+        )
+
+    channel_name = fqn[1]
+    try:
+        channel = broker.channels[channel_name]
+        channel_container.channel = channel
+    except KeyError:
+        linecol = module._tx_parser.pos_to_linecol(
+            channel_container._tx_position)
+        raise SilveraLoadError(
+            "Cannot resolve annotation ({} {}). Channel '{}' "
+            "not defined in broker '{}'".format(
+                module.path,
+                linecol,
+                channel_name,
+                broker_name)
+        )
+
+    # Perform registrations
+    # if isinstance(ann, ProducerAnnotation):
+    #     broker.register_producer(channel_name, fnc)
+    # else:
+    #     broker.register_consumer(channel_name, fnc)
 
 def _resolve_typed_list(service_decl, typed_list):
     """Resolves type of TypedList."""

@@ -350,6 +350,7 @@ class ServiceGenerator:
             "api": self.service.api,
             "timestamp": timestamp(),
             "typedefs": self.get_typedefs(self.service),
+            "consumers_per_message": self.get_consumers_per_message()
         }
         controller_template = env.get_template(
             "controller/controller.template")
@@ -460,6 +461,9 @@ class ServiceGenerator:
             "dep_names": [s.name for s in service.dependencies],
             "timestamp": timestamp(),
             "consumers": service.f_consumers,
+            "produced_msgs": self.get_produced_msgs(),
+            "consumed_msgs": self.get_consumed_msgs(),
+            "consumers_per_message": self.get_consumers_per_message()
         }
 
         base_template = env.get_template("service/service_interface.template")
@@ -519,8 +523,48 @@ class ServiceGenerator:
                 if field.isid:
                     id_datatype = field.type
 
-            typedefs.append((t.name, id_datatype, t.crud.event_for))
+            typedefs.append((t.name, id_datatype, t.crud_dict))
         return typedefs
+
+    def get_consumed_msgs(self):
+        """Returns collection of FQNs of consumed messages"""
+        return self._get_msgs(self.service.consumes)
+
+    def get_produced_msgs(self):
+        """Returns collection of FQNs of produced messages"""
+        return self._get_msgs(self.service.produces)
+
+    def _get_msgs(self, collection):
+        """Returns collection of FQNs messages from given collection."""
+        result = []
+        for msg_obj in collection:
+            result.append(self._build_msg_fqn(msg_obj))
+        return result
+
+    def get_consumed_channels(self):
+        """Returns collection of consumed channels"""
+        result = set()
+        for v in self.service.consumes.values():
+            for ch in v:
+                result.add(ch.name)
+        return result
+
+    def get_consumers_per_message(self):
+        """Returns message FQN to function mappings."""
+        result = {}
+        for msg_obj, values in self.service.consumers_per_message.items():
+            result[self._build_msg_fqn(msg_obj)] = values
+        return result
+
+    def _build_msg_fqn(self, msg_obj):
+        """Build FQN in form of package name."""
+        if "." in msg_obj.fqn:
+            values = msg_obj.fqn.split(".")
+            pkg = ".".join(values[:-1]).lower()
+            fqn = pkg + "." + msg_obj.name
+            return fqn
+        else:
+            return msg_obj.name
 
     def generate_messages(self, env, content_path):
         """Generate message objects
@@ -609,31 +653,6 @@ class RPCServiceGenerator(ServiceGenerator):
             cfg_name = self.service.name + "AsyncConfiguration.java"
             cfg_template.stream(d).dump(os.path.join(content_path, cfg_name))
 
-    # def generate_services(self, env, content_path):
-    #     super().generate_services(env, content_path)
-    #
-    #     # dependecy services
-    #     service = self.service
-    #     fns_by_service = defaultdict(list)
-    #     for fn in service.dep_functions:
-    #         fns_by_service[fn.service_name].append(fn)
-    #
-    #     dp_path = os.path.join(content_path, "service", "dependencies")
-    #     create_if_missing(dp_path)
-    #     for s in service.dependencies:
-    #         s_data = {
-    #             "service_name": s.name,
-    #             "package_name": service.name,
-    #             "functions": fns_by_service[s.name],
-    #             "use_circuit_breaker": True,
-    #             "timestamp": timestamp()
-    #         }
-    #         service_template = env.get_template(
-    #             "service/dependency_service.template")
-    #         service_template.stream(s_data).dump(
-    #             os.path.join(dp_path,
-    #                          s.name + "Client.java"))
-
 
 class MsgServiceGenerator(ServiceGenerator):
     """Generates code for service that uses messaging as a style of
@@ -641,34 +660,39 @@ class MsgServiceGenerator(ServiceGenerator):
     def generate_config(self, env, content_path):
         cfg_path = create_if_missing(os.path.join(content_path, "config"))
 
-        def prod_exists(service):
-            if len(service.consumes) > 0:
-                return True
-
+        def get_produced_msgs(service):
+            """Returns the list of message FQN produced by the service."""
+            msgs = set({self._build_msg_fqn(m)
+                        for m in service.produces.keys()})
             for t in service.api.typedefs:
-                if t.crud:
-                    return True
+                msgs.update({self._build_msg_fqn(m) for m in t.produces})
 
-        consumer_exists = len(self.service.consumes) > 0
+            return sorted(msgs)
+
+        consumed_msgs = self.get_consumed_msgs()
+        consumed_channels = self.get_consumed_channels()
+
         d = {
             "package_name": self.service.name,
             "service_name": self.service.name,
             "timestamp": timestamp(),
-            "producer_exists": prod_exists(self.service),
-            "consumer_exists": consumer_exists
+            "produced_msgs": get_produced_msgs(self.service),
+            "consumed_msgs": consumed_msgs,
+            "consumed_channels": consumed_channels
         }
 
         msg_template = env.get_template("config/kafka_config.template")
         msg_template.stream(d).dump(os.path.join(cfg_path, "KafkaConfig.java"))
 
-        if consumer_exists:
-            msg_pool = self.model.msg_pool
-
-            d["messages"] = sorted(msg_pool.messages, key=lambda x: x.fqn)
-
-            d_template = env.get_template("config/deserializer.template")
-            d_template.stream(d).dump(os.path.join(cfg_path,
-                                      "MessageDeserializer.java"))
+        # NOTE: This probably is not needed, for now.
+        # if consumed_msgs:
+        #     msg_pool = self.model.msg_pool
+        #
+        #     d["messages"] = sorted(msg_pool.messages, key=lambda x: x.fqn)
+        #
+        #     d_template = env.get_template("config/deserializer.template")
+        #     d_template.stream(d).dump(os.path.join(cfg_path,
+        #                               "MessageDeserializer.java"))
 
     def generate_messages(self, env, content_path):
         msg_path = create_if_missing(os.path.join(content_path, "messages"))
@@ -720,40 +744,6 @@ class MsgServiceGenerator(ServiceGenerator):
         # Groups will be packages
         for group in msg_pool.groups:
             create_package(group, msg_path)
-
-    # def generate_services(self, env, content_path):
-    #     #
-    #     # Generate services
-    #     #
-    #     service_path = create_if_missing(os.path.join(content_path, "service"))
-    #     service = self.service
-    #     service_name = service.name
-    #
-    #     # consumers = []
-    #     # for f service.api
-    #
-    #     # base service
-    #     base_path = create_if_missing(os.path.join(service_path, "base"))
-    #     service_data = {
-    #         "service_name": service_name,
-    #         "package_name": service_name,
-    #         "functions": service.api.functions,
-    #         "dep_names": [s.name for s in service.dependencies],
-    #         "timestamp": timestamp(),
-    #         "consumers": service.f_consumers
-    #     }
-    #
-    #     base_template = env.get_template("service/service_interface.template")
-    #     base_template.stream(service_data).dump(
-    #         os.path.join(base_path,
-    #                      "I" + service_name + "Service.java"))
-    #
-    #     # impl service
-    #     impl_path = create_if_missing(os.path.join(service_path, "impl"))
-    #     impl_file = os.path.join(impl_path, service_name + "Service.java")
-    #     if not os.path.exists(impl_file):
-    #         impl_template = env.get_template("service/service.template")
-    #         impl_template.stream(service_data).dump(impl_file)
 
 
 _obj_to_fnc = {

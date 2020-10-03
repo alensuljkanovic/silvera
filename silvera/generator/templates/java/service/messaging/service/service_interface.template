@@ -16,20 +16,30 @@ import org.springframework.beans.factory.annotation.Autowired;
 public interface I{{service_name}}Service {
 
     // Auto-generated CRUD methods
-    {%for typedef, id_datatype, _ in typedefs %}
+    {%for typedef, id_datatype, crud_dict in typedefs %}
     {% set id_datatype = id_datatype|converttype %}
+    {% if "@create" in crud_dict %}
     public {{typedef}} create{{typedef}}({{typedef}} {{typedef|lower}});
+    {% endif %}
+    {% if "@update" in crud_dict %}
     public {{typedef}} update{{typedef}}({{id_datatype}} id, {{typedef}} {{typedef|lower}}Update);
+    {% endif %}
+    {% if "@read" in crud_dict %}
     public {{typedef}} read{{typedef}}({{id_datatype}} id);
+    {% endif %}
+    {% if "@delete" in crud_dict %}
     public void delete{{typedef}}({{id_datatype}} id);
+    {% endif %}
     {% endfor%}
 
     {% for function in functions %}
     public {{function|return_type}} {{function.name}}({{function|unfold_function_params}});
     {% endfor %}
 
-    {% for function in consumers %}
-    public void {{function.name}}(Message message);
+    {% for msg_fqn in consumers_per_message %}
+    {% for function in consumers_per_message[msg_fqn] %}
+    public void {{function.name}}(com.silvera.{{package_name}}.messages.{{msg_fqn}} message);
+    {% endfor %}
     {% endfor %}
 
 }

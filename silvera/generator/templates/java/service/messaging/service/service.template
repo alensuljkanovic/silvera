@@ -34,55 +34,78 @@ public class {{service_name}}Service implements I{{service_name}}Service {
     {{dependency}}Client {{dependency|firstlower}}Client;
     {% endfor %}
 
+    {% for class_fqn in produced_msgs %}
+    {%- set name = class_fqn|replace(".", "") -%}
     @Autowired
-    KafkaTemplate<String, Message> kafkaTemplate;
+    KafkaTemplate<String, com.silvera.{{package_name}}.messages.{{class_fqn}}> {{name}}KafkaTemplate;
+    {% endfor %}
 
     // Auto-generated CRUD methods
-    {%for typedef, id_datatype, event_for in typedefs %}
-    {% set id_datatype = id_datatype|converttype %}
+    {% for typedef, id_datatype, crud_dict in typedefs %}
+    {%- set id_datatype = id_datatype|converttype -%}
+    {%- if "@create" in crud_dict %}
     @Override
     public {{typedef}} create{{typedef}}({{typedef}} {{typedef|lower}}){
         {{typedef|lower}}Repository.save({{typedef|lower}});
 
-        {% if "c" in event_for %}
-        Message msg = new Message("{{typedef}}MsgGroup.{{typedef|upper}}_CREATED");
-        kafkaTemplate.send("EV_{{typedef|upper}}_CREATED_CHANNEL", msg);
+        {% if crud_dict["@create"] %}
+        {%- set _message = crud_dict["@create"][0] -%}
+        {%- set channel = crud_dict["@create"][1] -%}
+        {%- set class_name = crud_dict["@create"][2] -%}
+        {%- set class_var = class_name.replace(".", "") -%}
+        com.silvera.{{package_name}}.messages.{{class_name}} msg = new com.silvera.{{package_name}}.messages.{{class_name}}();
+        {{class_var}}KafkaTemplate.send("{{channel}}", msg);
         {% endif %}
 
         Optional<{{typedef}}> opt = {{typedef|lower}}Repository.findById({{typedef|lower}}.getId());
         return opt.orElse(null);
     }
-
+    {% endif %}
+    {% if "@update" in crud_dict %}
     @Override
     public {{typedef}} update{{typedef}}({{id_datatype}} id, {{typedef}} {{typedef|lower}}Update){
-        {{typedef}} entity = this.read{{typedef}}(id);
+        Optional<{{typedef}}> opt = {{typedef|lower}}Repository.findById(id);
+        {{typedef}} entity = opt.orElseThrow(IllegalArgumentException::new);
         {{typedef|lower}}Repository.save({{typedef|lower}}Update);
 
-        {% if "u" in event_for %}
-        Message msg = new Message("{{typedef}}MsgGroup.{{typedef|upper}}_UPDATED");
-        kafkaTemplate.send("EV_{{typedef|upper}}_UPDATED_CHANNEL", msg);
+        {% if crud_dict["@update"] %}
+        {%- set _message = crud_dict["@update"][0] -%}
+        {%- set channel = crud_dict["@update"][1] -%}
+        {%- set class_name = crud_dict["@update"][2] -%}
+        {%- set class_var = class_name.replace(".", "") -%}
+        com.silvera.{{package_name}}.messages.{{class_name}} msg = new com.silvera.{{package_name}}.messages.{{class_name}}();
+        {{class_var}}KafkaTemplate.send("{{channel}}", msg);
         {% endif %}
 
         return {{typedef|lower}}Update;
     }
-
+    {% endif %}
+    {% if "@read" in crud_dict %}
     @Override
     public {{typedef}} read{{typedef}}({{id_datatype}} id){
         Optional<{{typedef}}> opt = {{typedef|lower}}Repository.findById(id);
         return opt.orElseThrow(IllegalArgumentException::new);
     }
-
+    {% endif %}
+    {% if "@delete" in crud_dict %}
     @Override
     public void delete{{typedef}}({{id_datatype}} id){
-        {{typedef}} entity = read{{typedef}}(id);
+        Optional<{{typedef}}> opt = {{typedef|lower}}Repository.findById(id);
+        {{typedef}} entity = opt.orElseThrow(IllegalArgumentException::new);
         {{typedef|lower}}Repository.delete(entity);
 
-        {% if "d" in event_for %}
-        Message msg = new Message("{{typedef}}MsgGroup.{{typedef|upper}}_DELETED");
-        kafkaTemplate.send("EV_{{typedef|upper}}_DELETED_CHANNEL", msg);
+        {% if crud_dict["@delete"] %}
+        {%- set _message = crud_dict["@delete"][0] -%}
+        {%- set channel = crud_dict["@delete"][1] -%}
+        {%- set class_name = crud_dict["@delete"][2] -%}
+        {%- set class_var = class_name.replace(".", "") -%}
+        com.silvera.{{package_name}}.messages.{{class_name}} msg = new com.silvera.{{package_name}}.messages.{{class_name}}();
+        {{class_var}}KafkaTemplate.send("{{channel}}", msg);
         {% endif %}
     }
+    {% endif %}
     {% endfor%}
+
 
     {% for function in functions %}
     @Override
@@ -94,9 +117,10 @@ public class {{service_name}}Service implements I{{service_name}}Service {
     }
     {% endfor %}
 
-    {% for function in consumers %}
+    {% for msg_fqn in consumers_per_message %}
+    {% for function in consumers_per_message[msg_fqn] %}
     @Override
-    public void {{function.name}}(Message message){
+    public void {{function.name}}(com.silvera.{{package_name}}.messages.{{msg_fqn}} message){
         /*
             TODO: Implement this function!!!
         */
@@ -108,6 +132,7 @@ public class {{service_name}}Service implements I{{service_name}}Service {
 
         throw new java.lang.UnsupportedOperationException("Not implemented yet.");
     }
+    {% endfor %}
     {% endfor %}
 
 }

@@ -88,11 +88,18 @@ public class {{service_name}}Controller {
     //
     // Message consumers
     //
-    {% for function in api.internal.functions %}
+    {% for msg_fqn in consumers_per_message %}
+    {%- set factory_name = msg_fqn.replace(".", "") -%}
+    {% for function in consumers_per_message[msg_fqn] %}
     {% set topics = function|topics %}
-    @KafkaListener(topics = { {{topics}} })
-    public void {{function.name}}(Message message){
+    @KafkaListener(
+        topics = { {{topics}} },
+        groupId = "{{service_name}}",
+        containerFactory = "{{factory_name}}KafkaListenerContainerFactory"
+    )
+    public void {{function.name}}(com.silvera.{{service_name}}.messages.{{msg_fqn}} message){
         {{service_name|firstlower}}Service.{{function.name}}(message);
     }
+    {% endfor %}
     {% endfor %}
 }
