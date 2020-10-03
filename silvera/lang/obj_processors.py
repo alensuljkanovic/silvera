@@ -25,24 +25,24 @@ def process_dependency(module):
         start = dependency.start
         end = dependency.end
 
-        # if start.comm_style != end.comm_style:
-        #     raise SilveraLoadError("Cannot connect two services with different"
-        #                            " communication styles: "
-        #                            "{}[{}] and {}[{}]".format(
-        #                                start.name,
-        #                                start.comm_style,
-        #                                end.name,
-        #                                end.comm_style
-        #                            ))
-
         if hasattr(start, "circuit_breaked"):
             start.circuit_breaked = True
 
         use = {c.method_name: (c.failure_pattern, c.fallback_method)
                for c in dependency.circuit_break_defs}
+        end_api_functions = {f.name: f for f in end.api.functions}
 
-        for orig_fn in end.api.functions:
-            if orig_fn.name in use:
+        # Check if all methods are defined in the end service
+        non_existing = {f for f in use if f not in end_api_functions}
+        if non_existing:
+            raise SilveraLoadError(
+                "Following functions are not defined in service '{}': {}".format(
+                    end.name,
+                    sorted(non_existing)
+                ))
+
+        for orig_name, orig_fn in end_api_functions.items():
+            if orig_name in use:
                 fn_clone = orig_fn.clone()
                 fn_clone.dep = orig_fn
                 start.dep_functions.append(fn_clone)

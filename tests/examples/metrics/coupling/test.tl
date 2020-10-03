@@ -34,6 +34,9 @@ service DepA1 {
 
         @rest(method=GET)
         ObjDep1 add(int id, ObjDep1 content)
+
+        @rest(method=GET)
+        ObjDep1 get(int id)
     }
 }
 

@@ -558,6 +558,7 @@ class ServiceDecl(ServiceObject):
 
         return cons
 
+
 class Service:
     """Object of this class represents an instance of a service that is of
     given ServiceDecl type.
