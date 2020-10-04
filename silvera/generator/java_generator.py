@@ -889,12 +889,14 @@ def generate_run_script(output_path, app_name, app_version, app_port):
     """
     templates_path = os.path.join(get_templates_path(), JAVA)
     env = Environment(loader=FileSystemLoader(templates_path))
-    run_template = env.get_template("run_sh.template")
-
-    out = os.path.join(output_path, app_name, "run.sh")
 
     d = {"name": app_name, "version": app_version, "port": app_port}
-    run_template.stream(d).dump(out)
+    for template_name, ext in [("run_sh", "sh"), ("run_cmd", "cmd")]:
+        run_template = env.get_template("%s.template" % template_name)
+
+        out = os.path.join(output_path, app_name, "run.%s" % ext)
+
+        run_template.stream(d).dump(out)
 
 
 def generate_dockerfile(output_path, app_name, app_version, app_port):

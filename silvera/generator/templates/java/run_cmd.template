@@ -1,0 +1,9 @@
+REM script for running the application
+
+call mvn clean
+@echo on
+
+call mvn package
+@echo on
+
+java -jar target\{{name}}-{{version}}-SNAPSHOT.jar --PORT={{port}}
