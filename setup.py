@@ -34,6 +34,7 @@ setup(
         'pytest',
     ],
     keywords="microservices dsl generator compiler",
+    url="https://gitlab.com/alensuljkanovic/silvera",
     entry_points={
         'console_scripts': [
             'silvera = silvera.cli:silvera'
