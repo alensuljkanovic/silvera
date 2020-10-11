@@ -10,7 +10,7 @@ from silvera.core import Model
 def compile(src_path, output_dir=None, rest_res_strategy=NO_STRATEGY):
     """Runs Silvera compiler
 
-    After this function is called, Silvera will process the given .tl file,
+    After this function is called, Silvera will process the given .si file,
     and compile it to a chosen target platform.
 
     Args:
@@ -39,7 +39,7 @@ def load(src_path, rest_res_strategy=NO_STRATEGY):
     """Loads project
 
     Args:
-        src_path(str): path to the project root dir, or to a single .tl file.
+        src_path(str): path to the project root dir, or to a single .si file.
         rest_res_strategy (int): REST resolving strategy.
 
     Returns:
@@ -56,7 +56,7 @@ def load(src_path, rest_res_strategy=NO_STRATEGY):
 
     model = Model(src_path)
     for root, _, filenames in os.walk(src_path):
-        for filename in fnmatch.filter(filenames, "*.tl"):
+        for filename in fnmatch.filter(filenames, "*.si"):
             module_path = os.path.join(root, filename)
             module = _metamodel.model_from_file(module_path)
             module.model = model

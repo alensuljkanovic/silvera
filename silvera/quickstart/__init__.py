@@ -45,7 +45,7 @@ def create_setup(file_dir, registry_name, registry_port, config_name,
     print("\tGenerated service registry: %s at port %s" % (registry_name,
                                                            registry_port))
 
-    with open(os.path.join(file_dir, "setup.tl"), "w") as f:
+    with open(os.path.join(file_dir, "setup.si"), "w") as f:
         f.write(content)
 
 
@@ -62,7 +62,7 @@ def create_messaging(file_dir):
     content += "\t channel EV_EXAMPLE_EVENT_CHANEL(ExampleMsgGroup.EXAMPLE_EVENT)\n"
     content += "}\n"
 
-    with open(os.path.join(file_dir, "messaging.tl"), "w") as f:
+    with open(os.path.join(file_dir, "messaging.si"), "w") as f:
         f.write(content)
 
 

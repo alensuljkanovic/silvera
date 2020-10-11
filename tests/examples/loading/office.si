@@ -1,4 +1,4 @@
-import "print.tl"
+import "print.si"
 
 service OfficeService {
 

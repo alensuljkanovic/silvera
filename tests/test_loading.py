@@ -19,7 +19,7 @@ def test_load_ok(examples_path):
     model = load(os.path.join(examples_path, "importing", "ok"))
     assert len(model.modules) == 5
 
-    # Find objects from share/setup.tl
+    # Find objects from share/setup.si
     config_server = model.find_by_fqn("share.setup.ConfigServer")
     assert isinstance(config_server, ConfigServerDecl)
     service_reg = model.find_by_fqn("share.setup.ServiceRegistry")
@@ -37,7 +37,7 @@ def test_load_ok(examples_path):
     assert payment_service.service_registry is service_reg
 
     # Check if references towards other services are resolved properly
-    payment_module = model.find_by_path("payment.tl")
+    payment_module = model.find_by_path("payment.si")
     dependencies = list(payment_module.dependencies)
     # Check connection PaymentService -> user.UserService
     pay_to_user = dependencies[0]
@@ -60,7 +60,7 @@ def test_multiple_defs(examples_path):
                           "multiple_defs"))
 
     msg = "Definition of object ServiceRegistry found in multiple modules: "\
-          "[first_setup.tl, second_setup.tl]"
+          "[first_setup.si, second_setup.si]"
     exc_obj = exc_info.value
     assert str(exc_obj) == msg
 

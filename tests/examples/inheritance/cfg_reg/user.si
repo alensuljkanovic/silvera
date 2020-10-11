@@ -1,4 +1,4 @@
-import "setup.tl"
+import "setup.si"
 
 service UserService {
 

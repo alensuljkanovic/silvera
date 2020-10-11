@@ -1,4 +1,4 @@
-import "share.setup.tl"
+import "share.setup.si"
 
 service ProductService {
 

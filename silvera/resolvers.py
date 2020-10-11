@@ -123,7 +123,7 @@ class RESTResolver:
             func.rest_path = func_name_mapping(func)
 
     def _apply_annotation(self, func):
-        """Applies the REST annotation given in .tl file.
+        """Applies the REST annotation given in .si file.
 
         Args:
             func (Function): function object

@@ -1,6 +1,6 @@
 
-import "setup.tl"
-import "messaging.tl"
+import "setup.si"
+import "messaging.si"
 
 
 service Dashboard {

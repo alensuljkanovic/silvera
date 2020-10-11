@@ -9,7 +9,7 @@ from collections import defaultdict
 
 def fqn_to_path(fqn):
     fqns = fqn.split(".")
-    path = os.sep.join(fqns[:-1]) + ".tl"
+    path = os.sep.join(fqns[:-1]) + ".si"
     return path
 
 
@@ -43,7 +43,7 @@ class Model:
 
     def find_by_fqn(self, fqn):
         fqns = fqn.split(".")
-        path = os.sep.join(fqns[:-1]) + ".tl"
+        path = os.sep.join(fqns[:-1]) + ".si"
         name = fqns[-1]
 
         module = self.find_by_path(path)
@@ -635,7 +635,7 @@ class Function:
         else:
             service = self.parent.parent
             module = service.parent
-        return "{}.{}".format(module.path.replace(".tl", ""), service.name)
+        return "{}.{}".format(module.path.replace(".si", ""), service.name)
 
     @property
     def msg_annotations(self):

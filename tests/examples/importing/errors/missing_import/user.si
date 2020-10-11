@@ -1,4 +1,4 @@
-// ServiceRegistry is not imported from setup.tl
+// ServiceRegistry is not imported from setup.si
 
 service UserService {
 

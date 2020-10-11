@@ -58,12 +58,12 @@ def init(ctx, project_name, registry, registry_port, cfg, cfg_path, cfg_port,
     open(os.path.join(project_path, ".silvera-project"), "a").close()
 
     # registry_name, registry_port = registry
-    click.echo("Generating setup.tl")
+    click.echo("Generating setup.si")
     quickstart.create_setup(project_path, registry, registry_port, cfg,
                             cfg_path, cfg_port)
 
     if messaging:
-        click.echo("Generating messaging.tl")
+        click.echo("Generating messaging.si")
         quickstart.create_messaging(project_path)
 
 

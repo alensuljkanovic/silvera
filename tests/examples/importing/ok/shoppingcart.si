@@ -1,6 +1,6 @@
-import "share.setup.tl"
-import "user.tl"
-import "product.tl"
+import "share.setup.si"
+import "user.si"
+import "product.si"
 
 service ShoppingCartService {
 

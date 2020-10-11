@@ -1,6 +1,6 @@
 // ServiceRegistry exists in both imports!
-import "first_setup.tl"
-import "second_setup.tl"
+import "first_setup.si"
+import "second_setup.si"
 
 service UserService {
 

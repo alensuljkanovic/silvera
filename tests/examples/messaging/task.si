@@ -1,8 +1,10 @@
-import "messaging.tl"
+import "setup.si"
+import "messaging.si"
 
 
 service Task {
 
+    service_registry=ServiceRegistry
     communication_style=messaging
 
     api {
@@ -17,17 +19,17 @@ service Task {
         ]
 
         @rest(method=POST, mapping="/task")
-        // method createTask publishes TASK_CREATED event to Broker's EV_TASK_CREATED_CHANNEL channel
+        // method addTask publishes TASK_CREATED event to Broker's EV_TASK_CREATED_CHANNEL channel
         @producer(TaskMsgGroup.TASK_CREATED -> Broker.EV_TASK_CREATED_CHANNEL)
-        Task createTask(str title, str description, i32 priority)
+        Task addTask(Task task)
 
         @rest(method=GET, mapping="/task/{id}")
         Task getTask(i32 id)
 
         @rest(method=GET, mapping="/task")
-        list<Task> listTasks()
+        list<Task> getTasks()
 
-        @rest(method=PUT, mapping="/task/{taskId}/{ownerId}")
+        @rest(method=PUT, mapping="/task/assign/{taskId}/{ownerId}")
         // method assignTask publishes to TASK_ASSIGNED event to Broker's EV_TASK_ASSIGNED_CHANNEL channel
         @producer(TaskMsgGroup.TASK_ASSIGNED -> Broker.EV_TASK_ASSIGNED_CHANNEL)
         void assignTask(i32 taskId, i32 ownerId)

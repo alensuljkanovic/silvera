@@ -1,4 +1,4 @@
-import "service_a.tl"
+import "service_a.si"
 
 service B {
 
