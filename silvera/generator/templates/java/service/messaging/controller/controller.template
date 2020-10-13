@@ -38,6 +38,7 @@ import com.silvera.{{service_name}}.messages.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
+import javax.validation.Valid;
 
 
 @RefreshScope
@@ -52,13 +53,13 @@ public class {{service_name}}Controller {
     {% set id_datatype = id_datatype|converttype %}
     @RequestMapping(value="/{{typedef|lower}}", method=RequestMethod.POST)
     @ResponseBody
-    public {{typedef}} create{{typedef}}(@RequestBody {{typedef}} {{typedef|lower}}){
+    public {{typedef}} create{{typedef}}(@Valid @RequestBody {{typedef}} {{typedef|lower}}){
         return {{service_name|firstlower}}Service.create{{typedef}}({{typedef|lower}});
     }
 
     @RequestMapping(value="/{{typedef|lower}}/{id}", method=RequestMethod.PUT)
     @ResponseBody
-    public {{typedef}} update{{typedef}}(@PathVariable {{id_datatype}} id, @RequestBody {{typedef}} {{typedef|lower}}){
+    public {{typedef}} update{{typedef}}(@PathVariable {{id_datatype}} id, @Valid @RequestBody {{typedef}} {{typedef|lower}}){
         return {{service_name|firstlower}}Service.update{{typedef}}(id, {{typedef|lower}});
     }
 

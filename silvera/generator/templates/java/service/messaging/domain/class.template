@@ -8,22 +8,35 @@
 package com.silvera.{{service_name}}.domain.{{"dependencies" if dependency else "model"}};
 
 import org.springframework.data.annotation.Id;
+import javax.validation.constraints.*;
 
+{%- macro validation_annotations(attr) %}
+    {% if attr.isid %}
+    @Id
+    {% endif -%}
+    {%- if attr.required -%}
+    {%- if attr.type == "str" %}
+    @NotBlank(message="Field '{{attr.name}}' cannot be empty!")
+    {% else %}
+    @NotNull(message="Field '{{attr.name}}' is mandatory!")
+    {% endif -%}
+    {% endif -%}
 
+{% endmacro %}
 public class {{name}} {
 
     {%if not id_attr %}
     @Id
     private String id;
-    {% endif %}
+    {% endif -%}
 
     {% for attr in attributes %}
-    {{"@Id" if attr.isid else ""}}
+    {{validation_annotations(attr) -}}
     private {{attr.type|converttype}} {{attr.name}}{{ "= java.util.Collections.emptyList()" if attr.type is collection else ""}};
     {%- endfor %}
 
 
-    {%- for attr in attributes %}
+    {% for attr in attributes %}
     public {{attr.type|converttype}} get{{attr.name|firstupper}}() {
         return this.{{attr.name}};
     }

@@ -95,10 +95,10 @@ class RESTResolver:
             if ann and ann.mapping:
                 fn_mapping = ann.mapping
             else:
-                fn_mapping = "%s/" % func.name.lower()
+                fn_mapping = "%s" % func.name.lower()
 
                 if func.http_verb == HTTP_GET and func.params:
-                    fn_mapping += http_get_params(func.params)
+                    fn_mapping += "/" + http_get_params(func.params)
 
             return fn_mapping
 
