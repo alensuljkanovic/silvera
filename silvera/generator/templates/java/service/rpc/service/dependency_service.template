@@ -9,7 +9,9 @@ package com.silvera.{{package_name}}.service.dependencies;
 
 import org.springframework.stereotype.Service;
 import com.silvera.{{package_name}}.domain.model.*;
+{% if has_domain_dependencies %}
 import com.silvera.{{package_name}}.domain.dependencies.*;
+{% endif -%}
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.cloud.client.ServiceInstance;
@@ -37,15 +39,14 @@ public class {{service_name}}Client {
     {{generate_cb_annotation(function)}}
     public {{function.ret_type|converttype}} {{function.name}}({{function|unfold_function_params}}) {
         {% set params = function|param_names %}
-        {% set params_str = ", " + params if params else "" %}
         String targetUri = getServiceURL("{{service_name}}");
         RestTemplate restTemplate = new RestTemplate();
         {% if function.dep.http_verb == "GET" %}
         {% if function.is_ret_type_a_list %}
-        {{function.ret_type|convertlisttoarray}} result = restTemplate.getForObject(targetUri + "{{get_rest_call(function)}}", {{function.ret_type|convertlisttoarray}}.class{{param_str}});
+        {{function.ret_type|convertlisttoarray}} result = restTemplate.getForObject(targetUri + "{{get_rest_call(function)}}", {{function.ret_type|convertlisttoarray}}.class{%if params%}, {{params}}{% else %}{%endif%});
         return Arrays.asList(result);
         {% else%}
-        {{"return" if function.ret_type != "void" else ""}} restTemplate.getForObject(targetUri + "{{get_rest_call(function)}}", {{function.ret_type|converttype}}.class{{param_str}});
+        {{"return" if function.ret_type != "void" else ""}} restTemplate.getForObject(targetUri + "{{get_rest_call(function)}}", {{function.ret_type|converttype}}.class{%if params%}, {{params}}{% else %}{%endif%});
         {% endif %}
         {% elif function.dep.http_verb == "POST"%}
         URI uri = URI.create(targetUri + "{{get_rest_call(function)}}");

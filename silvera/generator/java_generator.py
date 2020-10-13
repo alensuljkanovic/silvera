@@ -494,6 +494,7 @@ class ServiceGenerator:
                 "service_name": s.name,
                 "package_name": service.name,
                 "functions": fns_by_service[s.name],
+                "has_domain_dependecies": len(service.dep_typedefs) > 0,
                 "use_circuit_breaker": True,
                 "timestamp": timestamp()
             }
@@ -788,7 +789,7 @@ def get_return_type(function):
 
 def get_param_names(func):
     params = [p.name for p in func.params]
-    return ", ".join(params)
+    return ", ".join(params) if params else ""
 
 
 def generate_cb_annotation(func):
