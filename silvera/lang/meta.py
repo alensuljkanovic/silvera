@@ -23,6 +23,7 @@ def get_metamodel():
 
     path = os.path.join(get_root_path(), "silvera", "lang", "silvera.tx")
     _metamodel = metamodel_from_file(path, classes=_classes,
-                                     auto_init_attributes=False)
+                                     auto_init_attributes=False,
+                                     autokwd=True)
 
     return _metamodel
