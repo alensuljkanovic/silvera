@@ -3,9 +3,9 @@
 
 class SilveraTypeError(TypeError):
 
-    def __init__(self, decl_name, type_name):
-        msg = "Error in '{}'. Type '{}' does not exist!".format(decl_name,
-                                                                type_name)
+    def __init__(self, decl_name, type_name, line_col):
+        msg = "Error in '{}' {}. Type '{}' does not exist!".format(
+            decl_name, line_col, type_name)
         super().__init__(msg)
 
 

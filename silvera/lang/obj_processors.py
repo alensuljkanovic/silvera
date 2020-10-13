@@ -168,7 +168,11 @@ def resolve_custom_types(service_decl):
                     try:
                         ft = service_decl.domain_objs[field.type]
                     except KeyError:
-                        raise SilveraTypeError(service_decl.name, field.type)
+                        linecol = module._tx_parser.pos_to_linecol(
+                            field._tx_position)
+                        raise SilveraTypeError(module.path,
+                                               field.type,
+                                               linecol)
 
                     field.type = ft
 
@@ -205,7 +209,9 @@ def _resolve_fnc(module, service_decl, fnc):
             try:
                 rtd = service_decl.domain_objs[ret_type]
             except KeyError:
-                raise SilveraTypeError(service_decl.name, ret_type)
+                linecol = module._tx_parser.pos_to_linecol(
+                    fnc._tx_position)
+                raise SilveraTypeError(module.path, ret_type, linecol)
 
             fnc.ret_type = rtd
 
@@ -218,7 +224,9 @@ def _resolve_fnc(module, service_decl, fnc):
             try:
                 td = service_decl.domain_objs[param.type]
             except KeyError:
-                raise SilveraTypeError(service_decl.name, param.type)
+                linecol = module._tx_parser.pos_to_linecol(
+                    param._tx_position)
+                raise SilveraTypeError(module.path, param.type, linecol)
 
             param.type = td
 
@@ -348,6 +356,7 @@ def _resolve_ch_inst(module, channel_container):
     # else:
     #     broker.register_consumer(channel_name, fnc)
 
+
 def _resolve_typed_list(service_decl, typed_list):
     """Resolves type of TypedList."""
     if isinstance(typed_list.type, TypedList):
@@ -357,7 +366,12 @@ def _resolve_typed_list(service_decl, typed_list):
             try:
                 ft = service_decl.domain_objs[typed_list.type]
             except KeyError:
-                raise SilveraTypeError(service_decl.name, typed_list.type)
+                module = service_decl.parent
+                linecol = module._tx_parser.pos_to_linecol(
+                    typed_list._tx_position)
+                raise SilveraTypeError(module.path,
+                                       typed_list.type,
+                                       linecol)
 
             typed_list.type = ft
 
