@@ -28,7 +28,7 @@ def test_no_params_no_strategy(metamodel, examples_path):
     service = model.find_by_fqn("test.TestService")
     func = service.get_function("getAll")
     assert func.http_verb == HTTP_GET
-    assert func.rest_path == "getall/"
+    assert func.rest_path == "getall"
 
 
 def test_one_param_no_strategy(metamodel, examples_path):
@@ -67,7 +67,7 @@ def test_one_param_post_annotation(metamodel, examples_path):
     service = model.find_by_fqn("test.TestService")
     func = service.get_function("addCustomObject")
     assert func.http_verb == HTTP_POST
-    assert func.rest_path == "addcustomobject/"
+    assert func.rest_path == "addcustomobject"
 
 
 def test_resolving_with_dependencies(metamodel, examples_path):
@@ -90,7 +90,7 @@ def test_resolving_with_dependencies(metamodel, examples_path):
 
     office_print_func = office_service.get_function("addWorker")
     assert office_print_func.http_verb == HTTP_POST
-    assert office_print_func.rest_path == "addworker/"
+    assert office_print_func.rest_path == "addworker"
 
 
 def test_with_dependencies_and_inherit(examples_path):
@@ -109,9 +109,9 @@ def test_with_dependencies_and_inherit(examples_path):
 
     new_fast_print = new_office_service.get_function("fastPrint")
     assert new_fast_print.http_verb == HTTP_POST
-    assert new_fast_print.rest_path == "fastprint/"
+    assert new_fast_print.rest_path == "fastprint"
     assert new_fast_print.dep.http_verb == HTTP_POST
-    assert new_fast_print.dep.rest_path == "fastprint/"
+    assert new_fast_print.dep.rest_path == "fastprint"
 
 
 def test_function_return_type_resolving_error(examples_path):
