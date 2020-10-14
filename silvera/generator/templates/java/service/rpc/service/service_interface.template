@@ -26,13 +26,6 @@ public interface I{{service_name}}Service {
      {{'@Async(AsyncConfig.CONFIG_NAME)' if function.is_async() else ""}}
     {{generate_cb_annotation(function)}}
     public {{function|return_type}} {{function.name}}({{function|unfold_function_params}}) {{'throws InterruptedException ' if function.is_async() else ''}};
-
-    {% if function.cb_pattern and function.cb_pattern != "fail_fast" %}
-    //
-    // This is a fallback method if method '{{function.name}}' fails!
-    //
-    public {{function|return_type}} {{function.cb_fallback}}({{function|unfold_function_params}});
-    {% endif %}
     {% endfor %}
 
 }

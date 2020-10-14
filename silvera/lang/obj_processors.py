@@ -43,8 +43,17 @@ def process_dependency(module):
 
         for orig_name, orig_fn in end_api_functions.items():
             if orig_name in use:
+                failure_pattern, fallback_method = use[orig_name]
+
                 fn_clone = orig_fn.clone()
                 fn_clone.dep = orig_fn
+                fn_clone.cb_pattern = failure_pattern
+
+                # Set default value for fallback function
+                if fallback_method is None:
+                    fallback_method = orig_name + "_fallback"
+
+                fn_clone.cb_fallback = fallback_method
                 start.dep_functions.append(fn_clone)
 
                 ret_type = orig_fn.ret_type

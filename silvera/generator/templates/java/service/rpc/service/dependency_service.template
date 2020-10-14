@@ -19,6 +19,9 @@ import org.springframework.cloud.client.discovery.DiscoveryClient;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
+{% if use_circuit_breaker %}
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+{% endif %}
 
 
 @Service
@@ -54,6 +57,14 @@ public class {{service_name}}Client {
 
         {% endif%}
     }
+    {% if function.cb_pattern and function.cb_pattern != "fail_fast" %}
+    //
+    // This is a fallback method if method '{{function.name}}' fails!
+    //
+    public {{function|return_type}} {{function.cb_fallback}}({{function|unfold_function_params}}) {
+        return {{get_default_for_cb_pattern(function)}};
+    }
+    {% endif %}
     {% endfor %}
 
 }

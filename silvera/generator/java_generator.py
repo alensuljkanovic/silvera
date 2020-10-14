@@ -1,10 +1,11 @@
 import os
+import warnings
 from datetime import datetime
 from collections import defaultdict
 from jinja2 import Environment, FileSystemLoader
 from silvera.const import HOST_CONTAINER, HTTP_POST
 from silvera.core import (CustomType, ConfigServerDecl, ServiceRegistryDecl,
-                          ServiceDecl, APIGateway)
+                          ServiceDecl, APIGateway, TypeDef)
 from silvera.generator.platforms import (
     JAVA, convert_complex_type, get_def_ret_val, is_collection, convert_list_to_array
 )
@@ -486,7 +487,10 @@ class ServiceGenerator:
         create_if_missing(dp_path)
 
         fns_by_service = defaultdict(list)
+        use_circuit_breaker = False
         for fn in service.dep_functions:
+            if fn.cb_pattern not in {None, "fail_fast"}:
+                use_circuit_breaker = True
             fns_by_service[fn.service_name].append(fn)
 
         for s in service.dependencies:
@@ -494,8 +498,8 @@ class ServiceGenerator:
                 "service_name": s.name,
                 "package_name": service.name,
                 "functions": fns_by_service[s.name],
-                "has_domain_dependecies": len(service.dep_typedefs) > 0,
-                "use_circuit_breaker": True,
+                "has_domain_dependencies": len(service.dep_typedefs) > 0,
+                "use_circuit_breaker": use_circuit_breaker,
                 "timestamp": timestamp()
             }
             service_template = env.get_template(
@@ -800,8 +804,22 @@ def generate_cb_annotation(func):
 
 
 def get_default_for_cb_pattern(platform, func):
+
     if platform == JAVA:
-        if func.cb_pattern in ("fail_silent", "fallback_method"):
+        if func.cb_pattern in ("fallback_method", "fallback_static"):
+            return get_def_ret_val(platform, func.ret_type)
+        elif func.cb_pattern == "fallback_stubbed":
+            if isinstance(func.ret_type, TypeDef):
+                return "new {}()".format(func.ret_type.name)
+            else:
+                return get_def_ret_val(platform, func.ret_type)
+        elif func.cb_pattern == "fail_silent":
+            warnings.warn("Circuit Breaker pattern 'fail_silent' returns "
+                          "default value instead of empty response. Sorry :(. ")
+            return get_def_ret_val(platform, func.ret_type)
+        elif func.cb_pattern == "fallback_cache":
+            warnings.warn("Circuit Breaker pattern 'fallback_cache' returns "
+                          "default value instead of cached value. Sorry :(. ")
             return get_def_ret_val(platform, func.ret_type)
 
 

@@ -726,6 +726,8 @@ class Function:
 
         f = Function(None, self.name, self.ret_type, params, annotations)
         f.http_verb = self.http_verb
+        f.cb_pattern = self.cb_pattern
+        f.cb_fallback = self.cb_fallback
         return f
 
     @property
