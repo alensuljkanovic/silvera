@@ -62,31 +62,36 @@ public class {{service_name}}Controller {
     I{{service_name}}Service {{service_name|firstlower}}Service;
 
     // Auto-generated CRUD methods
-    {%for typedef, id_datatype, _ in typedefs %}
+    {%for typedef, id_datatype, crud_dict in typedefs %}
     {% set id_datatype = id_datatype|converttype %}
+    {% if "@create" in crud_dict %}
     @RequestMapping(value="/{{typedef|lower}}", method=RequestMethod.POST)
     @ResponseBody
     public {{typedef}} create{{typedef}}(@Valid @RequestBody {{typedef}} {{typedef|lower}}){
         return {{service_name|firstlower}}Service.create{{typedef}}({{typedef|lower}});
     }
-
+    {% endif %}
+    {% if "@update" in crud_dict %}
     @RequestMapping(value="/{{typedef|lower}}/{id}", method=RequestMethod.PUT)
     @ResponseBody
     public {{typedef}} update{{typedef}}(@PathVariable {{id_datatype}} id, @Valid @RequestBody {{typedef}} {{typedef|lower}}){
         return {{service_name|firstlower}}Service.update{{typedef}}(id, {{typedef|lower}});
     }
-
+    {% endif %}
+    {% if "@read" in crud_dict %}
     @RequestMapping(value="/{{typedef|lower}}/{id}", method=RequestMethod.GET)
     @ResponseBody
     public {{typedef}} read{{typedef}}(@PathVariable {{id_datatype}} id){
         return {{service_name|firstlower}}Service.read{{typedef}}(id);
     }
-
+    {% endif %}
+    {% if "@delete" in crud_dict %}
     @RequestMapping(value="/{{typedef|lower}}/{id}", method=RequestMethod.DELETE)
     @ResponseBody
     public void delete{{typedef}}(@PathVariable {{id_datatype}} id){
         {{service_name|firstlower}}Service.delete{{typedef}}(id);
     }
+    {% endif %}
     {% endfor%}
 
 

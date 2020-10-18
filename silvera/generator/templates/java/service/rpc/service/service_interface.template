@@ -13,12 +13,20 @@ import com.silvera.{{package_name}}.domain.model.*;
 public interface I{{service_name}}Service {
 
     // Auto-generated CRUD methods
-    {%for typedef, id_datatype, _ in typedefs %}
+    {%for typedef, id_datatype, crud_dict in typedefs %}
     {% set id_datatype = id_datatype|converttype %}
+    {% if "@create" in crud_dict %}
     public {{typedef}} create{{typedef}}({{typedef}} {{typedef|lower}});
+    {% endif %}
+    {% if "@update" in crud_dict %}
     public {{typedef}} update{{typedef}}({{id_datatype}} id, {{typedef}} {{typedef|lower}}Update);
+    {% endif %}
+    {% if "@read" in crud_dict %}
     public {{typedef}} read{{typedef}}({{id_datatype}} id);
+    {% endif %}
+    {% if "@delete" in crud_dict %}
     public void delete{{typedef}}({{id_datatype}} id);
+    {% endif %}
     {% endfor%}
 
 
