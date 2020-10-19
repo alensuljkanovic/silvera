@@ -113,6 +113,17 @@ public class {{service_name}}Service implements I{{service_name}}Service {
         /*
             TODO: Implement this function!!!
         */
+        {% for msg_class_fqn, channel in get_produced_messages(function) %}
+        {%- set msg_name = msg_class_fqn|replace(".", "") -%}
+        // Uncomment to publish the message
+        //com.silvera.{{package_name}}.messages.{{msg_class_fqn}} msg = new com.silvera.{{package_name}}.messages.{{msg_class_fqn}}();
+        // Here set values to the message attributes:
+        // ------------------------------------------
+
+        // ------------------------------------------
+        //{{msg_name}}KafkaTemplate.send("{{channel.name}}", msg);
+        {% endfor %}
+
         throw new java.lang.UnsupportedOperationException("Not implemented yet.");
     }
     {% endfor %}

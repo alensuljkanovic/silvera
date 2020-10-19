@@ -270,6 +270,7 @@ class ServiceGenerator:
         env.globals["get_rest_call"] = lambda x: get_rest_call(JAVA, x)
         env.globals["default_value_for_type"] = lambda x: \
             get_def_ret_val(JAVA, x)
+        env.globals["get_produced_messages"] = get_produced_messages
 
         env.tests["collection"] = lambda x: is_collection(x)
 
@@ -543,7 +544,7 @@ class ServiceGenerator:
         """Returns collection of FQNs messages from given collection."""
         result = []
         for msg_obj in collection:
-            result.append(self._build_msg_fqn(msg_obj))
+            result.append(_build_msg_fqn(msg_obj))
         return result
 
     def get_consumed_channels(self):
@@ -558,18 +559,8 @@ class ServiceGenerator:
         """Returns message FQN to function mappings."""
         result = {}
         for msg_obj, values in self.service.consumers_per_message.items():
-            result[self._build_msg_fqn(msg_obj)] = values
+            result[_build_msg_fqn(msg_obj)] = values
         return result
-
-    def _build_msg_fqn(self, msg_obj):
-        """Build FQN in form of package name."""
-        if "." in msg_obj.fqn:
-            values = msg_obj.fqn.split(".")
-            pkg = ".".join(values[:-1]).lower()
-            fqn = pkg + "." + msg_obj.name
-            return fqn
-        else:
-            return msg_obj.name
 
     def generate_messages(self, env, content_path):
         """Generate message objects
@@ -667,10 +658,10 @@ class MsgServiceGenerator(ServiceGenerator):
 
         def get_produced_msgs(service):
             """Returns the list of message FQN produced by the service."""
-            msgs = set({self._build_msg_fqn(m)
+            msgs = set({_build_msg_fqn(m)
                         for m in service.produces.keys()})
             for t in service.api.typedefs:
-                msgs.update({self._build_msg_fqn(m) for m in t.produces})
+                msgs.update({_build_msg_fqn(m) for m in t.produces})
 
             return sorted(msgs)
 
@@ -794,6 +785,31 @@ def get_return_type(function):
 def get_param_names(func):
     params = [p.name for p in func.params]
     return ", ".join(params) if params else ""
+
+
+def get_produced_messages(func):
+    """Returns a list of message fqn and channel pairs.
+
+    Args:
+        func (Function): function object
+    Returns:
+        list
+    """
+    result = []
+    for msg, channel in func.produces:
+        result.append((_build_msg_fqn(msg), channel))
+    return result
+
+
+def _build_msg_fqn(msg_obj):
+    """Build FQN in form of package name."""
+    if "." in msg_obj.fqn:
+        values = msg_obj.fqn.split(".")
+        pkg = ".".join(values[:-1]).lower()
+        fqn = pkg + "." + msg_obj.name
+        return fqn
+    else:
+        return msg_obj.name
 
 
 def generate_cb_annotation(func):
