@@ -4,7 +4,7 @@ from silvera.generator.generator import generate
 from silvera.lang.meta import get_metamodel
 from silvera.lang.obj_processors import model_processor
 from silvera.resolvers import RESTResolver, NO_STRATEGY
-from silvera.core import Model
+from silvera.core import Model, Module
 
 
 def compile(src_path, output_dir=None, rest_res_strategy=NO_STRATEGY):
@@ -59,6 +59,9 @@ def load(src_path, rest_res_strategy=NO_STRATEGY):
         for filename in fnmatch.filter(filenames, "*.si"):
             module_path = os.path.join(root, filename)
             module = _metamodel.model_from_file(module_path)
+            if not isinstance(module, Module):
+                raise ValueError("Loading failed. Invalid module: %s" %
+                                 module_path)
             module.model = model
             module.path = module_path.replace(src_path, "")[1:]
             model.modules.append(module)
