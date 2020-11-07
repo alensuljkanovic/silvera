@@ -29,7 +29,7 @@ setup(
     packages=["silvera", "silvera.export", "silvera.generator",
               "silvera.lang"],
     include_package_data=True,
-    install_requires=["textx", "jinja2"],
+    install_requires=["textx", "jinja2", "click"],
     tests_require=[
         'pytest',
     ],
