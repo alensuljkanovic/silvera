@@ -184,6 +184,23 @@ class EvaluationResult:
                                 "are more favorable for the maintainability "
                                 "of a service." % (s, self.wsic[s], wsic_avg))
 
+        # NVS
+        report += section("Number of Versions per Service (NVS)")
+        report += descr("The number of versions that are used concurrently "
+                        "in system Y for service S.")
+        report += sys_avg(self.nvs_avg)
+
+        for s in sorted(self.nvs, key=lambda x: self.nvs[x] - self.nvs_avg):
+            diff = self.nvs[s] - self.nvs_avg
+            report += service(s)
+            report += "*  NVS[s]: %.2f\n" % self.nvs[s]
+            report += "*  Diff from avg: %.2f\n\n" % diff
+            if diff > 0:
+                warn_lst.append("NVS for '%s' service (%s) is larger than the "
+                                "systems average (%s). Large NVS impacts "
+                                "maintainability of the services." %
+                                (s, self.wsic[s], wsic_avg))
+
         # AIS
         report += section("Absolute Importance of the Service (AIS)")
         report += descr("AIS(S) for a service S is the number of consumers "
