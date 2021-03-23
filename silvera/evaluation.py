@@ -141,6 +141,11 @@ class EvaluationResult:
         return sum(self.acs.values())/len(self.acs)
 
     def _to_markdown(self):
+        """Creates evaluation report as a string with Markdown syntax.
+
+        Returns:
+            str, list
+        """
         def title(s):
             return "# %s\n\n" % s
 
@@ -156,8 +161,6 @@ class EvaluationResult:
         def service(s):
             return "Service *%s*:\n\n" % s
 
-        def result(t, v):
-            return "*  %s: %.2f\n"
         wsic_avg = self.wsic_avg
 
         report = title("Evaluation report")
@@ -242,6 +245,7 @@ class EvaluationResult:
             warn_lst.append("Interdependent services: %s. Could these services"
                             "be merged?\n" %s)
 
+        # Add warnings to the report
         if warn_lst:
             report += section("Warnings")
             for w in warn_lst:
