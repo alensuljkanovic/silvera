@@ -544,6 +544,10 @@ def process_module(module):
                 raise ValueError("In this version of Silvera  '%s' database "
                                  "is not supported." % db.type)
 
+            # Assign name to the private database
+            if db.name is None:
+                db.name = "%s_db" % decl.name.lower()
+
             resolve_inheritance(module, decl)
             resolve_custom_types(decl)
 

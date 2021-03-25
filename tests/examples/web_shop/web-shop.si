@@ -17,10 +17,20 @@ service-registry ServiceRegistry{
     }
 }
 
+// Shared Database
+database MainDB {
+    type=mongodb
+    port=21000
+    url="localhost"
+}
+
 service UserService {
 
     config_server=ConfigServer
     service_registry=ServiceRegistry
+
+    // use shared db
+    database = MainDB
 
     deployment {
         version="0.0.1"
@@ -81,6 +91,9 @@ service PaymentService {
     config_server=ConfigServer
     service_registry=ServiceRegistry
 
+    // use shared db
+    database = MainDB
+
     deployment {
         version="0.0.1"
         port=8081
@@ -113,6 +126,13 @@ service ShoppingCartService {
 
     config_server=ConfigServer
     service_registry=ServiceRegistry
+
+    // private db
+    database {
+        type=mongodb
+        port=22000
+        url="localhost"
+    }
 
     deployment {
         version="0.0.1"
@@ -150,6 +170,13 @@ service ProductService {
 
     config_server=ConfigServer
     service_registry=ServiceRegistry
+
+    // private db
+    database {
+        type=mongodb
+        port=22500
+        url="localhost"
+    }
 
     deployment {
         version="0.0.1"

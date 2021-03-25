@@ -60,7 +60,7 @@ ServiceDecl:
             (database=DatabaseDecl) |
             ('database' '=' database=FQN)
         )?
-
+        (deployment=Deployment)?
         'communication_style' '=' comm_style=CommunicationStyle
 
         (api=APIDecl)?
