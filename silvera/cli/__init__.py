@@ -4,7 +4,7 @@ import silvera.run as runners
 import silvera.generator.generator as gn
 from silvera.generator.gen_reg import collect_generators
 from silvera import quickstart
-from silvera.evaluation import Evaluator
+from silvera.evaluation import Evaluator, FORMAT_MD
 
 
 @click.group()
@@ -100,6 +100,11 @@ def compile(ctx, project_dir, output_dir, rest_strategy):
         import traceback
         traceback.print_exc()
         raise click.ClickException(str(ex))
+
+    click.echo("Evaluating...")
+    evaluator = Evaluator()
+    result = evaluator.evaluate(model)
+    result.to_report(output_dir, FORMAT_MD)
 
     click.echo("Compilation finished successfully!")
     click.echo("Project generated in: %s" % output_dir)

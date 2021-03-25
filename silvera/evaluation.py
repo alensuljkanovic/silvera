@@ -1,7 +1,12 @@
 """
 This module contains implementation of evaluation of Silvera models.
 """
+import os
+import warnings
 from collections import defaultdict
+
+FORMAT_STR = 0
+FORMAT_MD = 1
 
 
 class Evaluator:
@@ -135,46 +140,147 @@ class EvaluationResult:
     def acs_avg(self):
         return sum(self.acs.values())/len(self.acs)
 
-    def to_report(self):
-        """Prints report"""
+    def _to_markdown(self):
+        """Creates evaluation report as a string with Markdown syntax.
+
+        Returns:
+            str, list
+        """
+        def title(s):
+            return "# %s\n\n" % s
+
+        def section(s):
+            return "## %s\n\n" % s
+
+        def descr(s):
+            return "*%s*\n\n" % s
+
+        def sys_avg(s):
+            return "**System average: %.2f**\n\n" % s
+
+        def service(s):
+            return "Service *%s*:\n\n" % s
 
         wsic_avg = self.wsic_avg
-        print("Weighted Service Interface Count (WSIC):")
-        print("\tSystem average: %.2f" % wsic_avg)
+
+        report = title("Evaluation report")
+        warn_lst = []
+
+        # WSIC
+        report += section("Weighted Service Interface Count (WSIC)")
+        report += descr("This metric counts the number of exposed interface "
+                        "operations of a service. Lower values for WSIC are "
+                        "more favorable for the maintainability of a service.")
+        report += sys_avg(wsic_avg)
 
         for s in sorted(self.wsic, key=lambda x: self.wsic[x] - wsic_avg):
             diff = self.wsic[s] - wsic_avg
-            print("\tService:'%s':" % s)
-            print("\t\tWsic[s]: %.2f" % self.wsic[s])
-            print("\t\tDiff from avg: %.2f" % diff)
+            report += service(s)
+            report += "*  Wsic[s]: %.2f\n" % self.wsic[s]
+            report += "*  Diff from avg: %.2f\n\n" % diff
+            if diff > 0:
+                warn_lst.append("WSIC for '%s' service (%s) is larger than the "
+                                "systems average (%s). Lower values for WSIC "
+                                "are more favorable for the maintainability "
+                                "of a service." % (s, self.wsic[s], wsic_avg))
 
-        print("\n\nAbsolute Importance of the Service (AIS):")
-        print("System average[AIS_avg]:  %.2f" % self.ais_avg)
+        # NVS
+        report += section("Number of Versions per Service (NVS)")
+        report += descr("The number of versions that are used concurrently "
+                        "in system Y for service S.")
+        report += sys_avg(self.nvs_avg)
+
+        for s in sorted(self.nvs, key=lambda x: self.nvs[x] - self.nvs_avg):
+            diff = self.nvs[s] - self.nvs_avg
+            report += service(s)
+            report += "*  NVS[s]: %.2f\n" % self.nvs[s]
+            report += "*  Diff from avg: %.2f\n\n" % diff
+            if diff > 0:
+                warn_lst.append("NVS for '%s' service (%s) is larger than the "
+                                "systems average (%s). Large NVS impacts "
+                                "maintainability of the services." %
+                                (s, self.wsic[s], wsic_avg))
+
+        # AIS
+        report += section("Absolute Importance of the Service (AIS)")
+        report += descr("AIS(S) for a service S is the number of consumers "
+                        "that depend on S, i.e. the number of clients that "
+                        "invoke at least one operation of S.")
+        report += sys_avg(self.ais_avg)
+
         for s, total_calls in self.ais.items():
             diff = self.ais[s] - self.ais_avg
-            print("\tService '%s':" % s)
-            print("\t\tAIS[s]: %s" % total_calls)
-            print("\t\tAIS[s] - AIS_avg: %.2f" % diff)
+            report += service(s)
+            report += "*  AIS[s]: %s\n" % total_calls
+            report += "*  AIS[s] - AIS_avg: %.2f\n\n" % diff
+            if diff > 0:
+                warn_lst.append("AIS for '%s' service (%s) is larger than the "
+                                "systems average (%s). This service may be a "
+                                "potential bottleneck." % (s, self.ais[s],
+                                                           self.ais_avg))
 
-        print("\n\nAbsolute Dependence of the Service (ADS)")
-        print("System average: %.2f" % self.ads_avg)
+        # ADS
+        report += section("Absolute Dependence of the Service (ADS)")
+        report += descr("ADS(S) is the number of other services that S "
+                        "depends on, i.e. the number of services from which "
+                        "S invokes at least one operation.")
+        report += sys_avg(self.ads_avg)
         for s, total_calls in self.ads.items():
             diff = self.ads[s] - self.ads_avg
-            print("\tService '%s':" % s)
-            print("\tADS[s]: %s" % total_calls)
-            print("\tADS[s] - ADS_avg: %.2f" % diff)
+            report += service(s)
+            report += "*  ADS[s]: %s\n" % total_calls
+            report += "*  ADS[s] - ADS_avg: %.2f\n\n" % diff
+            if diff > 0:
+                warn_lst.append("ADS for '%s' service (%s) is larger than the "
+                                "systems average (%s). This service may be a "
+                                "potential bottleneck." % (s, self.ads[s],
+                                                           self.ads_avg))
 
-        print("\n\nAbsolute Criticality of the Service (ACS)")
-        print("System average: %.2f" % self.ads_avg)
+        # ACS
+        report += section("Absolute Criticality of the Service (ACS)")
+        report += descr("ACS(S) = AIS(S) × ADS(S)")
+        report += sys_avg(self.acs_avg)
         for s, value in self.acs.items():
             diff = self.acs[s] - self.acs_avg
-            print("\tService '%s':" % s)
-            print("\t\tACS[s]: %s" % value)
-            print("\t\tACS[s] - ACS_avg: %.2f" % diff)
+            report += service(s)
+            report += "*  ACS[s]: %s\n" % value
+            report += "*  ACS[s] - ACS_avg: %.2f\n\n" % diff
+            if diff > 0:
+                warn_lst.append("ACS for '%s' service (%s) is larger than the "
+                                "systems average (%s)." % (s, self.acs[s],
+                                                           self.acs_avg))
 
-        print("\n\nServices Interdependence in the System (SIY)")
+        # SIY
+        report += section("Services Interdependence in the System (SIY)")
+        report += descr("Pairs ⟨S 1 , S 2 ⟩ where service S1 calls S2 while "
+                        "service S2 also calls S1 at some point.")
         if not self.siy:
-            print("\tNo interdependent pairs found!")
+            report += "*  No interdependent pairs found!\n\n"
 
         for s in self.siy:
-            print("\t{}".format(s))
+            report += "{}\n".format(s)
+            warn_lst.append("Interdependent services: %s. Could these services"
+                            "be merged?\n" %s)
+
+        # Add warnings to the report
+        if warn_lst:
+            report += section("Warnings")
+            for w in warn_lst:
+                report += "* %s\n" % w
+
+        return report, warn_lst
+
+    def to_report(self, output_dir=None, f=FORMAT_STR):
+        """Prints report"""
+        report, warn_lst = self._to_markdown()
+
+        if f == FORMAT_MD:
+            with open(os.path.join(output_dir, "evaluation_report.md"), "w") as f:
+                f.write(report)
+
+            # Print warnings at the end of function so they do not mix with
+            # report
+            for w in warn_lst:
+                warnings.warn(w)
+        else:
+            print(report)
