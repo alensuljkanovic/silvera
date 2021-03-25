@@ -9,7 +9,8 @@ Import:
 
 
 Declaration:
-    ConfigServerDecl | ServiceRegistryDecl | ServiceDecl | APIGateway | Dependency | MessagePool | MessageBroker
+    ConfigServerDecl | ServiceRegistryDecl | ServiceDecl | APIGateway |
+    Dependency | MessagePool | MessageBroker | DatabaseDecl
 ;
 
 ConfigServerDecl:
@@ -55,12 +56,24 @@ ServiceDecl:
 
         ('config_server' '=' config_server=FQN)?
         ('service_registry' '=' service_registry=FQN)?
-
-        (deployment=Deployment)?
+        (
+            (database=DatabaseDecl) |
+            ('database' '=' database=FQN)
+        )?
 
         'communication_style' '=' comm_style=CommunicationStyle
 
         (api=APIDecl)?
+    '}'
+;
+
+DatabaseDecl:
+    'database' name=ID? '{'
+        (
+            ('type' '=' type=ID)?  |
+            ('port' '=' port=INT)? |
+            ('url' '=' url=STRING)?
+        )#
     '}'
 ;
 

@@ -51,11 +51,12 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-
+        {% if database.type == "mongodb" %}
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-mongodb</artifactId>
 		</dependency>
+        {% endif %}
 
         <!-- Dependencies bellow should be generated only if needed -->
         <dependency>

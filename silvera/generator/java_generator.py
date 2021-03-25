@@ -237,12 +237,11 @@ class ServiceGenerator:
     def __init__(self, service):
         super().__init__()
         self.service = service
-        self._templates_path = os.path.join(
-            get_templates_path(),
-            JAVA,
-            "service",
-            self.service.comm_style
-        )
+
+        service_templ = os.path.join(get_templates_path(), JAVA, "service")
+        common_templ = os.path.join(service_templ, "common")
+        comm_style_templ = os.path.join(service_templ, self.service.comm_style)
+        self._templates_path = [common_templ, comm_style_templ]
 
         self.model = service.parent.model
 
@@ -422,6 +421,10 @@ class ServiceGenerator:
         repo_path = create_if_missing(os.path.join(content_path, "repository"))
 
         api = self.service.api
+        if self.service.database.type == "mongodb":
+            template_name = "repository/mongodb/repository.template"
+        else:
+            template_name = "repository/no_db/repository.template"
 
         for typedef in api.typedefs:
 
@@ -436,7 +439,7 @@ class ServiceGenerator:
                 "typedef": typedef.name,
                 "id_datatype": id_datatype
             }
-            class_template = env.get_template("repository/repository.template")
+            class_template = env.get_template(template_name)
             class_template.stream(data).dump(os.path.join(repo_path,
                                              typedef.name + "Repository.java"))
 
@@ -616,6 +619,7 @@ class ServiceGenerator:
             "service_version": service.version,
             "use_circuit_breaker": len(service.dependencies) > 0,
             "timestamp": timestamp(),
+            "database": service.database
         }
 
         # Generate root files

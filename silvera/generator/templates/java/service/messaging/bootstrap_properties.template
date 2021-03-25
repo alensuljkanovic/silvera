@@ -5,3 +5,9 @@ eureka.client.healthcheck.enabled = true
 server.port={{service_port}}
 security.basic.enable=false
 management.security.enabled=false
+
+{% if database.type == "mongodb" %}
+spring.data.mongodb.database={{service_name|lower}}_db
+spring.data.mongodb.port={{database.port}}
+spring.data.mongodb.host={{database.url}}
+{% endif %}

@@ -10,3 +10,6 @@ HTTP_POST = "POST"
 HTTP_PUT = "PUT"
 HTTP_GET = "GET"
 HTTP_DELETE = "DELETE"
+
+
+SUPPORTED_DB = {"mongodb", "none"}

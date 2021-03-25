@@ -442,13 +442,14 @@ class ServiceDecl(ServiceObject):
 
     def __init__(self, parent=None, name=None, config_server=None,
                  service_registry=None, deployment=None, comm_style=None,
-                 api=None, extends=None, handlers=None):
+                 api=None, extends=None, handlers=None, database=None):
         super().__init__(parent, name, config_server, service_registry,
                          deployment, comm_style, extends)
         self.api = api
         self.handlers = handlers
         self.dep_functions = []
         self.dep_typedefs = []
+        self.database = database if database is not None else DatabaseDecl(self)
 
     @property
     def functions(self):
@@ -557,6 +558,19 @@ class ServiceDecl(ServiceObject):
                         cons[subscr.message].add(f)
 
         return cons
+
+
+class DatabaseDecl:
+    """Database declaration object, used by service."""
+
+    def __init__(self, parent, name=None, type="mongodb", port=27017,
+                 url="localhost"):
+        super().__init__()
+        self.parent = parent
+        self.name = name
+        self.type = type
+        self.port = port
+        self.url = url
 
 
 class Service:

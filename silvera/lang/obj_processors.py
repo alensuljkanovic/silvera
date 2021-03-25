@@ -2,10 +2,12 @@
 This module contains object processors attached to Silvera objects. Object
 processors are used during parsing.
 """
+import warnings
 from collections import deque, OrderedDict, defaultdict
+from silvera.const import SUPPORTED_DB
 from silvera.core import (ServiceDecl, ConfigServerDecl, ServiceRegistryDecl,
                           TypedList, TypeDef, Deployable, Deployment,
-                          MessagePool, ProducerAnnotation, APIGateway)
+                          MessagePool, ProducerAnnotation, APIGateway, DatabaseDecl)
 from silvera.exceptions import SilveraTypeError, SilveraLoadError
 from silvera.utils import available_port
 
@@ -528,6 +530,20 @@ def process_module(module):
                 decl.deployment = deployment
 
         if isinstance(decl, ServiceDecl):
+
+            if decl.database and not isinstance(decl.database, DatabaseDecl):
+                # Case when shared database is used. We need to find the
+                # reference by using the provided FQN.
+                assign_ref(decl, "database")
+                warnings.warn("Service '%s' uses shared database '%s'. "
+                              "Shared databases create coupling between "
+                              "services." % (decl.name, decl.database.name))
+
+            db = decl.database
+            if db.type not in SUPPORTED_DB:
+                raise ValueError("In this version of Silvera  '%s' database "
+                                 "is not supported." % db.type)
+
             resolve_inheritance(module, decl)
             resolve_custom_types(decl)
 
