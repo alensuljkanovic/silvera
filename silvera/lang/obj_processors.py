@@ -11,7 +11,7 @@ from silvera.utils import available_port
 
 
 BASIC_TYPES = {"date", "i16", "i32", "i64", "bool", "int", "void", "str",
-               "double"}
+               "double", "pwd"}
 
 
 def process_dependency(module):

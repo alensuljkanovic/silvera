@@ -11,6 +11,7 @@ PYTHON = "python"
 # silvera types
 VOID = "void"
 STRING = "str"
+PASSWORD = "pwd"
 FLOAT = "float"
 DOUBLE = "double"
 BOOL = "bool"
@@ -57,7 +58,8 @@ platforms = {
             STRING: "java.lang.String",
             BOOL: "java.lang.Boolean",
             VOID: "void",
-            DATE: "java.util.Date"
+            DATE: "java.util.Date",
+            PASSWORD: "java.lang.String"
         },
 
         COLLECTIONS: {
@@ -74,6 +76,7 @@ platforms = {
             FLOAT: 0.0,
             DOUBLE: 0.0,
             STRING: '""',
+            PASSWORD: '""',
             BOOL: "false",
             VOID: "",
             DATE: "new java.util.Date()",
@@ -100,7 +103,8 @@ platforms = {
             DOUBLE: "double",
             STRING: "str",
             BOOL: "bool",
-            VOID: ""
+            VOID: "",
+            PASSWORD: "str"
         },
 
         COLLECTIONS: {
@@ -116,6 +120,7 @@ platforms = {
             FLOAT: 0.0,
             DOUBLE: 0.0,
             STRING: "",
+            PASSWORD: "",
             BOOL: True,
             VOID: "",
             LIST: "[]",

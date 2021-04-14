@@ -6,14 +6,14 @@ service UserService {
     api {
         typedef User [
             str id
-            str password
+            pwd password
             bool active
             str createdBy
             str deletedBy
         ]
 
 
-        User login(str userId, str password)
+        User login(str userId, pwd password)
 
         @rest(method=POST)
         bool register(User user)

@@ -293,11 +293,15 @@ Collection:
 ;
 
 Sequence:
-    String | List
+    String | Password | List
 ;
 
 String:
     'str'
+;
+
+Password:
+    'pwd'
 ;
 
 List:

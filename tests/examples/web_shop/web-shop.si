@@ -44,7 +44,7 @@ service UserService {
         """
         typedef User [
             str id
-            str password
+            pwd password
             PaymentDetail paymentDetail
             UserDetail userDetail
             bool active
@@ -76,7 +76,7 @@ service UserService {
         ]
 
         """Logs user into the system."""
-        User login(str userId, str password)
+        User login(str userId, pwd password)
 
         """Checks if user with the given ID exists."""
         @rest(method=POST)
