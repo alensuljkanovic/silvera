@@ -156,8 +156,8 @@ class Module:
 
 class Deployable:
     """Base class for all deployable objects"""
-    def __init__(self, deployment=None):
-        super().__init__()
+    def __init__(self, deployment=None, **kwargs):
+        super().__init__(**kwargs)
         self.deployment = deployment
 
     @property
@@ -349,6 +349,13 @@ class MsgFQN:
         return _recurse_up(self)
 
 
+class DocstringContainer:
+
+    def __init__(self, docstring=None, **kwargs):
+        super().__init__(**kwargs)
+        self.docstring = docstring
+
+
 class MessageGroup(MsgFQN):
 
     def __init__(self, parent, name, groups=None, messages=None):
@@ -403,7 +410,7 @@ class MessageChannel:
         return False
 
 
-class ServiceObject(Deployable):
+class ServiceObject(Deployable, DocstringContainer):
     """Base class for all services
 
     Contains information about deployment, communication style, etc.
@@ -411,8 +418,8 @@ class ServiceObject(Deployable):
 
     def __init__(self, parent=None, name=None, config_server=None,
                  service_registry=None, deployment=None, comm_style=None,
-                 extends=None):
-        super().__init__(deployment)
+                 extends=None, docstring=None):
+        super().__init__(deployment=deployment, docstring=docstring)
         self.parent = parent
         self.extends = extends
         self.name = name
@@ -442,9 +449,9 @@ class ServiceDecl(ServiceObject):
 
     def __init__(self, parent=None, name=None, config_server=None,
                  service_registry=None, deployment=None, comm_style=None,
-                 api=None, extends=None, handlers=None):
+                 api=None, extends=None, handlers=None, docstring=None):
         super().__init__(parent, name, config_server, service_registry,
-                         deployment, comm_style, extends)
+                         deployment, comm_style, extends, docstring=docstring)
         self.api = api
         self.handlers = handlers
         self.dep_functions = []
@@ -606,10 +613,11 @@ class ConfigServerDecl(Deployable):
         self.search_path = search_path
 
 
-class Function:
+class Function(DocstringContainer):
     """Object representation of function declaration."""
     def __init__(self, parent, name=None, ret_type=None, params=None,
-                 annotations=None):
+                 annotations=None, docstring=None):
+        super().__init__(docstring)
         self.parent = parent
         self.name = name
         self.ret_type = ret_type
@@ -793,10 +801,11 @@ class ConsumerAnnotation(MessagingAnnotation):
         super().__init__(parent, subscriptions)
 
 
-class TypeDef:
+class TypeDef(DocstringContainer):
 
     def __init__(self, parent, name=None, inherits=None, fields=None,
-                 crud=None):
+                 crud=None, docstring=None):
+        super().__init__(docstring)
         self.parent = parent
         self.name = name
         self.inherits = inherits if inherits else []

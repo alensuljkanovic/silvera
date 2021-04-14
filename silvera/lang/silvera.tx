@@ -51,6 +51,7 @@ GatewayFor:
 ;
 
 ServiceDecl:
+    (docstring=Docstring)?
     'service' name=ID ('extends' extends=FQN)? '{'
 
         ('config_server' '=' config_server=FQN)?
@@ -176,6 +177,7 @@ PersistenceAnnotation:
 ;
 
 TypeDef:
+    (docstring=Docstring)?
     crud*=TypedefCrud 'typedef' name=ID (':' inherits+=FQN[','])? '['
         fields+=TypeField
     ']'
@@ -248,6 +250,7 @@ ConsumerSubs:
 ;
 
 Function:
+    (docstring=Docstring)?
     annotations*=Annotation
     ret_type=ReturnType name=ID '(' params*=FunctionParameter[','] ')'
 ;
@@ -344,4 +347,8 @@ Path:
 // Special rule for comments. Comments start with //
 Comment:
     /\/\/.*$/
+;
+
+Docstring:
+    /\"\"\"[\w\W]*?\"\"\"/
 ;

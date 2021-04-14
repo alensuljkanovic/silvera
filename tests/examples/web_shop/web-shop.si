@@ -17,6 +17,10 @@ service-registry ServiceRegistry{
     }
 }
 
+"""This is a service about users
+
+It provides functions for handling user objects.
+"""
 service UserService {
 
     config_server=ConfigServer
@@ -34,6 +38,10 @@ service UserService {
     communication_style=rpc
 
     api {
+        """User object
+
+        This object stores information about users.
+        """
         typedef User [
             str id
             str password
@@ -44,6 +52,10 @@ service UserService {
             str deletedBy
         ]
 
+        """User details object
+
+        This object stores information about user's name, age and gender.
+        """
         typedef UserDetail [
             str firstName
             str lastName
@@ -52,6 +64,10 @@ service UserService {
             int gender
         ]
 
+        """Payment details object
+
+        This object stores information about user's credit card.
+        """
         typedef PaymentDetail [
             str cardType
             str cardNumber
@@ -59,17 +75,22 @@ service UserService {
             date validTo
         ]
 
+        """Logs user into the system."""
         User login(str userId, str password)
 
+        """Checks if user with the given ID exists."""
         @rest(method=POST)
         bool checkUser(str userId)
 
+        """Registers a new user to the system."""
         @rest(method=POST)
         bool register(User user)
 
+        """Provides payment information for a given user ID."""
         @rest(method=GET)
         PaymentDetail getPaymentInfo(str userId)
 
+        """Checks payment information for a given user ID."""
         @rest(method=POST)
         bool checkPaymentInfo(str userId)
 
