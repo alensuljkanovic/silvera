@@ -40,7 +40,7 @@ service User {
         @rest(method=PUT)
         bool updateUserDetails(str username, User user)
 
-        @rest(method=GET)
+        @rest(method=POST)
         list<bool> compare(list<User> users)
     }
 }

@@ -15,6 +15,7 @@ experimenting/**
 .cache
 .vscode
 .history
+.venv
 
 silvera/generator/src-gen/*
 !silvera/generator/src-gen/.gitkeep

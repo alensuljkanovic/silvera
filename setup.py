@@ -32,6 +32,7 @@ setup(
     install_requires=["textx", "jinja2", "click"],
     tests_require=[
         'pytest',
+        'openapi_spec_validator'
     ],
     keywords="microservices dsl generator compiler",
     url="https://gitlab.com/alensuljkanovic/silvera",
