@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 * Evaluation called during compilation process. Evaluation report generated as Markdown file in the output folder.
+* OpenAPI specification (openapi.json) generated for each service with REST API during compilation.
 
 ## [0.2.3] - 2020-11-07
 

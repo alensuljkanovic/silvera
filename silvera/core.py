@@ -565,6 +565,24 @@ class ServiceDecl(ServiceObject):
 
         return cons
 
+    def gateway_urls(self):
+        """Returns all URLs where this service is available through API
+        Gateways.
+
+        Returns:
+            set
+        """
+        model = self.parent.model
+        result = set()
+        for module in model.modules:
+            for ag in module.api_gateways:
+                for gf in ag.gateway_for:
+                    if gf.service is self:
+                        depl = ag.deployment
+                        url = "%s:%s%s" % (depl.url, depl.port, gf.path)
+                        result.add(url)
+        return result
+
 
 class Service:
     """Object of this class represents an instance of a service that is of
@@ -929,3 +947,26 @@ class TypedList(List):
         super().__init__(parent)
         self.type = type
         self.len = len
+
+
+class Set(Sequence):
+    def __init__(self, parent):
+        super().__init__(parent)
+
+
+class TypedSet(Set):
+    def __init__(self, parent, type):
+        super().__init__(parent)
+        self.type = type
+
+
+class Dict(Sequence):
+    def __init__(self, parent):
+        super().__init__(parent)
+
+
+class TypedDict(Dict):
+    def __init__(self, parent, key_type, value_type):
+        super().__init__(parent)
+        self.key_type = key_type
+        self.value_type = value_type

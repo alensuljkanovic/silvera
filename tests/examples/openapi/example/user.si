@@ -1,0 +1,40 @@
+import "registry.si"
+
+service User {
+
+    service_registry=ServiceRegistry
+    communication_style=rpc
+
+    api{
+        @crud
+        typedef User [
+            @id str username
+            @required pwd password
+            @required str email
+            str firstName
+            str lastName
+            date birthDate
+        ]
+
+        @rest(method=GET)
+        list<User> listUsers()
+
+        @rest(method=GET)
+        set<User> listUsersWithName(str firstName)
+
+        @rest(method=DELETE)
+        void deleteAll()
+
+        @rest(method=GET)
+        bool userExists(str username)
+
+        @rest(method=GET)
+        str userEmail(str username)
+
+        @rest(method=GET)
+        date userBirthDate(str username)
+
+        @rest(method=PUT)
+        bool updatePassword(str username, pwd oldPass, pwd NewPass)
+    }
+}

@@ -6,6 +6,7 @@ from jinja2 import Environment
 from jinja2.loaders import FileSystemLoader
 from silvera.generator.gen_reg import generator_for_language
 from silvera.const import HOST_CONTAINER
+from silvera.openapi.serialization import OpenAPIDump
 from silvera.utils import get_templates_path
 from silvera.generator.platforms import JAVA
 
@@ -66,6 +67,8 @@ def generate(model, output_dir, debug=False):
             generator(service, output_dir, debug)
             if service.host == HOST_CONTAINER:
                 for_compose(service)
+
+            OpenAPIDump.dump(service, os.path.join(output_dir, service.name))
 
     if compose["services"]:
         _generate_docker_compose(output_dir, compose)

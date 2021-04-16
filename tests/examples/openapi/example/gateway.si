@@ -1,0 +1,19 @@
+import "registry.si"
+import "user.si"
+
+api-gateway EntryGateway {
+    service_registry = ServiceRegistry
+
+    deployment {
+        version="0.0.1"
+        port=9095
+        url="http://localhost"
+        host=container
+    }
+
+    communication_style=rpc
+
+    gateway-for {
+        User as /api/u
+    }
+}
