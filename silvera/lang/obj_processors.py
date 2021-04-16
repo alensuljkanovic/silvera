@@ -3,15 +3,13 @@ This module contains object processors attached to Silvera objects. Object
 processors are used during parsing.
 """
 from collections import deque, OrderedDict, defaultdict
+
+from silvera.const import BASIC_TYPES
 from silvera.core import (ServiceDecl, ConfigServerDecl, ServiceRegistryDecl,
                           TypedList, TypeDef, Deployable, Deployment,
-                          MessagePool, ProducerAnnotation, APIGateway)
+                          MessagePool, ProducerAnnotation, APIGateway, TypedSet)
 from silvera.exceptions import SilveraTypeError, SilveraLoadError
 from silvera.utils import available_port
-
-
-BASIC_TYPES = {"date", "i16", "i32", "i64", "bool", "int", "void", "str",
-               "double"}
 
 
 def process_dependency(module):
@@ -212,7 +210,7 @@ def _resolve_fnc(module, service_decl, fnc):
     # Resolve function's return type
     ret_type = fnc.ret_type
     if not is_type_resolved(ret_type):
-        if isinstance(ret_type, TypedList):
+        if isinstance(ret_type, (TypedList, TypedSet)):
             _resolve_typed_list(service_decl, ret_type)
         else:
             try:

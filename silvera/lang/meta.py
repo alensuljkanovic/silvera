@@ -2,9 +2,10 @@ import os
 from textx.metamodel import metamodel_from_file
 from silvera.core import Module, ServiceDecl, ServiceRegistryDecl, TypeDef, \
     DataType, Collection, Sequence, List, TypedList, Number, \
-    Function, FunctionParameter, ConfigServerDecl, APIGateway, RESTAnnotation,\
+    Function, FunctionParameter, ConfigServerDecl, APIGateway, RESTAnnotation, \
     Deployment, MessagePool, MessageBroker, MessageGroup, Message, \
-    ProducerAnnotation, ConsumerAnnotation, TypeField
+    ProducerAnnotation, ConsumerAnnotation, TypeField, Set, TypedSet, Dict, \
+    TypedDict
 
 from silvera.utils import get_root_path
 
@@ -12,7 +13,8 @@ _classes = (Module, ServiceDecl, ServiceRegistryDecl, TypeDef,
             DataType, Collection, Sequence, List, TypedList, Number, Function,
             FunctionParameter, ConfigServerDecl, APIGateway, RESTAnnotation,
             Deployment, MessagePool, MessageBroker, MessageGroup, Message,
-            ProducerAnnotation, ConsumerAnnotation, TypeField)
+            ProducerAnnotation, ConsumerAnnotation, TypeField,
+            Set, TypedSet, Dict, TypedDict)
 
 
 def get_metamodel():

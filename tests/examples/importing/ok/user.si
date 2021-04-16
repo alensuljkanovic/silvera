@@ -19,7 +19,7 @@ service UserService {
     api {
         typedef User [
             str id
-            str password
+            pwd password
             PaymentDetail paymentDetail
             UserDetail userDetail
             bool active
@@ -42,7 +42,7 @@ service UserService {
             date validTo
         ]
 
-        User login(str userId, str password)
+        User login(str userId, pwd password)
 
         @rest(method=POST)
         bool checkUser(str userId)
