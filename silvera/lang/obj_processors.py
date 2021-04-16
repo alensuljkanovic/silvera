@@ -3,15 +3,13 @@ This module contains object processors attached to Silvera objects. Object
 processors are used during parsing.
 """
 from collections import deque, OrderedDict, defaultdict
+
+from silvera.const import BASIC_TYPES
 from silvera.core import (ServiceDecl, ConfigServerDecl, ServiceRegistryDecl,
                           TypedList, TypeDef, Deployable, Deployment,
                           MessagePool, ProducerAnnotation, APIGateway, TypedSet)
 from silvera.exceptions import SilveraTypeError, SilveraLoadError
 from silvera.utils import available_port
-
-
-BASIC_TYPES = {"date", "i16", "i32", "i64", "bool", "int", "void", "str",
-               "double", "pwd"}
 
 
 def process_dependency(module):

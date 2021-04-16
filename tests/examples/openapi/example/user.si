@@ -36,5 +36,11 @@ service User {
 
         @rest(method=PUT)
         bool updatePassword(str username, pwd oldPass, pwd NewPass)
+
+        @rest(method=PUT)
+        bool updateUserDetails(str username, User user)
+
+        @rest(method=GET)
+        list<bool> compare(list<User> users)
     }
 }

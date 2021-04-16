@@ -4,6 +4,7 @@ OpenAPI specification.
 import os
 import json
 
+from silvera.const import BASIC_TYPES
 from silvera.core import TypedList, TypedSet, TypedDict
 
 
@@ -145,23 +146,72 @@ class OpenAPISerializer:
                     "operationId": function.name,
                 }
 
-                params = []
-                for param in function.params:
-                    params.append({
-                        "name": param.name,
-                        "in": "query" if param.query_param else "path",
-                        "required": True,
-                        "schema": {
-                            "type": self.type_map(param.type)[0]
-                        }
-                    })
-
-                d["parameters"] = params
+                self._func_params(function, d)
                 self._func_resp_bodies(function, d)
 
                 paths[path].update({function.http_verb.lower(): d})
 
         return paths
+
+    def _func_params(self, function, d):
+        """Creates `parameters` section based on function params.
+
+        Args:
+            function (Function): function object
+            d (dict): OpenAPI spec dict
+        """
+        # List with function parameters whose type is a Silvera
+        # built-in type
+        simple_params = []
+        # List with function parameters whose type is complex type
+        # These parameters will be sent in the request body.
+        complex_params = []
+        for p in function.params:
+            if p.type in BASIC_TYPES:
+                simple_params.append(p)
+            else:
+                complex_params.append(p)
+
+        params_section = []
+        for param in simple_params:
+            params_section.append({
+                "name": param.name,
+                "in": "query" if param.query_param else "path",
+                "required": True,
+                "schema": {
+                    "type": self.type_map(param.type)[0]
+                }
+            })
+
+        d["parameters"] = params_section
+
+        if complex_params:
+            param = complex_params[0]
+            rb = {
+                "description": "JSON representation object",
+                "required": True,
+            }
+            if isinstance(param.type, (TypedList, TypedSet)):
+                list_type = param.type.type
+                rb["content"] = {
+                    "application/json": {
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#components/schemas/%s" % list_type.name
+                            }
+                        }
+                    }
+                }
+            else:
+                rb["content"] = {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#components/schemas/%s" % param.type.name
+                        }
+                    }
+                }
+            d["requestBody"] = rb
 
     def _func_resp_bodies(self, function, d):
         """Creates `responses` section for user defined API functions.
@@ -272,14 +322,22 @@ class OpenAPISerializer:
                         }
                         properties[field.name].update(items)
                 else:
-                    _type, _format = self.type_map(field.type)
-                    properties[field.name] = {
-                        "type": _type
-                    }
-                    if _format:
-                        properties[field.name].update({
-                            "format": _format
-                        })
+                    try:
+                        # Silvera built-in type
+                        _type, _format = self.type_map(field.type)
+                        properties[field.name] = {
+                            "type": _type
+                        }
+                        if _format:
+                            properties[field.name].update({
+                                "format": _format
+                            })
+                    except KeyError:
+                        # Complex type
+                        _format = None
+                        properties[field.name] = {
+                            "$ref": '#/components/schemas/%s' % field.type.name
+                        }
 
             return required, properties
 
@@ -358,7 +416,9 @@ class OpenAPISerializer:
 
         # If there are no API Gateways
         if not servers:
-            servers.append({"url": service_decl.deployment.url})
+            service_url = service_decl.deployment.url
+            service_url = service_url if service_url is not None else ""
+            servers.append({"url": service_url})
 
         return servers
 
@@ -374,7 +434,7 @@ class OpenAPISerializer:
         """
         deployment = service_decl.deployment
         if service_decl.docstring:
-            description = service_decl.docstring.split()[0]
+            description = service_decl.docstring.split("\n")[0].strip()
         else:
             description = ""
 
@@ -410,7 +470,6 @@ class OpenAPIDump:
         """
         serializer = OpenAPISerializer()
         data = serializer.serialize(service_decl)
-
         openapi_file = os.path.join(output_dir, "openapi.json")
 
         with open(openapi_file, "w") as f:
