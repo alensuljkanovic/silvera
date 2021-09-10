@@ -8,7 +8,6 @@ config-server ConfigServer {
 }
 
 service-registry EmployeeEurekaServer{
-    tool=eureka
     client_mode=False
     deployment {
         version="0.0.1"

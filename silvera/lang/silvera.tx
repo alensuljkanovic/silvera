@@ -21,15 +21,11 @@ ConfigServerDecl:
 
 ServiceRegistryDecl:
     'service-registry' name=ID '{'
-        'tool' '=' tool=ServiceRegistryTool
         'client_mode' '=' client_mode=BOOL
         deployment=Deployment
     '}'
 ;
 
-ServiceRegistryTool:
-    "eureka" | "zookeeper" | "consul"
-;
 
 APIGateway:
     'api-gateway' name=ID '{'

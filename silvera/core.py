@@ -610,12 +610,10 @@ class ServiceRegistryDecl(Deployable):
     location, number of instances, etc.
     """
 
-    def __init__(self, parent, name=None, tool=None,
-                 client_mode=False, deployment=None):
+    def __init__(self, parent, name=None, client_mode=False, deployment=None):
         super().__init__(deployment)
         self.name = name
         self.parent = parent
-        self.tool = tool
         self.client_mode = client_mode
 
 
