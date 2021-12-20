@@ -14,8 +14,6 @@ service UserService {
         replicas=1
     }
 
-    communication_style=rpc
-
     api {
         typedef User [
             str id
@@ -35,8 +33,6 @@ service UserService {
 
 
 service NewUserService extends UserService {
-
-    communication_style=rpc
 
     api {
         // NewUserService adds another API method

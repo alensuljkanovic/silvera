@@ -6,8 +6,6 @@ service PrintService {
         version="1.0.0"
     }
 
-    communication_style=rpc
-
     api {
         typedef Document [
             int id
@@ -27,8 +25,6 @@ service OfficeService {
      deployment {
         version="1.0.0"
     }
-
-    communication_style=messaging
 
     api {
         typedef Worker [

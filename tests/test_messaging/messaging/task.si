@@ -3,8 +3,6 @@ import "messaging.si"
 
 service Task {
 
-    communication_style=messaging
-
     api {
 
         typedef Task [

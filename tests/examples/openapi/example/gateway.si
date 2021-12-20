@@ -11,8 +11,6 @@ api-gateway EntryGateway {
         host=container
     }
 
-    communication_style=rpc
-
     gateway-for {
         User as /api/u
     }

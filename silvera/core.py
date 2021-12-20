@@ -583,6 +583,29 @@ class ServiceDecl(ServiceObject):
                         result.add(url)
         return result
 
+    @property
+    def uses_messaging(self):
+        """Returns True if a service uses messaging for communication. False
+        otherwise.
+
+        Returns:
+            bool
+        """
+        for f in self.api.functions:
+            for _ in f.msg_annotations:
+                # Return True if generator is not empty.
+                return True
+
+        if not self.api.internal:
+            return False
+
+        for f in self.api.internal.functions:
+            for _ in f.msg_annotations:
+                # Return True if generator is not empty.
+                return True
+
+        return False
+
 
 class Service:
     """Object of this class represents an instance of a service that is of

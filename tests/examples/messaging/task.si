@@ -5,7 +5,6 @@ import "messaging.si"
 service Task {
 
     service_registry=ServiceRegistry
-    communication_style=messaging
 
     api {
 

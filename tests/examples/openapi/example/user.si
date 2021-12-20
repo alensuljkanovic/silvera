@@ -3,7 +3,6 @@ import "registry.si"
 service User {
 
     service_registry=ServiceRegistry
-    communication_style=rpc
 
     api{
         @crud

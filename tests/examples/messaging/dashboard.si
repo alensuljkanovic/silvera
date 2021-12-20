@@ -6,7 +6,6 @@ import "messaging.si"
 service Dashboard {
 
     service_registry=ServiceRegistry
-    communication_style=messaging
 
     api {
         typedef Status [

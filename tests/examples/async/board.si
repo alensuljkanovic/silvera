@@ -12,8 +12,6 @@ service Employee {
         replicas=1
     }
 
-    communication_style=rpc
-
     api {
 
         typedef Employee [
@@ -49,8 +47,6 @@ service Task {
         packaging="jar"
         replicas=1
     }
-
-    communication_style=rpc
 
     api {
 
@@ -91,8 +87,6 @@ service TasksBoard {
         packaging="jar"
         replicas=1
     }
-
-    communication_style=rpc
 
     api {
 

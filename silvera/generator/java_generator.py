@@ -219,10 +219,10 @@ def generate_service(service, output_dir):
         - bootstrap.properties
         - pom.xml
     """
-    if service.comm_style == "rpc":
-        generator = RPCServiceGenerator(service)
-    else:
+    if service.uses_messaging:
         generator = MsgServiceGenerator(service)
+    else:
+        generator = RPCServiceGenerator(service)
 
     generator.generate(output_dir)
 
@@ -236,12 +236,13 @@ class ServiceGenerator:
     """
     def __init__(self, service):
         super().__init__()
+
         self.service = service
         self._templates_path = os.path.join(
             get_templates_path(),
             JAVA,
             "service",
-            self.service.comm_style
+            "messaging" if self.service.uses_messaging else "rpc"
         )
 
         self.model = service.parent.model
