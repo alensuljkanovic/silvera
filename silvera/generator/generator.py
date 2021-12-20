@@ -4,7 +4,7 @@ This module contains code generator for Silvera.
 import os
 from jinja2 import Environment
 from jinja2.loaders import FileSystemLoader
-from silvera.generator.gen_reg import generator_for_language
+from silvera.generator.registration import generator_for_language
 from silvera.const import HOST_CONTAINER
 from silvera.openapi.serialization import OpenAPIDump
 from silvera.utils import get_templates_path

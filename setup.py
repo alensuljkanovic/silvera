@@ -45,11 +45,17 @@ setup(
             'check = silvera.cli.check'
             'compile = silvera.cli.compile'
             'list_generators = silvera.cli.list_generators'
+            'list_evaluators = silvera.cli.list_evaluators'
         ],
 
         'silvera_generators': [
             # Java generator is built-in
             'java = silvera.generator.java_generator:java',
+        ],
+
+        'silvera_evaluators': [
+            # Built-in evaluator
+            'default_evaluator = silvera.evaluation.builtin:default_evaluator',
         ]
     },
     classifiers=[

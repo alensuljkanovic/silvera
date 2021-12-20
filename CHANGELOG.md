@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 * Evaluation called during compilation process. Evaluation report generated as Markdown file in the output folder.
+* Evaluation functions now can be registered as plugins.
 * OpenAPI specification (openapi.json) generated for each service with REST API during compilation.
 
 ### Removed

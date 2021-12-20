@@ -4,9 +4,7 @@ This module contains implementation of evaluation of Silvera models.
 import os
 import warnings
 from collections import defaultdict
-
-FORMAT_STR = 0
-FORMAT_MD = 1
+from .registration import EvaluationDesc, FORMAT_STR, FORMAT_MD
 
 
 class Evaluator:
@@ -284,3 +282,17 @@ class EvaluationResult:
                 warnings.warn(w)
         else:
             print(report)
+
+
+def evaluate(model, output_dir, output_format=FORMAT_STR):
+    ev = Evaluator()
+    result = ev.evaluate(model)
+    result.to_report(output_dir, output_format)
+
+
+# built-in architecture evaluator
+default_evaluator = EvaluationDesc(
+    name="default",
+    description="Silvera's default architecture evaluator.",
+    eval_func=evaluate
+)

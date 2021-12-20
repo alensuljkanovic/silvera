@@ -2,9 +2,10 @@ import click
 import os
 import silvera.run as runners
 import silvera.generator.generator as gn
-from silvera.generator.gen_reg import collect_generators
+from silvera.generator.registration import collect_generators
 from silvera import quickstart
-from silvera.evaluation import Evaluator, FORMAT_MD
+from silvera.evaluation.registration import get_evaluator, FORMAT_STR, \
+    collect_evaluators
 
 
 @click.group()
@@ -74,8 +75,13 @@ def init(ctx, project_name, registry, registry_port, cfg, cfg_path, cfg_port,
 @click.option('--rest-strategy', '-r', default=0,
               help='Strategy to be applied during REST resolving. \
               Default = no strategy')
+@click.option('--evaluator-name', '-e', default='builtin',
+              help='The architecture evaluator name.')
+@click.option('--evaluator-out-format', '-f', default=FORMAT_STR,
+              help='The architecture evaluator\'s output format.')
 @click.pass_context
-def compile(ctx, project_dir, output_dir, rest_strategy):
+def compile(ctx, project_dir, output_dir, rest_strategy, evaluator_name,
+            evaluator_out_format):
     """Compiles application code into to provided output directory."""
     project_dir = os.path.abspath(project_dir)
 
@@ -101,10 +107,8 @@ def compile(ctx, project_dir, output_dir, rest_strategy):
         traceback.print_exc()
         raise click.ClickException(str(ex))
 
-    click.echo("Evaluating...")
-    evaluator = Evaluator()
-    result = evaluator.evaluate(model)
-    result.to_report(output_dir, FORMAT_MD)
+    evaluator = get_evaluator(evaluator_name)
+    evaluator(model, output_dir, evaluator_out_format)
 
     click.echo("Compilation finished successfully!")
     click.echo("Project generated in: %s" % output_dir)
@@ -112,8 +116,12 @@ def compile(ctx, project_dir, output_dir, rest_strategy):
 
 @silvera.command()
 @click.argument('project_dir', type=click.Path(), required=True)
+@click.option('--evaluator-name', '-e', default='builtin',
+              help='The architecture evaluator name.')
+@click.option('--evaluator-out-format', '-f', default=FORMAT_STR,
+              help='The architecture evaluator\'s output format.')
 @click.pass_context
-def evaluate(ctx, project_dir):
+def evaluate(ctx, project_dir, evaluator_name, evaluator_out_format):
     """Evaluates the architecture for given project."""
     project_dir = os.path.abspath(project_dir)
 
@@ -123,10 +131,8 @@ def evaluate(ctx, project_dir):
     except Exception as ex:
         raise click.ClickException(str(ex))
 
-    click.echo("Evaluating...")
-    evaluator = Evaluator()
-    result = evaluator.evaluate(model)
-    result.to_report()
+    evaluator = get_evaluator(evaluator_name)
+    evaluator(model, project_dir, evaluator_out_format)
 
 
 @silvera.command()
@@ -137,6 +143,14 @@ def list_generators(ctx):
         click.echo("{}-{} -> {}".format(gen_desc.lang_name,
                                         gen_desc.lang_ver,
                                         gen_desc.description))
+
+
+@silvera.command()
+@click.pass_context
+def list_evaluators(ctx):
+    """Lists all currently available architecture evaluators"""
+    for desc in collect_evaluators().values():
+        click.echo("{} -> {}".format(desc.name, desc.description))
 
 
 @silvera.command()

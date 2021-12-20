@@ -10,7 +10,7 @@ from silvera.generator.platforms import (
     JAVA, convert_complex_type, get_def_ret_val, is_collection, convert_list_to_array
 )
 from silvera.utils import get_templates_path
-from silvera.generator.gen_reg import GeneratorDesc
+from silvera.generator.registration import GeneratorDesc
 from silvera.generator.project_struct import java_struct, create_if_missing
 
 
