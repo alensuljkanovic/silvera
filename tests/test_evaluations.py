@@ -1,7 +1,7 @@
 import os
 import pytest
 
-from silvera.evaluation import Evaluator
+from silvera.evaluation.builtin import Evaluator
 from silvera.run import load
 from silvera.utils import get_root_path
 
