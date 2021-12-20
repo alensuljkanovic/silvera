@@ -5,8 +5,6 @@ service A {
         version="1.0.0"
     }
 
-    communication_style=rpc
-
     api {
         typedef ObjA [
             int id
@@ -23,8 +21,6 @@ service DepA1 {
     deployment {
         version="1.0.0"
     }
-
-    communication_style=rpc
 
     api {
         typedef ObjDep1 [
@@ -46,7 +42,6 @@ service DepA2 {
         version="1.0.0"
     }
 
-    communication_style=rpc
 
     api {
         typedef ObjDep2 [

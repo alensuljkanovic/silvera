@@ -6,8 +6,6 @@ service PrintService {
         version="1.0.0"
     }
 
-    communication_style=rpc
-
     api {
         typedef Document [
             int id
@@ -22,8 +20,6 @@ service PrintService {
 
 service FastPrintService extends PrintService {
 
-    communication_style=rpc
-
     api {
 
        @rest(method=POST)
@@ -37,8 +33,6 @@ service OfficeService {
         version="1.0.0"
     }
 
-    communication_style=rpc
-
     api {
         typedef Worker [
             str first_name
@@ -51,8 +45,6 @@ service OfficeService {
 }
 
 service NewOfficeService extends OfficeService {
-
-    communication_style=rpc
 
     api {
 

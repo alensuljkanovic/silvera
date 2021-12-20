@@ -16,8 +16,6 @@ service PaymentService {
         replicas=1
     }
 
-    communication_style=rpc
-
     api {
         typedef Payment [
             str id

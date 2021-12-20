@@ -13,8 +13,6 @@ service UserService {
         replicas=1
     }
 
-    communication_style=rpc
-
     api {
         typedef User [
             str id

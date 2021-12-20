@@ -6,8 +6,6 @@ service OfficeService {
         version="1.0.0"
     }
 
-    communication_style=rpc
-
     api {
         typedef Worker [
             i32 id
@@ -37,8 +35,6 @@ service NewOfficeService extends OfficeService{
     deployment {
         version="2.0.0"
     }
-
-    communication_style=messaging
 
     api {
         void updateWorker(Worker w)

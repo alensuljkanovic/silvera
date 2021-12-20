@@ -29,5 +29,7 @@ tests/examples/async/src-gen/*
 tests/examples/messaging/src-gen/*
 !tests/examples/messaging/src-gen/.gitkeep
 
+tests/examples/openapi/example/openapi.json
+
 # pyenv file
 .python-version

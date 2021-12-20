@@ -16,8 +16,6 @@ service UserService {
         }
     }
 
-    communication_style=rpc
-
     api {
         typedef User [
             str id
@@ -35,10 +33,6 @@ service UserService {
     }
 }
 
-service ProxyService extends UserService {
-    communication_style=messaging
-}
-
 service ChangedUserService extends UserService {
 
     deployment {
@@ -52,5 +46,4 @@ service ChangedUserService extends UserService {
         }
     }
 
-    communication_style=rpc
 }

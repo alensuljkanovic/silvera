@@ -21,15 +21,11 @@ ConfigServerDecl:
 
 ServiceRegistryDecl:
     'service-registry' name=ID '{'
-        'tool' '=' tool=ServiceRegistryTool
         'client_mode' '=' client_mode=BOOL
         deployment=Deployment
     '}'
 ;
 
-ServiceRegistryTool:
-    "eureka" | "zookeeper" | "consul"
-;
 
 APIGateway:
     'api-gateway' name=ID '{'
@@ -37,8 +33,6 @@ APIGateway:
         ('service_registry' '=' service_registry=FQN)?
 
         deployment=Deployment
-
-        'communication_style' '=' comm_style=CommunicationStyle
 
         'gateway-for' '{'
             gateway_for+=GatewayFor
@@ -58,8 +52,6 @@ ServiceDecl:
         ('service_registry' '=' service_registry=FQN)?
 
         (deployment=Deployment)?
-
-        'communication_style' '=' comm_style=CommunicationStyle
 
         (api=APIDecl)?
     '}'
@@ -211,10 +203,6 @@ HostChoice:
     "PC" | "VM" | "container" | "serverless"
 ;
 
-CommunicationStyle:
-    //"REST" | "gRPC" | "thrift" | "kafka" | "RabbitMQ" | "custom"
-    "rpc" | "messaging"
-;
 
 Annotation:
     "@async" | RESTAnnotation | "@thrift" | MessagingAnnotation

@@ -29,10 +29,7 @@ def test_deployment_inheritance(examples_path):
     model = load(os.path.join(examples_path, "inheritance", "deployment"))
 
     user_service = model.find_by_fqn("user.UserService")
-    proxy_service = model.find_by_fqn("user.ProxyService")
     changed_service = model.find_by_fqn("user.ChangedUserService")
-
-    assert user_service.deployment is proxy_service.deployment
 
     ch_deployment = changed_service.deployment
     ch_restart = ch_deployment.restart_policy
@@ -56,17 +53,14 @@ def test_api_inheritance(examples_path):
     model = load(os.path.join(examples_path, "inheritance", "api"))
 
     user_service = model.find_by_fqn("user.UserService")
-    proxy_service = model.find_by_fqn("user.ProxyService")
     changed_service = model.find_by_fqn("user.ChangedUserService")
 
     base_login = user_service.get_function("login")
-    assert proxy_service.get_function("login") is base_login
 
     assert changed_service.get_function("login") is base_login
     assert changed_service.get_function("logout")
 
     user_obj = user_service.domain_objs["User"]
-    assert proxy_service.domain_objs["User"] is user_obj
 
     ch_user_obj = changed_service.domain_objs["User"]
     assert ch_user_obj.name == user_obj.name

@@ -1,5 +1,4 @@
 service-registry ServiceRegistry{
-    tool=eureka
     client_mode=False
     deployment {
         version="0.0.1"
@@ -20,8 +19,6 @@ service Library {
         host=PC
         replicas=1
     }
-
-    communication_style=rpc
 
     api {
         typedef Registry [
@@ -76,8 +73,6 @@ service Schematic {
         host=PC
         replicas=1
     }
-
-    communication_style=rpc
 
     api {
         typedef Shematic [
@@ -145,8 +140,6 @@ service ConnectionsValidator {
         replicas=1
     }
 
-    communication_style=rpc
-
     api {
         typedef Status[
             i32 code
@@ -180,8 +173,6 @@ service AnsiCCompiler {
         replicas=1
     }
 
-    communication_style=rpc
-
     api {
 
         typedef ComponentData [
@@ -209,8 +200,6 @@ service ARMCCompiler {
         host=PC
         replicas=1
     }
-
-    communication_style=rpc
 
     api {
         typedef ComponentData [

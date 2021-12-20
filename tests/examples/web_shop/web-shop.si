@@ -8,7 +8,6 @@ config-server ConfigServer {
 }
 
 service-registry ServiceRegistry{
-    tool=eureka
     client_mode=False
     deployment {
         version="0.0.1"
@@ -34,8 +33,6 @@ service UserService {
         host=PC
         replicas=1
     }
-
-    communication_style=rpc
 
     api {
         """User object
@@ -111,8 +108,6 @@ service PaymentService {
         replicas=1
     }
 
-    communication_style=rpc
-
     api {
         typedef Payment [
             str id
@@ -143,8 +138,6 @@ service ShoppingCartService {
         host=PC
         replicas=1
     }
-
-    communication_style=rpc
 
     api {
         typedef ShoppingCart [
@@ -180,8 +173,6 @@ service ProductService {
         host=PC
         replicas=1
     }
-
-    communication_style=rpc
 
     api {
         typedef Product [

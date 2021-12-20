@@ -1,7 +1,6 @@
 
 
 service-registry ServiceRegistry{
-    tool=eureka
     client_mode=False
     deployment {
         version="0.0.1"

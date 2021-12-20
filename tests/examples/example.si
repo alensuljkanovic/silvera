@@ -8,7 +8,6 @@ config-server ConfigServer {
 }
 
 service-registry EmployeeEurekaServer{
-    tool=eureka
     client_mode=False
     deployment {
         version="0.0.1"
@@ -31,8 +30,6 @@ api-gateway APIGateway {
         replicas=1
     }
 
-    communication_style=rpc
-
     gateway-for {
         EmployeeSearch as /emp
     }
@@ -52,8 +49,6 @@ service EmployeeSearch {
         host=PC
         replicas=1
     }
-
-    communication_style=rpc
 
     api {
         typedef Employee [
