@@ -20,7 +20,7 @@ def silvera(ctx, debug):
 @click.argument('project_dir', type=click.Path(), required=True)
 @click.pass_context
 def check(ctx, project_dir):
-    """Checks if created model is valid."""
+    """Checks if the created model is valid."""
     try:
         runners.load(project_dir)
     except Exception as ex:
@@ -122,7 +122,7 @@ def compile(ctx, project_dir, output_dir, rest_strategy, evaluator_name,
               help='The architecture evaluator\'s output format.')
 @click.pass_context
 def evaluate(ctx, project_dir, evaluator_name, evaluator_out_format):
-    """Evaluates the architecture for given project."""
+    """Evaluates the architecture for a given project."""
     project_dir = os.path.abspath(project_dir)
 
     try:
@@ -159,7 +159,7 @@ def list_evaluators(ctx):
               help='The output dir to generate to. Default = same as input.')
 @click.pass_context
 def visualize(ctx, project_dir, output_dir):
-    """Visualize the architecture for given project."""
+    """Visualize the architecture for a given project."""
     project_dir = os.path.abspath(project_dir)
 
     try:
