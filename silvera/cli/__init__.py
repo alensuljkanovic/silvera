@@ -75,7 +75,7 @@ def init(ctx, project_name, registry, registry_port, cfg, cfg_path, cfg_port,
 @click.option('--rest-strategy', '-r', default=0,
               help='Strategy to be applied during REST resolving. \
               Default = no strategy')
-@click.option('--evaluator-name', '-e', default='builtin',
+@click.option('--evaluator-name', '-e', default='default',
               help='The architecture evaluator name.')
 @click.option('--evaluator-out-format', '-f', default=FORMAT_STR,
               help='The architecture evaluator\'s output format.')
