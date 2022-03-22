@@ -63,4 +63,4 @@ For documentation and tutorials, please check Silvera's wiki page: [here](https:
 
 ## Python versions
 
-Tested with Python 3.7.4
+Tested with Python 3.7.4+
