@@ -10,6 +10,57 @@ specifications are used by the compiler to produce executable program code.
 
 Silvera is fully implemented in Python.
 
+# Quick intro
+
+Here is a small example where we define a service registry and one microservice.
+
+```
+# setup.si
+
+service-registry ServiceRegistry {
+	tool=eureka
+	client_mode=False
+	deployment {
+		version="0.0.1"
+		port=9091
+		url="http://localhost"
+	}
+}
+```
+
+```
+import "setup.si"
+
+service Bookstore {
+
+    service_registry=ServiceRegistry
+    communication_style=rpc
+
+    api {
+
+        @crud
+        typedef Book [
+            @id str isbn
+            @required str title
+            @required str author
+            str category
+            @required double price
+        ]
+
+        @rest(method=GET)
+        list<Book> listBooks()
+
+        @rest(method=GET)
+        bool bookExists(str isbn)
+
+        @rest(method=GET)
+        double bookPrice(str isbn)
+    }
+
+}
+```
+
+
 ## Installation
 
 You can use `pip` to install Silvera:
@@ -58,7 +109,7 @@ Commands:
 
 ## User guide
 
-For documentation and tutorials, please check Silvera's wiki page: [here](https://alensuljkanovic.github.io/silvera/).
+For documentation and tutorials, please check Silvera's wiki page: https://alensuljkanovic.github.io/silvera/
 
 
 ## Python versions
