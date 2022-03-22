@@ -58,7 +58,7 @@ Commands:
 
 ## User guide
 
-For documentation and tutorials, please check Silvera's wiki page: [here](https://gitlab.com/alensuljkanovic/silvera/-/wikis/home).
+For documentation and tutorials, please check Silvera's wiki page: [here](https://alensuljkanovic.github.io/silvera/).
 
 
 ## Python versions
