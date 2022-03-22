@@ -59,19 +59,19 @@ Commands:
 ## User guide
 
 * Modeling microservices
-  * [Service registry declaration](./docs/service_registry)
-  * [Service declaration](./docs/service)
-  * [Inter-service communication](./docs/communication)
-    * [Remote procedure call](./docs/communication#remote-procedure-call)
-    * [Messaging](./docs/communication#messaging)
-  * [API gateway](./docs/api_gateway)
+  * [Service registry declaration](./service_registry)
+  * [Service declaration](./service)
+  * [Inter-service communication](./communication)
+    * [Remote procedure call](./communication#remote-procedure-call)
+    * [Messaging](./communication#messaging)
+  * [API gateway](./api_gateway)
 * From model to runnable
-  * [Compilation](./docs/compilation)
-  * [Running the executable](./docs/compilation#compile-and-run-the-project)
-  * [Introducing manual changes](./docs/compilation#introduce-manual-changes-to-the-generated-code)
-  * [Registering custom generator](./docs/custom_generator)
-* [Model evaluation](./docs/evaluation)
-* [Silvera CLI commands](./docs/commands)
+  * [Compilation](./compilation)
+  * [Running the executable](./compilation#compile-and-run-the-project)
+  * [Introducing manual changes](./compilation#introduce-manual-changes-to-the-generated-code)
+  * [Registering custom generator](./custom_generator)
+* [Model evaluation](./evaluation)
+* [Silvera CLI commands](./commands)
 
 ## Video tutorials
 
