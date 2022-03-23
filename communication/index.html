@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <meta name="author" content="Alen Suljkanović">
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Inter-service communication - Silvera</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Inter-service communication";
+    var mkdocs_page_input_path = "communication.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Silvera</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">User Guide</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="#">Modeling microservices</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../service_registry/">Service registry declaration</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../service/">Service declaration</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="#">Inter-service communication</a>
+    <ul>
+                <li class="toctree-l3"><a class="" href="../communication#remote-procedure-call">Remote procedure call</a>
+                </li>
+                <li class="toctree-l3"><a class="" href="../communication#messaging">Messaging</a>
+                </li>
+    </ul>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../api_gateway/">API gateway</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../deployment/">Deployment options</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../configuration_server/">Configuration server</a>
+                </li>
+    </ul>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="#">From model to runnable</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../compilation/">Compilation</a>
+                </li>
+                <li class="toctree-l2"><a class="" href="../compilation#compile-and-run-the-project">Running the executable</a>
+                </li>
+                <li class="toctree-l2"><a class="" href="../compilation#introduce-manual-changes-to-the-generated-code">Introducing manual changes</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../custom_generator/">Registering custom generator</a>
+                </li>
+    </ul>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../evaluation/">Model evaluation</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../commands/">Silvera CLI commands</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Video tutorials</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="" href="https://youtu.be/auYNqP4FgW0">Basics</a>
+                    </li>
+                    <li class="toctree-l1"><a class="" href="https://youtu.be/MQyfZOXX99M">Messaging</a>
+                    </li>
+                    <li class="toctree-l1"><a class="" href="https://youtu.be/p63EnxR40ic">Microservice deployment options & custom code generator</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">About</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="" href="https://github.com/alensuljkanovic/silvera/blob/master/LICENSE">License</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Silvera</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Inter-service communication</li>
+    <li class="wy-breadcrumbs-aside">
+      
+        <a href="https://github.com/alensuljkanovic/silvera/edit/master/docs/communication.md"
+          class="icon icon-github"> Edit on GitHub</a>
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="inter-service-communication">Inter-service communication</h1>
+<p>Service can use RPC (Remote procedure call) or Messaging communication style.</p>
+<p>RPC communication style is based on request-reply protocol. It is simple to use, but it creates
+coupling between client service and provider service.</p>
+<p>Messaging provides loose runtime coupling, but adds additional complexity to the system because
+you need to define <a href="./communication#message-broker">message broker</a> and <a href="./communication#message-pool">message pool</a>.</p>
+<h2 id="remote-procedure-call-rpc">Remote procedure call (RPC)</h2>
+<p>When using RPC, in order for two services to be able  to communicate, you must define
+a dependency between them.</p>
+<p>In the example that follows, we will define two dependencies for <code>Order</code> service.
+These are <code>User</code> service and <code>Storage</code> service. More precisely, <code>Order</code> service
+depends on <code>User</code> service methods <code>userExist</code> and <code>userEmail</code>, and <code>Storage</code>
+service method <code>takeIngredient</code>.</p>
+<pre><code>dependency Order -&gt; User {
+    userExists[fail_fast]
+    userEmail[fail_fast]
+}
+
+dependency Order -&gt; Storage {
+    takeIngredient[fail_fast]
+}
+</code></pre>
+<p>Based on the dependency declaration, Silvera will generate a code that can be used
+to interact with the target service.</p>
+<p>What happens if <code>User</code> service or <code>Storage</code> service is unavailable when request takes
+place? Luckily, Silvera implements Circuit Breaker pattern, and how the situation is
+handled is defined by one of the following options:</p>
+<ul>
+<li><strong>fail_fast</strong> - exception will be raised in the client if API call fails (default behavior),</li>
+<li><strong>fail_silent</strong> - returns an empty response,</li>
+<li><strong>fallback_method</strong> - defines a method that will be called in case the original method fails,</li>
+<li><strong>fallback_static</strong> - returns default values, and</li>
+<li><strong>fallback_cache</strong> - returns a cached version of response if present, otherwise returns empty response like fail_silent.</li>
+</ul>
+<h2 id="messaging">Messaging</h2>
+<p>Messaging communication style depends on two things: message broker, and message
+pool.</p>
+<p>!!! note</p>
+<pre><code>In the current version, Silvera supports only Kafka as a message broker.
+</code></pre>
+<h3 id="message-pool">Message pool</h3>
+<p>Message pool is globally available object that contains all messages that are used
+withing the system. Message can contain parameters (command message) or not (event).</p>
+<p>Here's how to define a message pool with two messages:</p>
+<pre><code>msg-pool {
+
+    // define message group Commands
+    group Commands [
+
+        msg CreateCommand[
+           str param1
+           str param2
+           ...
+        ]
+    ]
+
+    // define message group Events
+    group Events [
+        msg StorageItemTaken[]
+    ]
+}
+
+</code></pre>
+<h3 id="message-broker">Message broker</h3>
+<p>Message broker is an entity whose responsibility is to deliver messages to a destination.</p>
+<p>Message broker contains <code>channels</code> where messages are stored. Services that add messages
+to channels are called <code>publishers</code>, while services that read messages from channels
+are called <code>consumers</code>. A service can be both publisher and consumer at the same time.</p>
+<p>Here's how to define a message broker:</p>
+<pre><code>// message broker is named Broker
+msg-broker Broker {
+
+    channel CMD_CREATE_COMMAND_CHANNEL(Commands.CreateCommand)
+    channel EV_STORAE_ITEM_TAKEN_CHANNEL(Events.StorageItemTaken)
+</code></pre>
+<p>As shown in the example above, <strong>channels in Silvera are typed</strong>. Which means, only
+messages of certain type can be added to the channel.</p>
+<h3 id="how-do-i-send-messages">How do I send messages?</h3>
+<p>In order to send a message, you need to annotate an API method with <code>@producer</code> annotation.</p>
+<p>In following example, method <code>takeFromStorage</code> will send <code>Events.StorageItemTaken</code> message to the <code>EV_STORAGE_ITEM_TAKEN_CHANNEL</code> channel defined in broker named <code>Broker</code>.</p>
+<pre><code>service Order [
+
+    ...
+
+    api {
+        ...
+        @producer(Events.StorageItemTaken -&gt; Broker.EV_STORAGE_ITEM_TAKEN_CHANNEL)
+        bool takeFromStorage(i32 itemId)
+    }
+]
+
+</code></pre>
+<p>!!! note</p>
+<pre><code>Silvera will generate code that will publish the command to 
+the messaging broker, but setting values to command's attributes need to be 
+handled manually, otherwise empty message will be sent!
+</code></pre>
+<h3 id="how-do-i-receive-messages">How do I receive messages?</h3>
+<p>In order to consume a message, you need to annotate an API method with <code>@consumer</code> annotation.</p>
+<p>In following example, internal method <code>itemTakenListener</code> will receive <code>Events.StorageItemTaken</code> message from the <code>EV_STORAGE_ITEM_TAKEN_CHANNEL</code> channel defined in broker named <code>Broker</code>.</p>
+<pre><code>service StorageListener [
+
+    ...
+
+    api {
+        ...
+
+        internal {
+            @consumer(Events.StorageItemTaken &lt;- Broker.EV_STORAGE_ITEM_TAKEN_CHANNEL)
+            void itemTakenListener()
+        }
+
+    }
+]
+
+</code></pre>
+<p>In the generated code, <code>itemTakenListener</code> will have <code>Events.StorageItemTaken</code> object
+as a parameter.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/alensuljkanovic/silvera/" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

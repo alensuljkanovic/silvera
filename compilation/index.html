@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <meta name="author" content="Alen Suljkanović">
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Compilation - Silvera</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Compilation";
+    var mkdocs_page_input_path = "compilation.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Silvera</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">User Guide</span></p>
+                <ul class="current">
+                    <li class="toctree-l1"><a class="reference internal" href="#">Modeling microservices</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../service_registry/">Service registry declaration</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../service/">Service declaration</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="#">Inter-service communication</a>
+    <ul>
+                <li class="toctree-l3"><a class="" href="../communication#remote-procedure-call">Remote procedure call</a>
+                </li>
+                <li class="toctree-l3"><a class="" href="../communication#messaging">Messaging</a>
+                </li>
+    </ul>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../api_gateway/">API gateway</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../deployment/">Deployment options</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../configuration_server/">Configuration server</a>
+                </li>
+    </ul>
+                    </li>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="#">From model to runnable</a>
+    <ul class="current">
+                <li class="toctree-l2 current"><a class="reference internal current" href="./">Compilation</a>
+    <ul class="current">
+    <li class="toctree-l3"><a class="reference internal" href="#compile-and-run-the-project">Compile and run the project</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#introduce-manual-changes-to-the-generated-code">Introduce manual changes to the generated code</a>
+    </li>
+    </ul>
+                </li>
+                <li class="toctree-l2"><a class="" href="../compilation#compile-and-run-the-project">Running the executable</a>
+                </li>
+                <li class="toctree-l2"><a class="" href="../compilation#introduce-manual-changes-to-the-generated-code">Introducing manual changes</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../custom_generator/">Registering custom generator</a>
+                </li>
+    </ul>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../evaluation/">Model evaluation</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../commands/">Silvera CLI commands</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Video tutorials</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="" href="https://youtu.be/auYNqP4FgW0">Basics</a>
+                    </li>
+                    <li class="toctree-l1"><a class="" href="https://youtu.be/MQyfZOXX99M">Messaging</a>
+                    </li>
+                    <li class="toctree-l1"><a class="" href="https://youtu.be/p63EnxR40ic">Microservice deployment options & custom code generator</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">About</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="" href="https://github.com/alensuljkanovic/silvera/blob/master/LICENSE">License</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Silvera</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>User Guide &raquo;</li>
+        
+      
+        
+          <li>From model to runnable &raquo;</li>
+        
+      
+    
+    <li>Compilation</li>
+    <li class="wy-breadcrumbs-aside">
+      
+        <a href="https://github.com/alensuljkanovic/silvera/edit/master/docs/compilation.md"
+          class="icon icon-github"> Edit on GitHub</a>
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="from-model-to-runnable">From model to runnable</h1>
+<p>!!! note</p>
+<pre><code>Java 1.8 is needed to run generated code!
+</code></pre>
+<h2 id="compile-and-run-the-project">Compile and run the project</h2>
+<p>First, you need to compile the model. For compilation, use the following command:</p>
+<pre><code class="language-sh">$ silvera compile &lt;project_dir&gt; -o &lt;output_dir&gt;
+</code></pre>
+<p>If model is compiled successfully, before you run the applications, first you need to run MongoDB instance:</p>
+<pre><code class="language-sh">$ sudo systemctl start mongo.service
+</code></pre>
+<p>If your application is using <code>messaging</code> communication style, you need to run <code>Zookeper</code> and <code>Kafka</code> before starting an applications. To run <code>Zookeper</code> run the following command:</p>
+<pre><code class="language-sh">$ cd &lt;kafka_project&gt;
+$ bin/zookeeper-server-start.sh config/zookeeper.properties
+</code></pre>
+<p>To run <code>Kafka</code> run following command:</p>
+<pre><code class="language-sh">$ cd &lt;kafka_project&gt;
+$ bin/kafka-server-start.sh config/server.properties
+</code></pre>
+<p>After that, go to the output directory and run <code>run.sh</code> script:</p>
+<pre><code class="language-sh">$ cd &lt;output_dir&gt;
+$ sh run.sh
+</code></pre>
+<h2 id="introduce-manual-changes-to-the-generated-code">Introduce manual changes to the generated code</h2>
+<p>The functionality of custom functions needs to be added manually.</p>
+<p>During the compilation, Silvera produces a Java project with the following
+structure:</p>
+<pre><code>&lt;MicroserviceName&gt;
+| src
+| main
+└───java
+    └─── com.silvera.&lt;MicroserviceName&gt;
+             └───controller
+             └─── domain.model
+             └─── service
+                 └─── base
+                 └─── impl
+             └───App.java
+    └─── resources
+    |test
+| pom.xml
+| run.cmd
+| run.sh
+</code></pre>
+<p>Package <code>service.impl</code> contains the implementation of service functions. Here,
+you can provide the custom functions the necessary functionality. For example,
+for the <code>User</code> microservice (check section <a href="../service/">Service declaration</a>), the
+generated <code>UserService.java</code> looks like this:</p>
+<pre><code class="language-java">// UserService.java
+
+...
+
+@Service
+public class UserService implements IUserService {
+
+
+    @Autowired
+    UserRepository userRepository;
+
+
+    public UserService(){
+        super();
+    }
+
+    // Auto-generated CRUD methods
+    @Override
+    public User createUser(User user){
+        userRepository.save(user);
+        Optional&lt;User&gt; opt = userRepository.findById(user.getId());
+        return opt.orElse(null);
+    }
+
+    @Override
+    public User updateUser(java.lang.String id, User userUpdate){
+        User entity = this.readUser(id);
+        userRepository.save(userUpdate);
+        return userUpdate;
+    }
+
+    @Override
+    public User readUser(java.lang.String id){
+        Optional&lt;User&gt; opt = userRepository.findById(id);
+        return opt.orElseThrow(IllegalArgumentException::new);
+    }
+
+    @Override
+    public void deleteUser(java.lang.String id){
+        User entity = readUser(id);
+        userRepository.delete(entity);
+    }
+
+
+
+    @Override
+    public java.util.List&lt;User&gt; listUsers() {
+        /*
+            TODO: Implement this function!!!
+        */
+        throw new java.lang.UnsupportedOperationException(&quot;Not implemented yet.&quot;);
+    }
+
+
+
+    @Override
+    public java.lang.Boolean userExist(java.lang.String username) {
+        /*
+            TODO: Implement this function!!!
+        */
+        throw new java.lang.UnsupportedOperationException(&quot;Not implemented yet.&quot;);
+    }
+
+
+
+    @Override
+    public java.lang.String userEmail(java.lang.String username) {
+        /*
+            TODO: Implement this function!!!
+        */
+        throw new java.lang.UnsupportedOperationException(&quot;Not implemented yet.&quot;);
+    }
+
+
+}
+</code></pre>
+<p>As seen above, the CRUD methods are provided with the default functionality,
+but custom functions <code>listUsers</code>, <code>userExists</code>, and<code>userEmail</code> must be implemented
+manualy. The functionality is added by simply changing the implementation of these
+functions.</p>
+<p>!!! note</p>
+<p>This file will preserve its changes between successive compilations. Meaning,
+   if the base service is changed in the meantime, this file needs to be updated
+   manually.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../custom_generator/" class="btn btn-neutral float-right" title="Registering custom generator">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../configuration_server/" class="btn btn-neutral" title="Configuration server"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/alensuljkanovic/silvera/" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../configuration_server/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../custom_generator/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <meta name="author" content="Alen Suljkanović">
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Registering custom generator - Silvera</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Registering custom generator";
+    var mkdocs_page_input_path = "custom_generator.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> Silvera</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">User Guide</span></p>
+                <ul class="current">
+                    <li class="toctree-l1"><a class="reference internal" href="#">Modeling microservices</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../service_registry/">Service registry declaration</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../service/">Service declaration</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="#">Inter-service communication</a>
+    <ul>
+                <li class="toctree-l3"><a class="" href="../communication#remote-procedure-call">Remote procedure call</a>
+                </li>
+                <li class="toctree-l3"><a class="" href="../communication#messaging">Messaging</a>
+                </li>
+    </ul>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../api_gateway/">API gateway</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../deployment/">Deployment options</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../configuration_server/">Configuration server</a>
+                </li>
+    </ul>
+                    </li>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="#">From model to runnable</a>
+    <ul class="current">
+                <li class="toctree-l2"><a class="reference internal" href="../compilation/">Compilation</a>
+                </li>
+                <li class="toctree-l2"><a class="" href="../compilation#compile-and-run-the-project">Running the executable</a>
+                </li>
+                <li class="toctree-l2"><a class="" href="../compilation#introduce-manual-changes-to-the-generated-code">Introducing manual changes</a>
+                </li>
+                <li class="toctree-l2 current"><a class="reference internal current" href="./">Registering custom generator</a>
+    <ul class="current">
+    <li class="toctree-l3"><a class="reference internal" href="#step-1">Step 1</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#step-2">Step 2</a>
+    </li>
+    </ul>
+                </li>
+    </ul>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../evaluation/">Model evaluation</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../commands/">Silvera CLI commands</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Video tutorials</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="" href="https://youtu.be/auYNqP4FgW0">Basics</a>
+                    </li>
+                    <li class="toctree-l1"><a class="" href="https://youtu.be/MQyfZOXX99M">Messaging</a>
+                    </li>
+                    <li class="toctree-l1"><a class="" href="https://youtu.be/p63EnxR40ic">Microservice deployment options & custom code generator</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">About</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="" href="https://github.com/alensuljkanovic/silvera/blob/master/LICENSE">License</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">Silvera</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>User Guide &raquo;</li>
+        
+      
+        
+          <li>From model to runnable &raquo;</li>
+        
+      
+    
+    <li>Registering custom generator</li>
+    <li class="wy-breadcrumbs-aside">
+      
+        <a href="https://github.com/alensuljkanovic/silvera/edit/master/docs/custom_generator.md"
+          class="icon icon-github"> Edit on GitHub</a>
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="custom-generator">Custom generator</h1>
+<p>Silvera allows users to register new code generators as plugins.</p>
+<p>Silvera uses the <code>pkg_resources</code> module from <a href="https://setuptools.readthedocs.io/en/latest/">setuptools</a>
+and its concept of extension point to declaratively specify the registration of the new code generator.
+Extensions are defined within the project's <code>setup.py</code> module. All Python projects installed in
+the environment that declare the extension point will be discoverable dynamically.</p>
+<p>Registration of a new code generator is performed in two steps (as shown below). You can also follow
+the video tutorial:</p>
+<p><a href="https://youtu.be/p63EnxR40ic"><img alt="Custom code generator" src="https://img.youtube.com/vi/p63EnxR40ic/3.jpg" /></a></p>
+<h2 id="step-1">Step 1</h2>
+<p>Create an instance of <code>GeneratorDesc</code> class. An instance of GeneratorDesc class contains
+information about the code generator's target language, description, and the reference
+towards the function that should be called to perform code generation.
+This function has three parameters: <code>Decl</code> object, a path to the directory where code will be generated,
+and a flag that shows whether the code generator is run in debug mode.</p>
+<pre><code class="language-python">from silvera.generator.gen_reg import GeneratorDesc
+
+def generate(decl, output_dir, debug):
+    &quot;&quot;&quot;Entry point function for code generator.
+
+    Args:
+        decl(Decl): can be declaration of service registry or config
+                    server.
+        output_dir(str): output directory.
+        debug(bool): True if debug mode activated. False otherwise.
+    &quot;&quot;&quot;
+    ...
+
+python = GeneratorDesc(
+    language_name=&quot;python&quot;,
+    language_ver=&quot;3.7.4&quot;,
+    description=&quot;Python 3.7.4 code generator&quot;,
+    gen_func=generate
+)
+</code></pre>
+<h2 id="step-2">Step 2</h2>
+<p>Now, we need to make the code generator discoverable by Silvera. To do this,
+we must register the <code>GeneratorDesc</code> object in the <code>setup.py</code> entry point named
+<code>silvera_generators</code>:</p>
+<pre><code class="language-python"># setup.py
+
+from setuptools import setup
+
+setup(
+    ...
+    entry_points={
+        'silvera_generators': [
+            'python = pygen.generator:python'
+        ]
+    }
+)
+</code></pre>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../evaluation/" class="btn btn-neutral float-right" title="Model evaluation">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../compilation/" class="btn btn-neutral" title="Compilation"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/alensuljkanovic/silvera/" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../compilation/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../evaluation/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
