@@ -156,9 +156,10 @@
             <div class="section">
               
                 <h1 id="from-model-to-runnable">From model to runnable</h1>
-<p>!!! note</p>
-<pre><code>Java 1.8 is needed to run generated code!
-</code></pre>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Java 1.8 is needed to run generated code!</p>
+</div>
 <h2 id="compile-and-run-the-project">Compile and run the project</h2>
 <p>First, you need to compile the model. For compilation, use the following command:</p>
 <pre><code class="language-sh">$ silvera compile &lt;project_dir&gt; -o &lt;output_dir&gt;
@@ -283,7 +284,9 @@ public class UserService implements IUserService {
 but custom functions <code>listUsers</code>, <code>userExists</code>, and<code>userEmail</code> must be implemented
 manualy. The functionality is added by simply changing the implementation of these
 functions.</p>
-<p>!!! note</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+</div>
 <p>This file will preserve its changes between successive compilations. Meaning,
    if the base service is changed in the meantime, this file needs to be updated
    manually.</p>

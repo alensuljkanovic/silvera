@@ -178,9 +178,10 @@ handled is defined by one of the following options:</p>
 <h2 id="messaging">Messaging</h2>
 <p>Messaging communication style depends on two things: message broker, and message
 pool.</p>
-<p>!!! note</p>
-<pre><code>In the current version, Silvera supports only Kafka as a message broker.
-</code></pre>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In the current version, Silvera supports only Kafka as a message broker.</p>
+</div>
 <h3 id="message-pool">Message pool</h3>
 <p>Message pool is globally available object that contains all messages that are used
 withing the system. Message can contain parameters (command message) or not (event).</p>
@@ -233,11 +234,12 @@ messages of certain type can be added to the channel.</p>
 ]
 
 </code></pre>
-<p>!!! note</p>
-<pre><code>Silvera will generate code that will publish the command to 
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Silvera will generate code that will publish the command to 
 the messaging broker, but setting values to command's attributes need to be 
-handled manually, otherwise empty message will be sent!
-</code></pre>
+handled manually, otherwise empty message will be sent!</p>
+</div>
 <h3 id="how-do-i-receive-messages">How do I receive messages?</h3>
 <p>In order to consume a message, you need to annotate an API method with <code>@consumer</code> annotation.</p>
 <p>In following example, internal method <code>itemTakenListener</code> will receive <code>Events.StorageItemTaken</code> message from the <code>EV_STORAGE_ITEM_TAKEN_CHANNEL</code> channel defined in broker named <code>Broker</code>.</p>

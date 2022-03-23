@@ -163,9 +163,11 @@
 <li><strong>replicas</strong> (optional) - defines a number of service replicas which will be started,</li>
 <li><strong>restart_policy</strong> (optional) - defines a restart policy for a service.</li>
 </ul>
-<p>!!! note</p>
-<pre><code>Current version of Silvera has no support for replicas and restart_policy. Model will be compiled, but these attributes will be ignored.
-</code></pre>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Current version of Silvera has no support for <em>replicas</em> and <em>restart_policy</em>.
+Model will be compiled, but these attributes will be ignored.</p>
+</div>
 <p>Following example shows how deployable can be defined:</p>
 <pre><code>deployment {
     version=&quot;0.0.1&quot;

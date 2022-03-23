@@ -232,9 +232,10 @@ service User {
 <li><em>unique</em> - value of the field must be unique in the database. Use <code>@unique</code> annotation to set field as unique.</li>
 <li><em>ordered</em> - typedef will be sorted by this field when retrieving from the database. Use <code>@ordered</code> annotation to set field as ordered.</li>
 </ul>
-<p>!!! note</p>
-<pre><code>Classifiers unique and ordered are only partially supported for now!
-</code></pre>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Classifiers unique and ordered are only partially supported for now!</p>
+</div>
 <p>Following example demonstrates how to define fields with aforementioned attributes:</p>
 <pre><code>    typedef User [
         @id str username
@@ -323,9 +324,11 @@ bool userExists(str username)
 </code></pre>
 <p>All HTTP methods are supported by <code>@rest</code> annotation. If <code>@rest</code> annotation is omitted,
 Silvera will try to figure out the which HTTP method to use, or it will throw exception.</p>
-<p>!!! note</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
 <p>In the current version of Silvera, calculating proper <code>@rest</code> annotation is little buggy, 
-  so please set annotations manually.</p>
+so please set annotations manually.</p>
+</div>
 <p>Besides <code>@rest</code>, method can also be annotated with messaging annotations:</p>
 <ul>
 <li><code>@producer</code> - annotates method as a message producer, or</li>
