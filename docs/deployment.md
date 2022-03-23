@@ -14,7 +14,8 @@ Deployment contains following attributes:
 
 !!! note
 
-    Current version of Silvera has no support for replicas and restart_policy. Model will be compiled, but these attributes will be ignored.
+    Current version of Silvera has no support for *replicas* and *restart_policy*.
+    Model will be compiled, but these attributes will be ignored.
 
 Following example shows how deployable can be defined:
 

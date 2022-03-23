@@ -34,3 +34,6 @@ nav:
 
 - About:
   - License: https://github.com/alensuljkanovic/silvera/blob/master/LICENSE
+
+markdown_extensions:
+- admonition:

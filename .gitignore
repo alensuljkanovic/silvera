@@ -33,3 +33,6 @@ tests/examples/openapi/example/openapi.json
 
 # pyenv file
 .python-version
+
+# MkDocs
+site/

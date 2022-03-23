@@ -198,9 +198,8 @@ Silvera will try to figure out the which HTTP method to use, or it will throw ex
 
 
 !!! note
-
-  In the current version of Silvera, calculating proper `@rest` annotation is little buggy, 
-  so please set annotations manually.
+    In the current version of Silvera, calculating proper `@rest` annotation is little buggy, 
+    so please set annotations manually.
 
 Besides `@rest`, method can also be annotated with messaging annotations:
 
