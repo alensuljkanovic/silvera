@@ -49,7 +49,10 @@ handled is defined by one of the following options:
 Messaging communication style depends on two things: message broker, and message
 pool.
 
-> In the current version, Silvera supports only Kafka as a message broker.
+!!! note
+
+    In the current version, Silvera supports only Kafka as a message broker.
+
 
 ### Message pool
 
@@ -120,9 +123,11 @@ service Order [
 
 ```
 
-> Note: Silvera will generate code that will publish the command to
-> the messaging broker, but setting values to command's attributes need to be
-> handled manually, otherwise empty message will be sent!
+!!! note
+
+    Silvera will generate code that will publish the command to 
+    the messaging broker, but setting values to command's attributes need to be 
+    handled manually, otherwise empty message will be sent!
 
 ### How do I receive messages?
 

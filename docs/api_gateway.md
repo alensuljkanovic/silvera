@@ -36,8 +36,7 @@ api-gateway EntryPoint {
 API gateway has following attributes:
 
 * **name** (mandatory) - name of the API gateway.
-* **service_registry** (optional) - reference to a [service registry](./service_registry) where the service will be registered,
-* **deployment** (optional) - tells how gateway will be deployed (more info can be found [here](./deployment)),
-* **communication_style** - tells which [communication style](./service#communication-style) will gateway use. This attribute can have either `rpc` or `messaging` as a value,
+* **service_registry** (optional) - reference to a [service registry](service_registry.md) where the service will be registered,
+* **deployment** (optional) - tells how gateway will be deployed (more info can be found [here](deployment.md)),
 * **gateway-for** (mandatory) - Maps service instance to URL. By using this URL, clients can reach
 corresponding the service.

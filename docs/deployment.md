@@ -1,6 +1,6 @@
 # Deployment
 
-Deployment is used to describe how Deployable ([service](./service), [service registry](./service_registry), [API gateway](./api_gateway) or [configuration server](./configuration_server)) object will be deployed.
+Deployment is used to describe how Deployable ([service](service.md), [service registry](service_registry.md), [API gateway](api_gateway.md) or [configuration server](configuration_server.md)) object will be deployed.
 
 Deployment contains following attributes:
 
@@ -12,18 +12,19 @@ Deployment contains following attributes:
 * **replicas** (optional) - defines a number of service replicas which will be started,
 * **restart_policy** (optional) - defines a restart policy for a service.
 
-> Note: Current version of Silvera has no support for replicas and restart_policy. Model will
-> be compiled, but these attributes will be ignored.
+!!! note
+
+    Current version of Silvera has no support for replicas and restart_policy. Model will be compiled, but these attributes will be ignored.
 
 Following example shows how deployable can be defined:
 
 ```
-    deployment {
-        version="0.0.1"
-        port=9091
-        url="http://localhost"
-        host=container
-    }
+deployment {
+    version="0.0.1"
+    port=9091
+    url="http://localhost"
+    host=container
+}
 ```
 
 If `lang` is omitted, Silvera will generate Java source code.

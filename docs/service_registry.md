@@ -29,5 +29,5 @@ As seen above, service registry has following attributes:
 * **tool** (mandatory) - defines which tool will be used as a service registry. Currently, *Silvera* supports only Eureka.
 * **client_mode** (mandatory) - defines whether service registry can be registered within another service registry or not.
 * **deployment** (mandatory) - defines how registry will be deployed. Attributes of deployment
-are defined [here](./deployment).
+are defined [here](deployment.md).
 

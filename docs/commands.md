@@ -7,6 +7,7 @@ Silvera has several CLI commands:
 - `evaluate`- used to evaluate the architecture for given project,
 - `init` - used to create initial Silvera project,
 - `list-generators` - used to lists all currently available code generators,
+- `list-evaluators` - used to lists all currently available architecture evaluators,
 - `visualize` - used to visualize the architecture for given project.
 
 To list all available commands just call the `silvera`:

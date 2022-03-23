@@ -1,6 +1,8 @@
 # From model to runnable
 
-> Java 1.8 is needed to run generated code!
+!!! note
+    
+    Java 1.8 is needed to run generated code!
 
 ## Compile and run the project
 
@@ -65,7 +67,7 @@ structure:
 
 Package `service.impl` contains the implementation of service functions. Here,
 you can provide the custom functions the necessary functionality. For example,
-for the `User` microservice (check section [Service declaration](./service)), the
+for the `User` microservice (check section [Service declaration](service.md)), the
 generated `UserService.java` looks like this:
 
 ```java
@@ -151,8 +153,10 @@ but custom functions `listUsers`, `userExists`, and`userEmail` must be implement
 manualy. The functionality is added by simply changing the implementation of these
 functions.
 
-> This file will preserve its changes between successive compilations. Meaning,
-> if the base service is changed in the meantime, this file needs to be updated
-> manually.
+!!! note
+
+   This file will preserve its changes between successive compilations. Meaning,
+   if the base service is changed in the meantime, this file needs to be updated
+   manually.
 
 

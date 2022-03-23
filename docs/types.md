@@ -16,4 +16,4 @@ Here's the list on build-in types:
 
 ## Custom types
 
-Defined as `typedef`s. For more info check [](./service#defining-domain-objects)
+Defined as `typedef`s. For more info check [here](service#defining-domain-objects)

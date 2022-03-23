@@ -1,0 +1,36 @@
+site_name: Silvera
+
+site_description: A meta-language for building Domain-Specific Languages (DSLs)
+site_author: Alen Suljkanović
+
+repo_url: https://github.com/alensuljkanovic/silvera
+
+theme: readthedocs
+
+nav:
+- Home: index.md
+- User Guide:
+  - Modeling microservices:
+    - Service registry declaration: service_registry.md
+    - Service declaration: service.md
+    - Inter-service communication:
+        - Remote procedure call: communication#remote-procedure-call
+        - Messaging: communication#messaging
+    - API gateway: api_gateway.md
+    - Deployment options: deployment.md
+    - Configuration server: configuration_server.md
+  - From model to runnable:
+    - Compilation: compilation.md
+    - Running the executable: compilation#compile-and-run-the-project
+    - Introducing manual changes: compilation#introduce-manual-changes-to-the-generated-code
+    - Registering custom generator: custom_generator.md
+  - Model evaluation: evaluation.md
+  - Silvera CLI commands: commands.md
+
+- Video tutorials:
+    - Basics: https://youtu.be/auYNqP4FgW0
+    - Messaging: https://youtu.be/MQyfZOXX99M
+    - Microservice deployment options & custom code generator: https://youtu.be/p63EnxR40ic
+
+- About:
+  - License: https://github.com/alensuljkanovic/silvera/blob/master/LICENSE

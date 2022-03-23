@@ -35,18 +35,18 @@ service User {
 ```
 
 Attributes:
-* **name** (mandatory) - name of the service.
-* **service_registry** (optional) - reference to a [service registry](service_registry.md) where the service will be registered,
-* **communication_style** - tells which communication style will service use. This attribute can have either `rpc` or `messaging` as a value,
-* **deployment** (optional) - tells how service will be deployed (more info can be found [here](deployment.md)),
-* **api** (mandatory) - API of the service. Here you define all domain objects (via `typedef`) and
-functions accessible from the outside.
+
+  * **name** (mandatory) - name of the service.
+  * **service_registry** (optional) - reference to a [service registry](service_registry.md) where the service will be registered,
+  * **communication_style** - tells which communication style will service use. This attribute can have either `rpc` or `messaging` as a value,
+  * **deployment** (optional) - tells how service will be deployed (more info can be found [here](deployment.md)),
+  * **api** (mandatory) - API of the service. Here you define all domain objects (via `typedef`) and functions accessible from the outside.
 
 ### Communication style
 
 Communication style of a service is defined by  `communication_style` attribute. Service can use RPC (Remote procedure call) or Messaging communication style.
 
-To see how services can communicate, click [here](./communication).
+To see how services can communicate, click [here](communication.md).
 
 Attribute communication style is set like this:
 
@@ -81,7 +81,7 @@ typedef Point [
 
 Each `typedef` has a `name` and one-or-more `fields`. Field has following attributes:
 
-* **data type** (mandatory) - field's data type (list of available data types is [here](./types)),
+* **data type** (mandatory) - field's data type (list of available data types is [here](types.md)),
 * **name** (mandatory) - field's name,
 * **classifiers** (optional):
   * *id* - marks field as `typedef`s ID. Use `@id` annotation to set field as ID.
@@ -89,7 +89,10 @@ Each `typedef` has a `name` and one-or-more `fields`. Field has following attrib
   * *unique* - value of the field must be unique in the database. Use `@unique` annotation to set field as unique.
   * *ordered* - typedef will be sorted by this field when retrieving from the database. Use `@ordered` annotation to set field as ordered.
 
-> Note: Classifiers unique and ordered are only partially supported for now!
+
+!!! note
+
+    Classifiers unique and ordered are only partially supported for now!
 
 Following example demonstrates how to define fields with aforementioned attributes:
 
@@ -169,7 +172,7 @@ typedef Point [
 Methods are defined similarly to Java or C#:
 
 ```python
-    bool userExists(str username)
+bool userExists(str username)
 ```
 
 Each method has:
@@ -181,20 +184,23 @@ Each method has:
 Each method can be annotated with `@rest` annotation. For example
 
 ```python
-    // generates following REST mapping: "/userexists/{username}"
-    @rest(method=GET)
-    bool userExists(str username)
+// generates following REST mapping: "/userexists/{username}"
+@rest(method=GET)
+bool userExists(str username)
 
-    // you can also provide a custom mapping
-    @rest(method=GET, mapping="/exists/{username}")
-    bool userExists(str username)
+// you can also provide a custom mapping
+@rest(method=GET, mapping="/exists/{username}")
+bool userExists(str username)
 ```
 
 All HTTP methods are supported by `@rest` annotation. If `@rest` annotation is omitted,
 Silvera will try to figure out the which HTTP method to use, or it will throw exception.
 
-> Note: In current version of Silvera, calculating proper `@rest` annotation is little buggy,
-> so please set annotations manually.
+
+!!! note
+
+  In the current version of Silvera, calculating proper `@rest` annotation is little buggy, 
+  so please set annotations manually.
 
 Besides `@rest`, method can also be annotated with messaging annotations:
 
@@ -233,10 +239,9 @@ Consumer methods will be generated with corresponding message object as a parame
 in Java, method `orderCreated` will look like this:
 
 ```java
-    private orderCreated(com.silvera.EmailNotifier.messages.ordermsggroup.OrderCreated message){
-        ...
-    }
-
+private orderCreated(com.silvera.EmailNotifier.messages.ordermsggroup.OrderCreated message){
+    ...
+}
 ```
 
 

@@ -10,6 +10,19 @@ specifications are used by the compiler to produce executable program code.
 
 Silvera is fully implemented in Python.
 
+## Feature highlights
+
+* **Designed patterns directly implemented in language**
+
+* **Project modularization - imports**
+
+* **Project evaluation based on metrics**
+
+* **Automatic code generation**
+
+* **Support for custom code generators via plugins**
+
+
 ## Installation
 
 You can use `pip` to install Silvera:
@@ -39,39 +52,9 @@ Commands:
   evaluate         Evaluates the architecture for given project.
   init             Creates initial Silvera project
   list-generators  Lists all currently available code generators
+  list-evaluators  Lists all currently available architecture evaluators
   visualize        Visualize the architecture for given project.
 ```
-
-
-## Feature highlights
-
-* **Designed patterns directly implemented in language**
-
-* **Project modularization - imports**
-
-* **Project evaluation based on metrics**
-
-* **Automatic code generation**
-
-* **Support for custom code generators via plugins**
-
-
-## User guide
-
-* Modeling microservices
-  * [Service registry declaration](./service_registry)
-  * [Service declaration](./service)
-  * [Inter-service communication](./communication)
-    * [Remote procedure call](./communication#remote-procedure-call)
-    * [Messaging](./communication#messaging)
-  * [API gateway](./api_gateway)
-* From model to runnable
-  * [Compilation](./compilation)
-  * [Running the executable](./compilation#compile-and-run-the-project)
-  * [Introducing manual changes](./compilation#introduce-manual-changes-to-the-generated-code)
-  * [Registering custom generator](./custom_generator)
-* [Model evaluation](./evaluation)
-* [Silvera CLI commands](./commands)
 
 ## Video tutorials
 
