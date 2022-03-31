@@ -42,9 +42,9 @@ setup(
         ],
 
         'silvera_commands': [
-            'check = silvera.cli.check'
-            'compile = silvera.cli.compile'
-            'list_generators = silvera.cli.list_generators'
+            'check = silvera.cli.check',
+            'compile = silvera.cli.compile',
+            'list_generators = silvera.cli.list_generators',
             'list_evaluators = silvera.cli.list_evaluators'
         ],
 
