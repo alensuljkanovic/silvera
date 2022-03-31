@@ -96,7 +96,13 @@
                 </li>
     </ul>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../evaluation/">Model evaluation</a>
+                    <li class="toctree-l1"><a class="reference internal" href="#">Model evaluation</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../evaluation-metrics/">Metrics</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../custom_evaluator/">Registering custom evaluator</a>
+                </li>
+    </ul>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../commands/">Silvera CLI commands</a>
                     </li>
@@ -108,6 +114,13 @@
                     <li class="toctree-l1"><a class="" href="https://youtu.be/MQyfZOXX99M">Messaging</a>
                     </li>
                     <li class="toctree-l1"><a class="" href="https://youtu.be/p63EnxR40ic">Microservice deployment options & custom code generator</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Demo apps</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="" href="https://github.com/alensuljkanovic/silvera-demo/tree/master/bookstore">Bookstore</a>
+                    </li>
+                    <li class="toctree-l1"><a class="" href="https://github.com/alensuljkanovic/silvera-demo/tree/master/pygen">PyGen</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">About</span></p>
@@ -160,14 +173,13 @@
             <div class="section">
               
                 <h1 id="service">Service</h1>
-<p>Service is a mechanism to enable access to one or more capabilities, where the access is provided using a prescribed interface and is exercised consistent with constraints and policies as specified by the service description [^1].</p>
+<p>Service is a mechanism to enable access to one or more capabilities, where the access is provided using a prescribed interface and is exercised consistent with constraints and policies as specified by the service description[^1].</p>
 <h2 id="how-to-define-a-service">How to define a service</h2>
 <p>In the following example, we will define a service named <code>User</code>, which will register itself
 within a service registry called <code>ServiceRegistry</code>.</p>
 <pre><code>service User {
 
     service_registry=ServiceRegistry
-    communication_style=rpc
 
     api{
         @crud
@@ -192,11 +204,15 @@ within a service registry called <code>ServiceRegistry</code>.</p>
 <ul>
 <li><strong>name</strong> (mandatory) - name of the service.</li>
 <li><strong>service_registry</strong> (optional) - reference to a <a href="../service_registry/">service registry</a> where the service will be registered,</li>
-<li><strong>communication_style</strong> - tells which communication style will service use. This attribute can have either <code>rpc</code> or <code>messaging</code> as a value,</li>
+<li>~~<strong>communication_style</strong> - tells which communication style will service use. This attribute can have either <code>rpc</code> or <code>messaging</code> as a value~~ <em>This attribute is removed in version 0.3.0</em>,</li>
 <li><strong>deployment</strong> (optional) - tells how service will be deployed (more info can be found <a href="../deployment/">here</a>),</li>
 <li><strong>api</strong> (mandatory) - API of the service. Here you define all domain objects (via <code>typedef</code>) and functions accessible from the outside.</li>
 </ul>
 <h3 id="communication-style">Communication style</h3>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This attribute is removed in version 0.3.0!</p>
+</div>
 <p>Communication style of a service is defined by  <code>communication_style</code> attribute. Service can use RPC (Remote procedure call) or Messaging communication style.</p>
 <p>To see how services can communicate, click <a href="../communication/">here</a>.</p>
 <p>Attribute communication style is set like this:</p>
@@ -234,7 +250,7 @@ service User {
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Classifiers unique and ordered are only partially supported for now!</p>
+<p>Classifiers <em>unique</em> and <em>ordered</em> are only partially supported for now!</p>
 </div>
 <p>Following example demonstrates how to define fields with aforementioned attributes:</p>
 <pre><code>    typedef User [
@@ -324,8 +340,8 @@ bool userExists(str username)
 </code></pre>
 <p>All HTTP methods are supported by <code>@rest</code> annotation. If <code>@rest</code> annotation is omitted,
 Silvera will try to figure out the which HTTP method to use, or it will throw exception.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
 <p>In the current version of Silvera, calculating proper <code>@rest</code> annotation is little buggy, 
 so please set annotations manually.</p>
 </div>
@@ -365,7 +381,7 @@ in Java, method <code>orderCreated</code> will look like this:</p>
     ...
 }
 </code></pre>
-<p>[^1]:  <a href="http://www.oasis-open.org/committees/tc_home.php?wg_abbrev=soa-rm">OASIS Reference Model for Service Oriented Architecture 1.0</a></p>
+<p>[^1]: <a href="http://www.oasis-open.org/committees/tc_home.php?wg_abbrev=soa-rm">OASIS Reference Model for Service Oriented Architecture 1.0</a></p>
               
             </div>
           </div>

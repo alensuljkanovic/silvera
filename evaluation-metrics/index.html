@@ -9,7 +9,7 @@
   <meta name="author" content="Alen Suljkanović">
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>Inter-service communication - Silvera</title>
+  <title>Metrics - Silvera</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
   <link rel="stylesheet" href="../css/theme.css" />
@@ -18,8 +18,8 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "Inter-service communication";
-    var mkdocs_page_input_path = "communication.md";
+    var mkdocs_page_name = "Metrics";
+    var mkdocs_page_input_path = "evaluation-metrics.md";
     var mkdocs_page_url = null;
   </script>
   
@@ -51,7 +51,7 @@
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">User Guide</span></p>
-                <ul>
+                <ul class="current">
                     <li class="toctree-l1"><a class="reference internal" href="#">Modeling microservices</a>
     <ul>
                 <li class="toctree-l2"><a class="reference internal" href="../service_registry/">Service registry declaration</a>
@@ -86,9 +86,11 @@
                 </li>
     </ul>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="#">Model evaluation</a>
-    <ul>
-                <li class="toctree-l2"><a class="reference internal" href="../evaluation-metrics/">Metrics</a>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="#">Model evaluation</a>
+    <ul class="current">
+                <li class="toctree-l2 current"><a class="reference internal current" href="./">Metrics</a>
+    <ul class="current">
+    </ul>
                 </li>
                 <li class="toctree-l2"><a class="reference internal" href="../custom_evaluator/">Registering custom evaluator</a>
                 </li>
@@ -138,11 +140,19 @@
     <li><a href="..">Docs</a> &raquo;</li>
     
       
+        
+          <li>User Guide &raquo;</li>
+        
+      
+        
+          <li>Model evaluation &raquo;</li>
+        
+      
     
-    <li>Inter-service communication</li>
+    <li>Metrics</li>
     <li class="wy-breadcrumbs-aside">
       
-        <a href="https://github.com/alensuljkanovic/silvera/edit/master/docs/communication.md"
+        <a href="https://github.com/alensuljkanovic/silvera/edit/master/docs/evaluation-metrics.md"
           class="icon icon-github"> Edit on GitHub</a>
       
     </li>
@@ -154,145 +164,44 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="inter-service-communication">Inter-service communication</h1>
-<p>Service can use RPC (Remote procedure call) or Messaging communication style.</p>
-<p>RPC communication style is based on request-reply protocol. It is simple to use, but it creates
-coupling between client service and provider service.</p>
-<p>Messaging provides loose runtime coupling, but adds additional complexity to the system because
-you need to define <a href="./communication#message-broker">message broker</a> and <a href="./communication#message-pool">message pool</a>.</p>
-<h2 id="remote-procedure-call-rpc">Remote procedure call (RPC)</h2>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Silvera's RPC communication is generalization of Remote Method Invocation described here:
-<a href="https://microservices.io/patterns/communication-style/rpi.html">https://microservices.io/patterns/communication-style/rpi.html</a></p>
-</div>
-<p>When using RPC, in order for two services to be able  to communicate, you must define
-a dependency between them.</p>
-<p>In the example that follows, we will define two dependencies for <code>Order</code> service.
-These are <code>User</code> service and <code>Storage</code> service. More precisely, <code>Order</code> service
-depends on <code>User</code> service methods <code>userExist</code> and <code>userEmail</code>, and <code>Storage</code>
-service method <code>takeIngredient</code>.</p>
-<pre><code>dependency Order -&gt; User {
-    userExists[fail_fast]
-    userEmail[fail_fast]
-}
-
-dependency Order -&gt; Storage {
-    takeIngredient[fail_fast]
-}
-</code></pre>
-<p>Based on the dependency declaration, Silvera will generate a code that can be used
-to interact with the target service.</p>
-<p>What happens if <code>User</code> service or <code>Storage</code> service is unavailable when request takes
-place? Luckily, Silvera implements Circuit Breaker pattern, and how the situation is
-handled is defined by one of the following options:</p>
+                <h1 id="evaluation">Evaluation</h1>
+<p>Silvera uses predefined metrics to evaluate the modeled application:</p>
 <ul>
-<li><strong>fail_fast</strong> - exception will be raised in the client if API call fails (default behavior),</li>
-<li><strong>fail_silent</strong> - returns an empty response,</li>
-<li><strong>fallback_method</strong> - defines a method that will be called in case the original method fails,</li>
-<li><strong>fallback_static</strong> - returns default values, and</li>
-<li><strong>fallback_cache</strong> - returns a cached version of response if present, otherwise returns empty response like fail_silent.</li>
+<li>
+<p><em>Weighted Service Interface Count (WSIC)</em> - This metric counts the number of exposed interface operations of a service. Lower values for WSIC are more favorable for the maintainability of a service.</p>
+</li>
+<li>
+<p><em>Number of Versions per Service (NVS)</em> - The number of versions that are used concurrently in system Y for service S.</p>
+</li>
+<li>
+<p><em>Services Interdependence in the System (SIY)</em> - Pairs ⟨S 1 , S 2 ⟩ where service S1 calls S2 while service S2 also calls S1 at some point.</p>
+</li>
+<li>
+<p><em>Absolute Importance of the Service (AIS)</em> - AIS(S) for a service S is the number of consumers that depend on S, i.e. the number of clients that invoke at least one operation of S</p>
+</li>
+<li>
+<p><em>Absolute Dependence of the Service (ADS)</em> - ADS(S) is the number of other services that S depends on, i.e. the number of services from which S invokes at least one operation.</p>
+</li>
+<li>
+<p><em>Absolute Criticality of the Service (ACS)</em> - ACS(S) = AIS(S) × ADS(S)</p>
+</li>
 </ul>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>More information about the Circuit Breaker design pattern can be found here:
-<a href="https://microservices.io/patterns/reliability/circuit-breaker.html">https://microservices.io/patterns/reliability/circuit-breaker.html</a></p>
-</div>
-<h2 id="messaging">Messaging</h2>
-<p>Messaging communication style depends on two things: message broker, and message
-pool.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>In the current version, Silvera supports only Kafka as a message broker.</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>More information about the Messaging design pattern can be found here:
-<a href="https://microservices.io/patterns/communication-style/messaging.html">https://microservices.io/patterns/communication-style/messaging.html</a></p>
-</div>
-<h3 id="message-pool">Message pool</h3>
-<p>Message pool is globally available object that contains all messages that are used
-withing the system. Message can contain parameters (command message) or not (event).</p>
-<p>Here's how to define a message pool with two messages:</p>
-<pre><code>msg-pool {
-
-    // define message group Commands
-    group Commands [
-
-        msg CreateCommand[
-           str param1
-           str param2
-           ...
-        ]
-    ]
-
-    // define message group Events
-    group Events [
-        msg StorageItemTaken[]
-    ]
-}
-
+<p>To perform evaluation, run following command</p>
+<pre><code>$ silvera evaluate &lt;project_dir&gt;
 </code></pre>
-<h3 id="message-broker">Message broker</h3>
-<p>Message broker is an entity whose responsibility is to deliver messages to a destination.</p>
-<p>Message broker contains <code>channels</code> where messages are stored. Services that add messages
-to channels are called <code>publishers</code>, while services that read messages from channels
-are called <code>consumers</code>. A service can be both publisher and consumer at the same time.</p>
-<p>Here's how to define a message broker:</p>
-<pre><code>// message broker is named Broker
-msg-broker Broker {
-
-    channel CMD_CREATE_COMMAND_CHANNEL(Commands.CreateCommand)
-    channel EV_STORAE_ITEM_TAKEN_CHANNEL(Events.StorageItemTaken)
-</code></pre>
-<p>As shown in the example above, <strong>channels in Silvera are typed</strong>. Which means, only
-messages of certain type can be added to the channel.</p>
-<h3 id="how-do-i-send-messages">How do I send messages?</h3>
-<p>In order to send a message, you need to annotate an API method with <code>@producer</code> annotation.</p>
-<p>In following example, method <code>takeFromStorage</code> will send <code>Events.StorageItemTaken</code> message to the <code>EV_STORAGE_ITEM_TAKEN_CHANNEL</code> channel defined in broker named <code>Broker</code>.</p>
-<pre><code>service Order [
-
-    ...
-
-    api {
-        ...
-        @producer(Events.StorageItemTaken -&gt; Broker.EV_STORAGE_ITEM_TAKEN_CHANNEL)
-        bool takeFromStorage(i32 itemId)
-    }
-]
-
-</code></pre>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Silvera will generate code that will publish the command to 
-the messaging broker, but setting values to command's attributes need to be 
-handled manually, otherwise empty message will be sent!</p>
-</div>
-<h3 id="how-do-i-receive-messages">How do I receive messages?</h3>
-<p>In order to consume a message, you need to annotate an API method with <code>@consumer</code> annotation.</p>
-<p>In following example, internal method <code>itemTakenListener</code> will receive <code>Events.StorageItemTaken</code> message from the <code>EV_STORAGE_ITEM_TAKEN_CHANNEL</code> channel defined in broker named <code>Broker</code>.</p>
-<pre><code>service StorageListener [
-
-    ...
-
-    api {
-        ...
-
-        internal {
-            @consumer(Events.StorageItemTaken &lt;- Broker.EV_STORAGE_ITEM_TAKEN_CHANNEL)
-            void itemTakenListener()
-        }
-
-    }
-]
-
-</code></pre>
-<p>In the generated code, <code>itemTakenListener</code> will have <code>Events.StorageItemTaken</code> object
-as a parameter.</p>
               
             </div>
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../custom_evaluator/" class="btn btn-neutral float-right" title="Registering custom evaluator">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../custom_generator/" class="btn btn-neutral" title="Registering custom generator"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>
@@ -320,6 +229,10 @@ as a parameter.</p>
         </span>
     
     
+      <span><a href="../custom_generator/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../custom_evaluator/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>

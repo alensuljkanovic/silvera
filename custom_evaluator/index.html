@@ -9,7 +9,7 @@
   <meta name="author" content="Alen Suljkanović">
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>Model evaluation - Silvera</title>
+  <title>Registering custom evaluator - Silvera</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
   <link rel="stylesheet" href="../css/theme.css" />
@@ -18,8 +18,8 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "Model evaluation";
-    var mkdocs_page_input_path = "evaluation.md";
+    var mkdocs_page_name = "Registering custom evaluator";
+    var mkdocs_page_input_path = "custom_evaluator.md";
     var mkdocs_page_url = null;
   </script>
   
@@ -86,8 +86,14 @@
                 </li>
     </ul>
                     </li>
-                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Model evaluation</a>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="#">Model evaluation</a>
     <ul class="current">
+                <li class="toctree-l2"><a class="reference internal" href="../evaluation-metrics/">Metrics</a>
+                </li>
+                <li class="toctree-l2 current"><a class="reference internal current" href="./">Registering custom evaluator</a>
+    <ul class="current">
+    </ul>
+                </li>
     </ul>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../commands/">Silvera CLI commands</a>
@@ -100,6 +106,13 @@
                     <li class="toctree-l1"><a class="" href="https://youtu.be/MQyfZOXX99M">Messaging</a>
                     </li>
                     <li class="toctree-l1"><a class="" href="https://youtu.be/p63EnxR40ic">Microservice deployment options & custom code generator</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Demo apps</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="" href="https://github.com/alensuljkanovic/silvera-demo/tree/master/bookstore">Bookstore</a>
+                    </li>
+                    <li class="toctree-l1"><a class="" href="https://github.com/alensuljkanovic/silvera-demo/tree/master/pygen">PyGen</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">About</span></p>
@@ -131,11 +144,15 @@
           <li>User Guide &raquo;</li>
         
       
+        
+          <li>Model evaluation &raquo;</li>
+        
+      
     
-    <li>Model evaluation</li>
+    <li>Registering custom evaluator</li>
     <li class="wy-breadcrumbs-aside">
       
-        <a href="https://github.com/alensuljkanovic/silvera/edit/master/docs/evaluation.md"
+        <a href="https://github.com/alensuljkanovic/silvera/edit/master/docs/custom_evaluator.md"
           class="icon icon-github"> Edit on GitHub</a>
       
     </li>
@@ -147,31 +164,16 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="evaluation">Evaluation</h1>
-<p>Silvera uses predefined metrics to evaluate the modeled application:</p>
-<ul>
-<li>
-<p>Weighted Service Interface Count (WSIC) - This metric counts the number of exposed interface operations of a service. Lower values for WSIC are more favorable for the maintainability of a service.</p>
-</li>
-<li>
-<p>Number of Versions per Service (NVS) - The number of versions that are used concurrently in system Y for service S.</p>
-</li>
-<li>
-<p>Services Interdependence in the System (SIY) - Pairs ⟨S 1 , S 2 ⟩ where service S1 calls S2 while service S2 also calls S1 at some point.</p>
-</li>
-<li>
-<p>Absolute Importance of the Service (AIS) - AIS(S) for a service S is the number of consumers that depend on S, i.e. the number of clients that invoke at least one operation of S</p>
-</li>
-<li>
-<p>Absolute Dependence of the Service (ADS) - ADS(S) is the number of other services that S depends on, i.e. the number of services from which S invokes at least one operation.</p>
-</li>
-<li>
-<p>Absolute Criticality of the Service (ACS) - ACS(S) = AIS(S) × ADS(S)</p>
-</li>
-</ul>
-<p>To perform evaluation, run following command</p>
-<pre><code>$ silvera evaluate &lt;project_dir&gt;
-</code></pre>
+                <h1 id="custom-evaluator">Custom evaluator</h1>
+<p>Silvera allows users to register new evaluators as plugins.</p>
+<p>Silvera uses the <code>pkg_resources</code> module from <a href="https://setuptools.readthedocs.io/en/latest/">setuptools</a>
+and its concept of extension point to declaratively specify the registration of the new evaluator.
+Extensions are defined within the project's <code>setup.py</code> module. All Python projects installed in
+the environment that declare the extension point will be discoverable dynamically.</p>
+<p>Registration of new evaluator is performed in the same way as registration of new code generator,
+which is described <a href="../custom_generator/">here</a>.</p>
+<p>There is also a demo application where this functionality is demonstrated: 
+<a href="https://github.com/alensuljkanovic/silvera-demo/tree/master/pygen">PyGen</a></p>
               
             </div>
           </div>
@@ -182,7 +184,7 @@
         <a href="../commands/" class="btn btn-neutral float-right" title="Silvera CLI commands">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
-        <a href="../custom_generator/" class="btn btn-neutral" title="Registering custom generator"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../evaluation-metrics/" class="btn btn-neutral" title="Metrics"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -212,7 +214,7 @@
         </span>
     
     
-      <span><a href="../custom_generator/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../evaluation-metrics/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
       <span><a href="../commands/" style="color: #fcfcfc">Next &raquo;</a></span>

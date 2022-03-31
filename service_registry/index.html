@@ -90,7 +90,13 @@
                 </li>
     </ul>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../evaluation/">Model evaluation</a>
+                    <li class="toctree-l1"><a class="reference internal" href="#">Model evaluation</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../evaluation-metrics/">Metrics</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../custom_evaluator/">Registering custom evaluator</a>
+                </li>
+    </ul>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../commands/">Silvera CLI commands</a>
                     </li>
@@ -102,6 +108,13 @@
                     <li class="toctree-l1"><a class="" href="https://youtu.be/MQyfZOXX99M">Messaging</a>
                     </li>
                     <li class="toctree-l1"><a class="" href="https://youtu.be/p63EnxR40ic">Microservice deployment options & custom code generator</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Demo apps</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="" href="https://github.com/alensuljkanovic/silvera-demo/tree/master/bookstore">Bookstore</a>
+                    </li>
+                    <li class="toctree-l1"><a class="" href="https://github.com/alensuljkanovic/silvera-demo/tree/master/pygen">PyGen</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">About</span></p>
@@ -156,6 +169,11 @@
                 <h1 id="service-registry">Service Registry</h1>
 <p>Service registry is database of services. It contains information about all service instances and their locations.</p>
 <p>If used, client service can use service registry to determine the location of a service instance to which it wants to send requests.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>More information about the Service Registry design pattern can be found here: 
+<a href="https://microservices.io/patterns/apigateway.html">https://microservices.io/patterns/apigateway.html</a></p>
+</div>
 <h2 id="how-to-define-a-service-registry">How to define a service registry</h2>
 <p>In the following example, we will define a service registry named <code>ServiceRegistry</code>:</p>
 <pre><code class="language-java">service_registry ServiceRegistry {
