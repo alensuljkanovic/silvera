@@ -4,6 +4,12 @@ Service registry is database of services. It contains information about all serv
 
 If used, client service can use service registry to determine the location of a service instance to which it wants to send requests.
 
+!!! note
+
+    More information about the Service Registry design pattern can be found here: 
+    [https://microservices.io/patterns/apigateway.html](https://microservices.io/patterns/apigateway.html)
+
+
 ## How to define a service registry
 
 

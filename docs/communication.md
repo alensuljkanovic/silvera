@@ -10,6 +10,11 @@ you need to define [message broker](./communication#message-broker) and [message
 
 ## Remote procedure call (RPC)
 
+!!! note
+
+    Silvera's RPC communication is generalization of Remote Method Invocation described here:
+    [https://microservices.io/patterns/communication-style/rpi.html](https://microservices.io/patterns/communication-style/rpi.html)
+
 When using RPC, in order for two services to be able  to communicate, you must define
 a dependency between them.
 
@@ -43,6 +48,10 @@ handled is defined by one of the following options:
 * **fallback_static** - returns default values, and
 * **fallback_cache** - returns a cached version of response if present, otherwise returns empty response like fail_silent.
 
+!!! note
+
+    More information about the Circuit Breaker design pattern can be found here:
+    [https://microservices.io/patterns/reliability/circuit-breaker.html](https://microservices.io/patterns/reliability/circuit-breaker.html)
 
 ## Messaging
 
@@ -53,6 +62,10 @@ pool.
 
     In the current version, Silvera supports only Kafka as a message broker.
 
+!!! note
+
+    More information about the Messaging design pattern can be found here:
+    [https://microservices.io/patterns/communication-style/messaging.html](https://microservices.io/patterns/communication-style/messaging.html)
 
 ### Message pool
 

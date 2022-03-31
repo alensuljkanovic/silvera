@@ -153,10 +153,8 @@ but custom functions `listUsers`, `userExists`, and`userEmail` must be implement
 manualy. The functionality is added by simply changing the implementation of these
 functions.
 
-!!! note
+!!! note 
 
-   This file will preserve its changes between successive compilations. Meaning,
-   if the base service is changed in the meantime, this file needs to be updated
-   manually.
-
+    This file will preserve its changes between successive compilations. Meaning, if the base service is changed in the meantime, this file needs to be updated
+    manually.
 

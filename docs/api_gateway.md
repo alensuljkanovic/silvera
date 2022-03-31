@@ -7,6 +7,11 @@ several benefits. Most notable are following:
 * It's easier for client to determine location of service instances,
 * Reduces the number of requests or roundtrips,...
 
+!!! note
+
+    More information about the API gateway design pattern can be found here: 
+    [https://microservices.io/patterns/apigateway.html](https://microservices.io/patterns/apigateway.html)
+
 ## How to define an API gateway
 
 In the following example, we will define a service registry named `EntryPoint`:

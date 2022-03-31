@@ -24,13 +24,19 @@ nav:
     - Running the executable: compilation#compile-and-run-the-project
     - Introducing manual changes: compilation#introduce-manual-changes-to-the-generated-code
     - Registering custom generator: custom_generator.md
-  - Model evaluation: evaluation.md
+  - Model evaluation:
+    - Metrics: evaluation-metrics.md
+    - Registering custom evaluator: custom_evaluator.md
   - Silvera CLI commands: commands.md
 
 - Video tutorials:
     - Basics: https://youtu.be/auYNqP4FgW0
     - Messaging: https://youtu.be/MQyfZOXX99M
     - Microservice deployment options & custom code generator: https://youtu.be/p63EnxR40ic
+
+- Demo apps:
+    - Bookstore: https://github.com/alensuljkanovic/silvera-demo/tree/master/bookstore
+    - PyGen: https://github.com/alensuljkanovic/silvera-demo/tree/master/pygen
 
 - About:
   - License: https://github.com/alensuljkanovic/silvera/blob/master/LICENSE

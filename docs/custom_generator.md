@@ -12,6 +12,8 @@ the video tutorial:
 
 [![Custom code generator](https://img.youtube.com/vi/p63EnxR40ic/3.jpg)](https://youtu.be/p63EnxR40ic)
 
+There is also a demo application where this functionality is demonstrated: [PyGen](https://github.com/alensuljkanovic/silvera-demo/tree/master/pygen)
+
 ## Step 1
 
 Create an instance of `GeneratorDesc` class. An instance of GeneratorDesc class contains

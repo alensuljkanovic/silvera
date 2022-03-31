@@ -1,6 +1,6 @@
 # Service
 
-Service is a mechanism to enable access to one or more capabilities, where the access is provided using a prescribed interface and is exercised consistent with constraints and policies as specified by the service description [^1].
+Service is a mechanism to enable access to one or more capabilities, where the access is provided using a prescribed interface and is exercised consistent with constraints and policies as specified by the service description[^1].
 
 ## How to define a service
 
@@ -12,7 +12,6 @@ within a service registry called `ServiceRegistry`.
 service User {
 
     service_registry=ServiceRegistry
-    communication_style=rpc
 
     api{
         @crud
@@ -38,11 +37,15 @@ Attributes:
 
   * **name** (mandatory) - name of the service.
   * **service_registry** (optional) - reference to a [service registry](service_registry.md) where the service will be registered,
-  * **communication_style** - tells which communication style will service use. This attribute can have either `rpc` or `messaging` as a value,
+  * ~~**communication_style** - tells which communication style will service use. This attribute can have either `rpc` or `messaging` as a value~~ *This attribute is removed in version 0.3.0*,
   * **deployment** (optional) - tells how service will be deployed (more info can be found [here](deployment.md)),
   * **api** (mandatory) - API of the service. Here you define all domain objects (via `typedef`) and functions accessible from the outside.
 
 ### Communication style
+
+!!! warning
+
+    This attribute is removed in version 0.3.0!
 
 Communication style of a service is defined by  `communication_style` attribute. Service can use RPC (Remote procedure call) or Messaging communication style.
 
@@ -92,7 +95,7 @@ Each `typedef` has a `name` and one-or-more `fields`. Field has following attrib
 
 !!! note
 
-    Classifiers unique and ordered are only partially supported for now!
+    Classifiers *unique* and *ordered* are only partially supported for now!
 
 Following example demonstrates how to define fields with aforementioned attributes:
 
@@ -197,7 +200,8 @@ All HTTP methods are supported by `@rest` annotation. If `@rest` annotation is o
 Silvera will try to figure out the which HTTP method to use, or it will throw exception.
 
 
-!!! note
+!!! warning
+
     In the current version of Silvera, calculating proper `@rest` annotation is little buggy, 
     so please set annotations manually.
 
@@ -244,4 +248,4 @@ private orderCreated(com.silvera.EmailNotifier.messages.ordermsggroup.OrderCreat
 ```
 
 
-[^1]:  [OASIS Reference Model for Service Oriented Architecture 1.0](http://www.oasis-open.org/committees/tc_home.php?wg_abbrev=soa-rm)
+[^1]: [OASIS Reference Model for Service Oriented Architecture 1.0](http://www.oasis-open.org/committees/tc_home.php?wg_abbrev=soa-rm)
