@@ -35,7 +35,7 @@ setup(
         'openapi_spec_validator'
     ],
     keywords="microservices dsl generator compiler",
-    url="https://gitlab.com/alensuljkanovic/silvera",
+    url="https://github.com/alensuljkanovic/silvera",
     entry_points={
         'console_scripts': [
             'silvera = silvera.cli:silvera'
