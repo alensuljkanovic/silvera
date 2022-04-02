@@ -17,7 +17,6 @@ In the following example, we will define a service registry named `ServiceRegist
 
 ```java
 service_registry ServiceRegistry {
-    tool=eureka
     client_mode=False
     deployment {
         version="0.0.1"
@@ -32,8 +31,12 @@ service_registry ServiceRegistry {
 As seen above, service registry has following attributes:
 
 * **name** (mandatory) - name of the service registry.
-* **tool** (mandatory) - defines which tool will be used as a service registry. Currently, *Silvera* supports only Eureka.
+* ~~**tool** (mandatory) - defines which tool will be used as a service registry. Currently, *Silvera* supports only Eureka~~ *This attribute is removed in version 0.3.0*.
 * **client_mode** (mandatory) - defines whether service registry can be registered within another service registry or not.
 * **deployment** (mandatory) - defines how registry will be deployed. Attributes of deployment
 are defined [here](deployment.md).
 
+!!! warning
+    
+    The attribute `tool` is removed in version 0.3.0. Which service registry implementation
+    will be used in now decided in the code generators.
