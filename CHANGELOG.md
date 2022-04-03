@@ -8,8 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-* Fix bug in `silvera init` command.
-* Fix bug in `silvera check` command.
+* Fix bug in `silvera init` command. Service registry was generated with bad attribute.
+* Fix bug in `silvera check` command. Use projects abs path.
+* Fix bug in `silvera evaluate` command. Use proper default evaluator.
 * Fix bug in calling a dependency service when it's not registered within a service registry.
 
 ## [0.3.0] - 2022-03-31

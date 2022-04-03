@@ -118,7 +118,7 @@ def compile(ctx, project_dir, output_dir, rest_strategy, evaluator_name,
 
 @silvera.command()
 @click.argument('project_dir', type=click.Path(), required=True)
-@click.option('--evaluator-name', '-e', default='builtin',
+@click.option('--evaluator-name', '-e', default='default',
               help='The architecture evaluator name.')
 @click.option('--evaluator-out-format', '-f', default=FORMAT_STR,
               help='The architecture evaluator\'s output format.')
