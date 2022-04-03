@@ -21,6 +21,8 @@ def silvera(ctx, debug):
 @click.pass_context
 def check(ctx, project_dir):
     """Checks if the created model is valid."""
+    project_dir = os.path.abspath(project_dir)
+
     try:
         runners.load(project_dir)
     except Exception as ex:
