@@ -2,7 +2,7 @@
 
 !!! note
     
-    Java 1.8 is needed to run generated code!
+    Java 17 is needed to run generated code!
 
 ## Compile and run the project
 
