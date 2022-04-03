@@ -1,6 +1,10 @@
 spring.application.name={{service_name}}
 spring.cloud.config.uri={{config_server_uri}}
+spring.cloud.config.import-check.enabled=false
+
 eureka.client.serviceUrl.defaultZone={{service_registry_url}}
+eureka.instance.prefer-ip-address=true
+
 server.port={{service_port}}
 security.basic.enable=false
 management.security.enabled=false

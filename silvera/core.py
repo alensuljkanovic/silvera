@@ -591,6 +591,10 @@ class ServiceDecl(ServiceObject):
         Returns:
             bool
         """
+        for t in self.api.typedefs:
+            if len(t.produces) > 0:
+                return True
+
         for f in self.api.functions:
             for _ in f.msg_annotations:
                 # Return True if generator is not empty.

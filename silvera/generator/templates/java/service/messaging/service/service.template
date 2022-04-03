@@ -54,6 +54,10 @@ public class {{service_name}}Service implements I{{service_name}}Service {
         {%- set class_name = crud_dict["@create"][2] -%}
         {%- set class_var = class_name.replace(".", "") -%}
         com.silvera.{{package_name}}.messages.{{class_name}} msg = new com.silvera.{{package_name}}.messages.{{class_name}}();
+        // Here set values to the message attributes:
+        // ------------------------------------------
+
+        // ------------------------------------------
         {{class_var}}KafkaTemplate.send("{{channel}}", msg);
         {% endif %}
 
@@ -74,6 +78,10 @@ public class {{service_name}}Service implements I{{service_name}}Service {
         {%- set class_name = crud_dict["@update"][2] -%}
         {%- set class_var = class_name.replace(".", "") -%}
         com.silvera.{{package_name}}.messages.{{class_name}} msg = new com.silvera.{{package_name}}.messages.{{class_name}}();
+        // Here set values to the message attributes:
+        // ------------------------------------------
+
+        // ------------------------------------------
         {{class_var}}KafkaTemplate.send("{{channel}}", msg);
         {% endif %}
 
@@ -100,6 +108,10 @@ public class {{service_name}}Service implements I{{service_name}}Service {
         {%- set class_name = crud_dict["@delete"][2] -%}
         {%- set class_var = class_name.replace(".", "") -%}
         com.silvera.{{package_name}}.messages.{{class_name}} msg = new com.silvera.{{package_name}}.messages.{{class_name}}();
+        // Here set values to the message attributes:
+        // ------------------------------------------
+
+        // ------------------------------------------
         {{class_var}}KafkaTemplate.send("{{channel}}", msg);
         {% endif %}
     }

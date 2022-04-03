@@ -2,18 +2,34 @@ package com.silvera.{{gateway_name}};
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.netflix.zuul.EnableZuulProxy;
-import org.springframework.context.annotation.Bean;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.gateway.route.RouteLocator;
+import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
+import org.springframework.context.annotation.Bean;
 
 
-@EnableZuulProxy
-@EnableDiscoveryClient
 @SpringBootApplication
+@EnableDiscoveryClient
 public class App {
 
   public static void main(String[] args) {
     SpringApplication.run(App.class, args);
+  }
+
+  @Bean
+  public RouteLocator gatewayRoutes(RouteLocatorBuilder routeLocatorBuilder)
+  {
+    return routeLocatorBuilder.routes()
+    {%- for service_name, path, service_port  in gateway_for %}
+            .route("{{service_name}}", rt -> rt.path("{{path}}/**")
+                    .filters(f -> f.rewritePath("{{path}}/(?<segment>.*)", "/${segment}"))
+    {%- if service_registry_url %}
+                    .uri("lb://{{service_name}}"))
+    {% else %}
+                    .uri("http://localhost:{{service_port}}"))
+    {% endif -%}
+    {% endfor %}
+            .build();
   }
 
 }

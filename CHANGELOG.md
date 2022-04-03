@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Evaluation functions now can be registered as plugins.
 * OpenAPI specification (openapi.json) generated for each service with REST API during compilation.
 
+### Changed
+
+* Built-in code generator now supports Java 17 and uses Spring Boot 2.6.6.
+
 ### Removed
 
 * Attribute `tool` from service registry declaration is removed. Which service registry will actually be used is determined by code generators.

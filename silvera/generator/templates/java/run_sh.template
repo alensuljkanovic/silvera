@@ -3,4 +3,4 @@
 mvn clean
 mvn package
 
-java -jar target/{{name}}-{{version}}-SNAPSHOT.jar --PORT={{port}}
+java -jar --add-opens java.base/java.lang=ALL-UNNAMED target/{{name}}-{{version}}-SNAPSHOT.jar --PORT={{port}}

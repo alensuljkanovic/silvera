@@ -1,0 +1,14 @@
+spring.application.name={{gateway_name}}
+server.port={{port}}
+ribbon.eureka.enabled=false
+
+{% if service_registry_url %}
+eureka.client.registerWithEureka=true
+eureka.client.fetchRegistry=true
+eureka.client.serviceUrl.defaultZone={{service_registry_url}}
+eureka.instance.prefer-ip-address=true
+
+spring.cloud.gateway.discovery.locator.enabled=true
+spring.cloud.gateway.discovery.locator.lower-case-service-id=true
+
+{% endif %}

@@ -43,11 +43,11 @@ def generate_config_server(config_server, output_dir):
         os.mkdir(res_path)
 
     #
-    # Generate bootstrap.properties
+    # Generate application.properties
     #
-    bootstrap_template = env.get_template("bootstrap_properties.template")
-    bootstrap_template.stream(d).dump(os.path.join(res_path,
-                                                   "bootstrap.properties"))
+    application_template = env.get_template("application_properties.template")
+    application_template.stream(d).dump(os.path.join(res_path,
+                                                     "application.properties"))
     #
     # Generate pom.xml
     #
@@ -98,11 +98,11 @@ def generate_service_registry(serv_registry, output_dir):
     if not os.path.exists(res_path):
         os.mkdir(res_path)
     #
-    # Generate bootstrap.properties
+    # Generate application.properties
     #
-    bootstrap_template = env.get_template("eureka_bootstrap.template")
-    bootstrap_template.stream(d).dump(os.path.join(res_path,
-                                                   "bootstrap.properties"))
+    application_template = env.get_template("eureka_application.template")
+    application_template.stream(d).dump(os.path.join(res_path,
+                                                     "application.properties"))
 
     #
     # Generate pom.xml
@@ -164,11 +164,11 @@ def generate_api_gateway(api_gateway, output_dir):
         os.mkdir(res_path)
 
     #
-    # Generate bootstrap.properties
+    # Generate application.properties
     #
-    bootstrap_template = env.get_template("bootstrap_properties.template")
-    bootstrap_template.stream(d).dump(os.path.join(res_path,
-                                                   "application.properties"))
+    application_template = env.get_template("application_properties.template")
+    application_template.stream(d).dump(os.path.join(res_path,
+                                                     "application.properties"))
 
     #
     # Generate pom.xml
@@ -216,7 +216,7 @@ def generate_service(service, output_dir):
                             - service
                 - resources
             - test
-        - bootstrap.properties
+        - application.properties
         - pom.xml
     """
     if service.uses_messaging:
@@ -288,12 +288,12 @@ class ServiceGenerator:
         app_template = env.get_template("main.template")
         app_template.stream(d).dump(os.path.join(content_path, "App.java"))
 
-    def generate_bootstrap_properties(self, env, output_dir, d):
-        """Generate bootstrap.properties
+    def generate_application_properties(self, env, output_dir, d):
+        """Generate application.properties
 
         Args:
-            env (Environment): jinja2 enviroment used during generation.
-            content_path (str): path to the parent folder in generated project
+            env (Environment): jinja2 environment used during generation.
+            output_dir (str): path to the parent folder in generated project
             d (dict): dict with variables for templates
         """
 
@@ -301,7 +301,7 @@ class ServiceGenerator:
         root = os.path.join(output_dir, service.name)
         res_path = os.path.join(root, "src", "main", "resources")
 
-        bootstrap_template = env.get_template("bootstrap_properties.template")
+        application_template = env.get_template("application_properties.template")
 
         if service.config_server:
             d["config_server_uri"] = "http://localhost:%s" % \
@@ -312,15 +312,15 @@ class ServiceGenerator:
             url = "%s:%s/eureka" % (reg.url, reg.port)
             d["service_registry_url"] = url
 
-        bootstrap_template.stream(d).dump(os.path.join(res_path,
-                                                       "bootstrap.properties"))
+        application_template.stream(d).dump(os.path.join(res_path,
+                                                         "application.properties"))
 
     def generate_pom_xml(self, env, output_dir, d):
         """Generate pom.xml
 
         Args:
             env (Environment): jinja2 enviroment used during generation.
-            content_path (str): path to the parent folder in generated project
+            output_dir (str): path to the parent folder in generated project
             d (dict): dict with variables for templates
         """
         service = self.service
@@ -620,7 +620,7 @@ class ServiceGenerator:
         }
 
         # Generate root files
-        self.generate_bootstrap_properties(env, output_dir, d)
+        self.generate_application_properties(env, output_dir, d)
         self.generate_pom_xml(env, output_dir, d)
 
         content_path = os.path.join(root, "src", "main", "java", "com",
@@ -962,7 +962,7 @@ def generate_dockerfile(output_path, app_name, app_version, app_port):
 # Create built-in Java generator.
 java = GeneratorDesc(
     language_name="java",
-    language_ver="1.8",
-    description="Java 1.8 code generator",
+    language_ver="17",
+    description="Java 17 code generator",
     gen_func=generate
 )
