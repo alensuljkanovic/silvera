@@ -152,7 +152,8 @@ def generate_api_gateway(api_gateway, output_dir):
         "gateway_version": api_gateway.version,
         "port": "${PORT:%s}" % api_gateway.port,
         "service_registry_url": reg_url,
-        "gateway_for": [(g.service.name, g.path, g.service.port)
+        "gateway_for": [(g.service.name, g.path, g.service.port,
+                         g.service.service_registry is not None)
                         for g in api_gateway.gateway_for],
         "timestamp": timestamp(),
         "user_service_registry": user_service_registry
@@ -502,7 +503,9 @@ class ServiceGenerator:
                 "functions": fns_by_service[s.name],
                 "has_domain_dependencies": len(service.dep_typedefs) > 0,
                 "use_circuit_breaker": use_circuit_breaker,
-                "timestamp": timestamp()
+                "timestamp": timestamp(),
+                "uses_registry": True if s.service_registry else False,
+                "service_url": "%s:%s" % (s.url, s.port)
             }
             service_template = env.get_template(
                 "service/dependency_service.template")
@@ -617,6 +620,7 @@ class ServiceGenerator:
             "service_version": service.version,
             "use_circuit_breaker": len(service.dependencies) > 0,
             "timestamp": timestamp(),
+            "uses_registry": service.service_registry is not None
         }
 
         # Generate root files

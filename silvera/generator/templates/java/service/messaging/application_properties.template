@@ -2,9 +2,11 @@ spring.application.name={{service_name}}
 spring.cloud.config.uri={{config_server_uri}}
 spring.cloud.config.import-check.enabled=false
 
+{% if service_registry_url %}
 eureka.client.serviceUrl.defaultZone={{service_registry_url}}
 eureka.client.healthcheck.enabled = true
 eureka.instance.prefer-ip-address=true
+{% endif %}
 
 server.port={{service_port}}
 security.basic.enable=false

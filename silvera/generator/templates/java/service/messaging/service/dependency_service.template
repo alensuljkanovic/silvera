@@ -42,7 +42,11 @@ public class {{service_name}}Client {
     {{generate_cb_annotation(function)}}
     public {{function.ret_type|converttype}} {{function.name}}({{function|unfold_function_params}}) {
         {% set params = function|param_names %}
+        {% if uses_registry %}
         String targetUri = getServiceURL("{{service_name}}");
+        {% else %}
+        String targetUri = "{{service_url}}";
+        {% endif -%}
         RestTemplate restTemplate = new RestTemplate();
         {% if function.dep.http_verb == "GET" %}
         {% if function.is_ret_type_a_list %}

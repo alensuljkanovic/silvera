@@ -58,11 +58,13 @@
 		</dependency>
 
         <!-- Dependencies bellow should be generated only if needed -->
+        {% if uses_registry %}
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
             <version>2.2.10.RELEASE</version>
         </dependency>
+        {% endif %}
 
         <dependency>
 			<groupId>org.springframework.cloud</groupId>

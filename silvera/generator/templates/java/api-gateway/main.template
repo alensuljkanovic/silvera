@@ -6,10 +6,15 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
+{% if service_registry_url %}
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+{% endif %}
 
 
 @SpringBootApplication
+{% if service_registry_url %}
 @EnableDiscoveryClient
+{% endif -%}
 public class App {
 
   public static void main(String[] args) {
@@ -20,10 +25,10 @@ public class App {
   public RouteLocator gatewayRoutes(RouteLocatorBuilder routeLocatorBuilder)
   {
     return routeLocatorBuilder.routes()
-    {%- for service_name, path, service_port  in gateway_for %}
+    {%- for service_name, path, service_port, uses_registry  in gateway_for %}
             .route("{{service_name}}", rt -> rt.path("{{path}}/**")
                     .filters(f -> f.rewritePath("{{path}}/(?<segment>.*)", "/${segment}"))
-    {%- if service_registry_url %}
+    {%- if service_registry_url and uses_registry %}
                     .uri("lb://{{service_name}}"))
     {% else %}
                     .uri("http://localhost:{{service_port}}"))

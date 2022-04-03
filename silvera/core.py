@@ -193,7 +193,7 @@ class Deployment:
                  restart_policy=None):
         super().__init__()
         self.version = version if version else "0.0.1b"
-        self.url = url
+        self.url = url if url else "http://localhost"
         self.port = port
         self.lang = lang if lang else "java"
         self.packaging = packaging if packaging else "jar"
