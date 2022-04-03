@@ -1,12 +1,20 @@
 # Silvera
 
-Silvera is an tool for acceleration of development of microservice architectures.
-
-Silvera consists of two parts: a domain-specific language - SilveraDSL, and
-a Silvera compiler. SilveraDSL is a declarative language for modeling microservice
+Silvera is a declarative language for modeling microservice
 architectures based on [textX](https://github.com/textX/textX), and it is designed
-in a way that directly implements domain-related design patterns. SilveraDSL
-specifications are used by the compiler to produce executable program code.
+in a way that directly implements domain-related design patterns.
+
+Silvera is:
+
+* lightweight and editor-agnostic language - you can use text editor of your choice to write Silvera programs.
+* built with heterogeneity in mind - Silvera's compiler can produce code for any programming language or framework since
+  [code generators are registered as plugins](https://alensuljkanovic.github.io/silvera/custom_generator/).
+
+In addition, Silvera uses microservice-tailored metrics to evaluate the architecture
+of the designed system and automatically generates the documentation. 
+Architecture Evaluation Processor comes with a set of 
+[predefined metrics](https://alensuljkanovic.github.io/silvera/evaluation-metrics/), 
+but you can also [add your own!](https://alensuljkanovic.github.io/silvera/custom_evaluator/).
 
 Silvera is fully implemented in Python.
 
@@ -18,7 +26,6 @@ Here is a small example where we define a service registry and one microservice.
 # setup.si
 
 service-registry ServiceRegistry {
-	tool=eureka
 	client_mode=False
 	deployment {
 		version="0.0.1"
@@ -34,7 +41,6 @@ import "setup.si"
 service Bookstore {
 
     service_registry=ServiceRegistry
-    communication_style=rpc
 
     api {
 
@@ -109,7 +115,7 @@ Commands:
 
 ## User guide
 
-For documentation and tutorials, please check Silvera's wiki page: https://alensuljkanovic.github.io/silvera/
+For documentation and tutorials, visit docs: https://alensuljkanovic.github.io/silvera/
 
 
 ## Python versions

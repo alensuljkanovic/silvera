@@ -1,12 +1,20 @@
 # Silvera
 
-Silvera is a tool for acceleration of development of microservice architectures.
-
-Silvera consists of two parts: a domain-specific language - SilveraDSL, and
-a Silvera compiler. SilveraDSL is a declarative language for modeling microservice
+Silvera is a declarative language for modeling microservice
 architectures based on [textX](https://github.com/textX/textX), and it is designed
-in a way that directly implements domain-related design patterns. SilveraDSL
-specifications are used by the compiler to produce executable program code.
+in a way that directly implements domain-related design patterns.
+
+Silvera is:
+
+* lightweight and editor-agnostic language - you can use text editor of your choice to write Silvera programs.
+* built with heterogeneity in mind - Silvera's compiler can produce code for any programming language or framework since
+  [code generators are registered as plugins](custom_generator.md).
+
+In addition, Silvera uses microservice-tailored metrics to evaluate the architecture
+of the designed system and automatically generates the documentation. 
+Architecture Evaluation Processor comes with a set of 
+[predefined metrics](evaluation-metrics.md), 
+but you can also [add your own!](custom_evaluator.md).
 
 Silvera is fully implemented in Python.
 

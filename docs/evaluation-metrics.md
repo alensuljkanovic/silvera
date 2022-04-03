@@ -1,4 +1,4 @@
-# Evaluation
+# Evaluation metrics
 
 Silvera uses predefined metrics to evaluate the modeled application:
 
@@ -19,3 +19,11 @@ To perform evaluation, run following command
 ```
 $ silvera evaluate <project_dir>
 ```
+
+For more info about these evaluation metrics, check these papers:
+* Bogner, J.; Wagner, S.; Zimmermann, A. Automatically measuring the maintainability of service-and microservice-based systems:
+  a literature review. Proceedings of the 27th International Workshop on Software Measurement and 12th International Conference
+  on Software Process and Product Measurement, 2017, pp. 107–115.
+* Hirzalla, M.; Cleland-Huang, J.; Arsanjani, A. A metrics suite for evaluating flexibility and complexity in service oriented
+architectures. International Conference on Service-Oriented Computing. Springer, 2008, pp. 41–52.
+* Rud, D.; Schmietendorf, A.; Dumke, R. Product metrics for service-oriented infrastructures.
