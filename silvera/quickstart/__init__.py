@@ -33,7 +33,6 @@ def create_setup(file_dir, registry_name, registry_port, config_name,
         registry_port = 9091
 
     content += "service-registry %s {\n" % registry_name
-    content += "\ttool=eureka\n"
     content += "\tclient_mode=False\n"
     content += "\tdeployment {\n"
     content += '\t\tversion="0.0.1"\n'
