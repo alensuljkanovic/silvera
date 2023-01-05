@@ -117,7 +117,19 @@ Commands:
 
 For documentation and tutorials, visit docs: https://alensuljkanovic.github.io/silvera/
 
+## Additional code generators
 
+Additional code generators that you can use are:
+
+* [pyvera](https://github.com/dovvla/pyvera) - Python code generator for Silvera
+* [silvera-csharp-gen](https://github.com/albertmakan/silvera-csharp-gen) - C# code generator for Silvera
+* [gogen](https://github.com/stasadj/gogen) - Go code generator for Silvera
+
+## Citing Silvera
+
+If you are using textX in your research project we would be very grateful if you cite our paper:
+
+Suljkanović, A.; Milosavljević, B.; Inđić, V.; Dejanović, I. Developing Microservice-Based Applications Using the Silvera Domain-Specific Language. Appl. Sci. 2022, 12, 6679. https://doi.org/10.3390/app12136679 
 ## Python versions
 
 Tested with Python 3.7.4+
