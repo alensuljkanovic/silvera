@@ -127,7 +127,7 @@ Additional code generators that you can use are:
 
 ## Citing Silvera
 
-If you are using textX in your research project we would be very grateful if you cite our paper:
+If you are using Silvera in your research project we would be very grateful if you cite our paper:
 
 Suljkanović, A.; Milosavljević, B.; Inđić, V.; Dejanović, I. Developing Microservice-Based Applications Using the Silvera Domain-Specific Language. Appl. Sci. 2022, 12, 6679. https://doi.org/10.3390/app12136679 
 ## Python versions
